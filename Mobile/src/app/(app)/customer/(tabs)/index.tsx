@@ -1,16 +1,16 @@
 import React from 'react';
-import { View, Text, ScrollView, SafeAreaView } from 'react-native';
+import { View, Text, ScrollView,  } from 'react-native';
 import { useRouter } from 'expo-router';
 import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { Header } from '../../../components/common/Header';
-import { QuickActionCard } from '../../../components/customer/QuickActionCard';
-import { ForexRateCard } from '../../../components/customer/ForexRateCard';
-import { NearestBranchCard } from '../../../components/customer/NearestBranchCard';
-import { Button } from '../../../components/common/Button';
-import { homeStyles } from '../../../../assets/styles/home.styles';
-import { commonStyles } from '../../../../assets/styles/common.styles';
-import { COLORS } from '../../../../constants/colors';
-
+import { Header } from '../../../../components/common/Header';
+import { QuickActionCard } from '../../../../components/customer/QuickActionCard';
+import { ForexRateCard } from '../../../../components/customer/ForexRateCard';
+import { NearestBranchCard } from '../../../../components/customer/NearestBranchCard';
+import { Button } from '../../../../components/common/Button';
+import { homeStyles } from '../../../../../assets/styles/home.styles';
+import { commonStyles } from '../../../../../assets/styles/common.styles';
+import { COLORS } from '../../../../../constants/colors';
+import { SafeAreaView } from 'react-native-safe-area-context';
 export default function CustomerHomeScreen() {
   const router = useRouter();
 
