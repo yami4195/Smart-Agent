@@ -1,14 +1,20 @@
 import { useSignUp } from '@clerk/expo';
 import { Link, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import  { useState } from 'react';
+import {Ionicons} from "@expo/vector-icons";
+
+import { authStyles } from '../../../assets/styles/auth.styles';
 import {
   ActivityIndicator,
   Pressable,
-  StyleSheet,
   Text,
   TextInput,
   View,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
 } from 'react-native';
+import { COLORS } from '../../../constants/colors';
 
 export default function SignUpScreen() {
   const { signUp } = useSignUp();
@@ -16,14 +22,21 @@ export default function SignUpScreen() {
 
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
-  const [pendingVerification, setPendingVerification] = useState(false);
-  const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [showPassword, SetshowPassword] = useState(false);
 
-  const onSignUpPress = async () => {
-    if (!emailAddress || !password) {
-      setErrorMsg('Please enter both email and password.');
+  const handleSignUp = async () => {
+    if (!emailAddress) {
+      setErrorMsg('Email address required');
+      return;
+    }
+    if (!password) {
+      setErrorMsg('Password required');
+      return;
+    }
+    if (password.length < 8) {
+      setErrorMsg('Password must be at least 8 characters');
       return;
     }
 
@@ -47,7 +60,10 @@ export default function SignUpScreen() {
         return;
       }
 
-      setPendingVerification(true);
+      router.push({
+        pathname: '/(auth)/verify-email',
+        params: { email: emailAddress.trim() },
+      });
     } catch (err: any) {
       console.error('Sign up error:', err);
       setErrorMsg('An error occurred during sign up.');
@@ -56,87 +72,21 @@ export default function SignUpScreen() {
     }
   };
 
-  const onVerifyPress = async () => {
-    if (!code) {
-      setErrorMsg('Please enter the verification code.');
-      return;
-    }
-
-    setLoading(true);
-    setErrorMsg('');
-
-    try {
-      const { error } = await signUp.verifications.verifyEmailCode({
-        code: code.trim(),
-      });
-
-      if (error) {
-        setErrorMsg(error.message || 'Invalid verification code.');
-        return;
-      }
-
-      const { error: finalizeError } = await signUp.finalize();
-      if (finalizeError) {
-        setErrorMsg(finalizeError.message || 'Could not finalize sign up.');
-        return;
-      }
-
-      router.replace('/(app)');
-    } catch (err: any) {
-      console.error('Verification error:', err);
-      setErrorMsg('Verification failed.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (pendingVerification) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Verify Email</Text>
-        <Text style={styles.subtitle}>
-          We sent a verification code to {emailAddress}. Enter it below to activate your account.
-        </Text>
-
-        {errorMsg ? <Text style={styles.errorText}>{errorMsg}</Text> : null}
-
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Verification Code</Text>
-          <TextInput
-            style={styles.input}
-            keyboardType="number-pad"
-            placeholder="Enter verification code"
-            placeholderTextColor="#999"
-            value={code}
-            onChangeText={setCode}
-          />
-        </View>
-
-        <Pressable
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={onVerifyPress}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#ffffff" />
-          ) : (
-            <Text style={styles.buttonText}>Verify Email</Text>
-          )}
-        </Pressable>
-      </View>
-    );
-  }
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Sign Up</Text>
+    <KeyboardAvoidingView
+      behavior={Platform.OS ==="ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS ==="ios" ? 64 :0}
+      style={authStyles.keyboardView}
+      >
+    <View style={authStyles.container}>
+      <Text style={authStyles.title}>Sign Up</Text>
 
-      {errorMsg ? <Text style={styles.errorText}>{errorMsg}</Text> : null}
+      {errorMsg ? <Text style={authStyles.errorText}>{errorMsg}</Text> : null}
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Email</Text>
+      <View style={authStyles.inputContainer}>
+        <Text style={authStyles.label}>Email</Text>
         <TextInput
-          style={styles.input}
+          style={authStyles.input}
           autoCapitalize="none"
           keyboardType="email-address"
           placeholder="Enter email"
@@ -146,115 +96,53 @@ export default function SignUpScreen() {
         />
       </View>
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Password</Text>
+      <View style={authStyles.inputContainer}>
+        <Text style={authStyles.label}>Password</Text>
         <TextInput
-          style={styles.input}
-          secureTextEntry
+          style={authStyles.input}
+          secureTextEntry={!showPassword}
           placeholder="Enter password"
           placeholderTextColor="#999"
           value={password}
           onChangeText={setPassword}
         />
+
+        <Pressable 
+        style={authStyles.eyeButton}
+        onPress={()=> SetshowPassword(!showPassword)}
+        >
+          <Ionicons
+          name={showPassword ? "eye-outline" : "eye-off-outline"}
+          size={20}
+          color={COLORS.primary}
+          />
+        </Pressable>
       </View>
 
       <Pressable
-        style={[styles.button, loading && styles.buttonDisabled]}
-        onPress={onSignUpPress}
+        style={[authStyles.button, loading && authStyles.buttonDisabled]}
+        onPress={handleSignUp}
         disabled={loading}
       >
         {loading ? (
           <ActivityIndicator color="#ffffff" />
         ) : (
-          <Text style={styles.buttonText}>Sign Up</Text>
+          <Text style={authStyles.buttonText}>Sign Up</Text>
         )}
       </Pressable>
 
       <View nativeID="clerk-captcha" />
 
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>Already have an account? </Text>
+      <View style={authStyles.footer}>
+        <Text style={authStyles.footerText}>Already have an account? </Text>
         <Link href="/(auth)/sign-in" asChild>
           <Pressable>
-            <Text style={styles.linkText}>Sign In</Text>
+            <Text style={authStyles.linkText}>Sign In</Text>
           </Pressable>
         </Link>
       </View>
-    </View>
+      </View>
+      </KeyboardAvoidingView>
+   
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-    justifyContent: 'center',
-    backgroundColor: '#ffffff',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#4b5563',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  errorText: {
-    color: '#ef4444',
-    marginBottom: 16,
-    textAlign: 'center',
-    fontSize: 14,
-  },
-  inputContainer: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#374151',
-    marginBottom: 6,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: '#111827',
-    backgroundColor: '#f9fafb',
-  },
-  button: {
-    backgroundColor: '#2563eb',
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 24,
-  },
-  footerText: {
-    color: '#6b7280',
-    fontSize: 14,
-  },
-  linkText: {
-    color: '#2563eb',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-});

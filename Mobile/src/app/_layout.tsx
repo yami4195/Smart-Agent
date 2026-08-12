@@ -3,6 +3,8 @@ import { Slot, useRouter, useSegments } from 'expo-router';
 import React, { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { tokenCache } from '../cache';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import {COLORS} from '../../constants/colors';
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim() || '';
 
@@ -41,8 +43,11 @@ function InitialLayout() {
 export default function RootLayout() {
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+      <SafeAreaView style={{flex : 1, backgroundColor:COLORS.background}}>
       <InitialLayout />
+      </SafeAreaView>
     </ClerkProvider>
+    
   );
 }
 

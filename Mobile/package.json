@@ -4,6 +4,7 @@
   "main": "expo-router/entry",
   "dependencies": {
     "@clerk/expo": "^4.2.3",
+    "@expo/vector-icons": "^15.0.3",
     "@hookform/resolvers": "^5.7.1",
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/native": "^7.1.6",
