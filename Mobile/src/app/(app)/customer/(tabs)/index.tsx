@@ -10,7 +10,6 @@ import { Button } from '../../../../components/common/Button';
 import { homeStyles } from '../../../../../assets/styles/home.styles';
 import { commonStyles } from '../../../../../assets/styles/common.styles';
 import { COLORS } from '../../../../../constants/colors';
-import { SafeAreaView } from 'react-native-safe-area-context';
 export default function CustomerHomeScreen() {
   const router = useRouter();
 
@@ -35,10 +34,10 @@ export default function CustomerHomeScreen() {
   };
 
   return (
-    <SafeAreaView style={commonStyles.safeArea}>
+    <View style={commonStyles.safeArea}>
       {/* I & VI. Custom Top Navigation Header (White bar, Bank Icon on Left, AI Agent + Bell on Right) */}
       <Header
-        title="Tera Mobile Banking"
+        title="ተራ Mobile Services"
         onAiAgentPress={handleAiAgentPress}
         onNotificationPress={handleNotificationPress}
       />
@@ -104,6 +103,6 @@ export default function CustomerHomeScreen() {
           onMapPress={handleFindNearbyBranches}
         />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

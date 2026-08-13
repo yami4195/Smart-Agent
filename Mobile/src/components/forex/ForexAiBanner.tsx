@@ -1,11 +1,15 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { forexStyles } from '../../../assets/styles/forex.styles';
 import { COLORS } from '../../../constants/colors';
 
 export const ForexAiBanner: React.FC = () => {
+  const handleSmartAgent = () =>{
+    console.log("Coming soon!!")
+  }
   return (
+    <Pressable onPress={handleSmartAgent}>
     <View style={forexStyles.aiBannerContainer}>
       <View style={forexStyles.aiIconContainer}>
         <MaterialCommunityIcons name="robot-outline" size={24} color={COLORS.aiPurple} />
@@ -18,5 +22,6 @@ export const ForexAiBanner: React.FC = () => {
         </Text>
       </View>
     </View>
+    </Pressable>
   );
 };

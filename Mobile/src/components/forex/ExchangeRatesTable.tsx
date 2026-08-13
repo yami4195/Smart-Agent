@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable } from 'react-native';
+import { View, Text, TextInput, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { forexStyles } from '../../../assets/styles/forex.styles';
 import { COLORS } from '../../../constants/colors';
@@ -47,10 +47,14 @@ export const ExchangeRatesTable: React.FC<ExchangeRatesTableProps> = ({
   });
 
   return (
-    <View>
+    <KeyboardAvoidingView
+                  behavior={Platform.OS ==="ios" ? "padding" : "height"}
+                  keyboardVerticalOffset={Platform.OS ==="ios" ? 64:0}
+                  style={forexStyles.keyboardView}
+                  >
       {/* Directory Section Header */}
       <View style={forexStyles.directoryHeaderRow}>
-        <Text style={forexStyles.directoryTitle}>Exchange Rates Directory</Text>
+        <Text style={forexStyles.directoryTitle}>Exchange Rates </Text>
         <MaterialCommunityIcons name="table-large" size={20} color={COLORS.navy} />
       </View>
 
@@ -59,10 +63,11 @@ export const ExchangeRatesTable: React.FC<ExchangeRatesTableProps> = ({
         <Feather name="search" size={18} color={COLORS.textMuted} />
         <TextInput
           style={forexStyles.searchInput}
-          placeholder="Search currency (e.g. USD, Dirham, Euro)..."
+          placeholder="Search currency (e.g. USD, EURO)..."
           placeholderTextColor={COLORS.textMuted}
           value={searchQuery}
           onChangeText={setSearchQuery}
+      
         />
         {searchQuery.length > 0 && (
           <Pressable onPress={() => setSearchQuery('')}>
@@ -145,6 +150,6 @@ export const ExchangeRatesTable: React.FC<ExchangeRatesTableProps> = ({
           </Pressable>
         </View>
       ))}
-    </View>
+    </KeyboardAvoidingView>
   );
 };

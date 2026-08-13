@@ -573,4 +573,7 @@ export const forexStyles = StyleSheet.create({
   modalCloseButton: {
     padding: 4,
   },
+  keyboardView: {
+    flex: 1,
+  },
 });

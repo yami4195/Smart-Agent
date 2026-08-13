@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function MyQueueScreen() {
   return (
-    <SafeAreaView style={commonStyles.safeArea}>
+    <View style={commonStyles.safeArea}>
       <Header title="Tera Mobile Banking" />
       <View style={placeholderStyles.container}>
         <View style={placeholderStyles.iconCircle}>
@@ -20,6 +20,6 @@ export default function MyQueueScreen() {
           Your live tokens (e.g. A024), estimated waiting time, and queue history will appear here.
         </Text>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }

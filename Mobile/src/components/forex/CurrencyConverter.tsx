@@ -3,6 +3,7 @@ import { View, Text, TextInput, Pressable } from 'react-native';
 import { MaterialCommunityIcons, Ionicons, Feather } from '@expo/vector-icons';
 import { forexStyles } from '../../../assets/styles/forex.styles';
 import { COLORS } from '../../../constants/colors';
+import { Button } from '../common/Button';
 
 export interface CurrencyItem {
   code: string;
@@ -77,7 +78,7 @@ export const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
     <View style={forexStyles.converterCard}>
       {/* Title */}
       <View style={forexStyles.cardTitleRow}>
-        <Text style={forexStyles.converterTitle}>Currency Calculator</Text>
+        <Text style={forexStyles.converterTitle}>Convert your curruncies</Text>
         <MaterialCommunityIcons name="calculator" size={20} color={COLORS.primary} />
       </View>
 
@@ -121,7 +122,7 @@ export const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
         </View>
       </View>
 
-      {/* Swap Button */}
+      {/* the Swap Button */}
       <View style={forexStyles.swapContainer}>
         <Pressable style={forexStyles.swapButton} onPress={handleSwap}>
           <Ionicons name="swap-vertical" size={20} color={COLORS.white} />
@@ -184,17 +185,31 @@ export const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
         </View>
       </View>
 
-      {/* Action Buttons Stack */}
+      {/* Action Buttons Stack "Reused button" */}
       <View style={forexStyles.actionButtonsStack}>
-        <Pressable style={forexStyles.bookTicketButton} onPress={onBookTicketPress}>
-          <MaterialCommunityIcons name="ticket-confirmation-outline" size={20} color={COLORS.white} />
-          <Text style={forexStyles.bookTicketText}>Book Forex Counter Ticket</Text>
-        </Pressable>
+        
 
-        <Pressable style={forexStyles.alertButton} onPress={onSetAlertPress}>
-          <Ionicons name="notifications-outline" size={18} color={COLORS.navy} />
-          <Text style={forexStyles.alertButtonText}>Set Rate Alert Notification</Text>
-        </Pressable>
+        <Button 
+          title='Book Forex Counter Ticket'
+            onPress={onBookTicketPress}
+              variant='primary'
+            icon={<MaterialCommunityIcons name="ticket-confirmation-outline" size={20} color={COLORS.white} />}
+          style={forexStyles.bookTicketButton}
+        textStyle={forexStyles.bookTicketText}
+        >
+        </Button>
+
+        <Button
+          title='Set Rate Alert Notification'
+            onPress={onSetAlertPress}
+              variant='secondary'
+            icon={<Ionicons name="notifications-outline" size={18} color={COLORS.navy} />}
+          style={forexStyles.alertButton}
+        textStyle={forexStyles.alertButtonText}>
+      
+        </Button>
+
+        
       </View>
     </View>
   );

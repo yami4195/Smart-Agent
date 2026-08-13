@@ -28,26 +28,30 @@ export default function ProfileScreen() {
         ]
           );
             }
-  return (
-    <SafeAreaView style={commonStyles.safeArea}>
-      <Header title="Tera Mobile Banking" />
-        <View style={placeholderStyles.container}>
-          <View style={placeholderStyles.iconCircle}>
-            <Ionicons name="person-outline" size={36} color={COLORS.primary} />
+              return (
+                <View style={commonStyles.safeArea}>
+                  <Header title="Tera Mobile Banking" />
+                    <View style={placeholderStyles.container}>
+                      <View style={placeholderStyles.iconCircle}>
+                        <Ionicons name="person-outline" size={36} color={COLORS.primary} />
+                          </View>
+                            <Text style={placeholderStyles.title}>Profile</Text>
+                              <Text style={placeholderStyles.subtitle}>
+                                    Account details, language preferences 🇪🇹, and settings will be implemented here.
+                                </Text>
+                              <Button 
+                            title='Sign Out'
+                          onPress={handleSignOut}
+                        variant='outline'
+                      icon={<Feather name="log-out" size={18} color={COLORS.danger} />}
+                    style={{ borderColor: COLORS.danger }}
+                  textStyle={{ color: COLORS.danger }}
+                ></Button>
               </View>
-                <Text style={placeholderStyles.title}>Profile</Text>
-                  <Text style={placeholderStyles.subtitle}>
-                        Account details, language preferences 🇪🇹, and settings will be implemented here.
-                    </Text>
-                  <Button 
-                title='Sign Out'
-              onPress={handleSignOut}
-            variant='outline'
-          icon={<Feather name="log-out" size={18} color={COLORS.danger} />}
-        style={{ borderColor: COLORS.danger }}
-      textStyle={{ color: COLORS.danger }}
-    ></Button>
-  </View>
-</SafeAreaView>
-  );
-}
+            </View>
+              );
+            }
+
+            
+
+    

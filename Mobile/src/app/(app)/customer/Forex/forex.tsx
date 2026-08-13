@@ -9,7 +9,6 @@ import { ExchangeRatesTable } from '../../../../components/forex/ExchangeRatesTa
 import { ForexAiBanner } from '../../../../components/forex/ForexAiBanner';
 import { RateAlertModal } from '../../../../components/forex/RateAlertModal';
 import { COLORS } from '../../../../../constants/colors';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ForexPage() {
     const router = useRouter();
@@ -53,7 +52,7 @@ export default function ForexPage() {
                 <ForexAiBanner />
 
                 {/* 4. Full Exchange Rates Directory Table */}
-                <ExchangeRatesTable />
+                <ExchangeRatesTable/>
             </ScrollView>
 
             {/* 5. Rate Alert Modal */}
