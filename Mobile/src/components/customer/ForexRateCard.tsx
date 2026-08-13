@@ -40,13 +40,13 @@ export const ForexRateCard: React.FC<ForexRateCardProps> = ({
       {/* Today's Exchange Rate Preview Bar */}
       <View style={homeStyles.forexRatesRow}>
         <View style={homeStyles.ratePill}>
-          <Text style={homeStyles.rateCurrency}>🇺🇸 USD/ETB</Text>
-          <Text style={homeStyles.rateValue}>{usdBuyRate} / {usdSellRate}</Text>
+          <Text style={homeStyles.rateCurrency} numberOfLines={1}>🇺🇸 USD/ETB</Text>
+          <Text style={homeStyles.rateValue} numberOfLines={1}>{usdBuyRate} / {usdSellRate}</Text>
         </View>
 
         <View style={homeStyles.ratePill}>
-          <Text style={homeStyles.rateCurrency}>🇪🇺 EUR/ETB</Text>
-          <Text style={homeStyles.rateValue}>{eurBuyRate} / {eurSellRate}</Text>
+          <Text style={homeStyles.rateCurrency} numberOfLines={1}>🇪🇺 EUR/ETB</Text>
+          <Text style={homeStyles.rateValue} numberOfLines={1}>{eurBuyRate} / {eurSellRate}</Text>
         </View>
       </View>
     </Pressable>

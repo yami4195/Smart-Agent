@@ -24,19 +24,20 @@ export const Button: React.FC<ButtonProps> = ({
   style,
   textStyle,
 }) => {
-  const isPrimary = variant === 'primary';
-  const isSecondary = variant === 'secondary';
+  
+  const styleMap = {
+    primary: { container: commonStyles.buttonPrimary, text: commonStyles.buttonPrimaryText },
+    secondary: { container: commonStyles.buttonSecondary, text: commonStyles.buttonSecondaryText },
+    outline: { container: commonStyles.buttonOutline, text: commonStyles.buttonOutlineText },
+    text: { container: commonStyles.buttonText, text: commonStyles.buttonTextOnly },
+  };
 
-  const baseStyle = isPrimary ? commonStyles.buttonPrimary : commonStyles.buttonSecondary;
-  const baseTextStyle = isPrimary ? commonStyles.buttonPrimaryText : commonStyles.buttonSecondaryText;
+  const { container: baseStyle, text: baseTextStyle } = styleMap[variant];
+  const isPrimary = variant === 'primary';
 
   return (
     <Pressable
-      style={[
-        baseStyle,
-        disabled && { opacity: 0.6 },
-        style,
-      ]}
+      style={[baseStyle, disabled && { opacity: 0.6 }, style]}
       onPress={onPress}
       disabled={disabled || loading}
     >

@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text, SafeAreaView } from 'react-native';
+import { View, Text } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Header } from '../../../../components/common/Header';
 import { placeholderStyles } from '../../../../../assets/styles/placeholder.styles';
 import { commonStyles } from '../../../../../assets/styles/common.styles';
 import { COLORS } from '../../../../../constants/colors';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function MyQueueScreen() {
   return (

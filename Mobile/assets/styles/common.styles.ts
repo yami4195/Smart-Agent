@@ -67,6 +67,39 @@ export const commonStyles = StyleSheet.create({
     fontWeight: '600',
   },
 
+  // common.styles.ts
+
+buttonOutline: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  paddingVertical: 12,
+  paddingHorizontal: 20,
+  borderRadius: 10,
+  borderWidth: 1.5,
+  borderColor: COLORS.primary,
+  backgroundColor: 'transparent',
+},
+buttonOutlineText: {
+  color: COLORS.primary,
+  fontSize: 15,
+  fontWeight: '600',
+},
+
+buttonText: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  paddingVertical: 12,
+  paddingHorizontal: 12,
+  backgroundColor: 'transparent',
+},
+buttonTextOnly: {
+  color: COLORS.primary,
+  fontSize: 15,
+  fontWeight: '600',
+},
+
   // Input / TextField Primitives
   inputWrapper: {
     marginBottom: 16,

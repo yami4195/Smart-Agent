@@ -23,8 +23,7 @@ export default function CustomerHomeScreen() {
   };
 
   const handleForexPress = () => {
-    // Navigate to Forex details or show exchange calculator
-    console.log('Forex rates pressed');
+    router.push('/customer/Forex/forex');
   };
 
   const handleAiAgentPress = () => {

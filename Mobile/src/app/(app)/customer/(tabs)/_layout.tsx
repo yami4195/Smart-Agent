@@ -9,11 +9,12 @@ export default function CustomerTabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: tabStyles.tabBar, // White background tab bar matching screen
-        tabBarActiveTintColor: COLORS.tabBarActive,
-        tabBarInactiveTintColor: COLORS.tabBarInactive,
+          tabBarStyle: tabStyles.tabBar, // White background tab bar matching screen
+            tabBarActiveTintColor: COLORS.tabBarActive,
+          tabBarInactiveTintColor: COLORS.tabBarInactive,
         tabBarLabelStyle: tabStyles.tabBarLabel,
-      }}
+      }
+    }
     >
       {/* 1. Home Tab */}
       <Tabs.Screen

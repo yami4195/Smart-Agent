@@ -163,7 +163,7 @@ export const homeStyles = StyleSheet.create({
   forexRatesRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
     marginTop: 14,
     paddingTop: 12,
     borderTopWidth: 1,
@@ -172,12 +172,13 @@ export const homeStyles = StyleSheet.create({
   ratePill: {
     flex: 1,
     backgroundColor: COLORS.background,
-    borderRadius: 8,
-    paddingVertical: 6,
+    borderRadius: 10,
+    paddingVertical: 8,
     paddingHorizontal: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    gap: 3,
   },
   rateCurrency: {
     fontSize: 12,
