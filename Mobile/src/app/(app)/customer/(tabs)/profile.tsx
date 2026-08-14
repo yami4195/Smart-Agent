@@ -37,7 +37,7 @@ export default function ProfileScreen() {
                           </View>
                             <Text style={placeholderStyles.title}>Profile</Text>
                               <Text style={placeholderStyles.subtitle}>
-                                    Account details, language preferences 🇪🇹, and settings will be implemented here.
+                                    Account details, language preferences 🇪🇹, and settings will be implemented here soon.
                                 </Text>
                               <Button 
                             title='Sign Out'

@@ -16,7 +16,7 @@ export default function BranchesScreen() {
         </View>
         <Text style={placeholderStyles.title}>Branches</Text>
         <Text style={placeholderStyles.subtitle}>
-          Interactive Wegagen Bank branch map & services lookup will be implemented here.
+          Interactive Wegagen Bank branch map & services lookup will be implemented here soon.
         </Text>
       </View>
     </View>
