@@ -4,6 +4,7 @@ import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-ico
 import { branchesStyles } from '../../../assets/styles/branches.styles';
 import { Badge } from '../common/Badge';
 import { COLORS } from '../../../constants/colors';
+import { Button } from '../common/Button';
 
 export interface BranchData {
   id: string;
@@ -98,18 +99,25 @@ export const BranchCard: React.FC<BranchCardProps> = ({
 
       {/* Action Buttons Stack */}
       <View style={branchesStyles.cardActionsRow}>
-        <Pressable style={branchesStyles.joinQueueButton} onPress={() => onJoinQueue(branch)}>
-          <MaterialCommunityIcons name="ticket-confirmation-outline" size={18} color={COLORS.white} />
-          <Text style={branchesStyles.joinQueueText}>Join Queue</Text>
-        </Pressable>
+        
+        <Button
+          title="Join Queue"
+          onPress={()=>onJoinQueue(branch)}
+          variant="primary"
+          icon={<MaterialCommunityIcons name="ticket-confirmation-outline" size={18} color={COLORS.white} />}
+          style={branchesStyles.joinQueueButton}
+          textStyle={branchesStyles.joinQueueText}
+        ></Button>
 
-        <Pressable
+        <Button
+          title="Directions"
+          onPress={()=>onGetDirections && onGetDirections(branch)}
+          variant="secondary"
+          icon={<FontAwesome5 name="directions" size={14} color={COLORS.navy} />}
           style={branchesStyles.directionsButton}
-          onPress={() => onGetDirections && onGetDirections(branch)}
-        >
-          <FontAwesome5 name="directions" size={14} color={COLORS.navy} />
-          <Text style={branchesStyles.directionsText}>Directions</Text>
-        </Pressable>
+          textStyle={branchesStyles.directionsText}
+        ></Button>
+      
       </View>
     </View>
   );

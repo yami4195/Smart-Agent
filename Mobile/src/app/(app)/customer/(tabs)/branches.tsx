@@ -120,7 +120,7 @@ export default function BranchesScreen() {
         {viewMode === 'MAP' ? (
           <BranchMapPreview
             branches={filteredBranches}
-            onSelectBranchPin={(b) => handleJoinQueue(b)}
+            onSelectBranchPin={(branch) => handleJoinQueue(branch)}
           />
         ) : null}
 

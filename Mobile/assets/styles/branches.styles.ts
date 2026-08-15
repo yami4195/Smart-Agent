@@ -310,7 +310,7 @@ export const branchesStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    gap: 6,
+    gap: 30,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
