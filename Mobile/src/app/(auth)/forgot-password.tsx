@@ -42,7 +42,7 @@ export default function ForgotPasswordScreen() {
 
       if (createError) {
         if (createError.code === 'form_identifier_not_found') {
-           setErrorMsg('No account found with that email address.');
+          setErrorMsg('No account found with that email address.');
         }else{
         setErrorMsg(createError.message || 'Could not find the account.');
       }
@@ -132,7 +132,7 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-     <KeyboardAvoidingView
+      <KeyboardAvoidingView
               behavior={Platform.OS ==="ios" ? "padding" : "height"}
               keyboardVerticalOffset={Platform.OS ==="ios" ? 64:0}
               style={authStyles.keyboardView}
