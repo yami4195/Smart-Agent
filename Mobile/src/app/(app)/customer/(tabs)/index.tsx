@@ -10,30 +10,37 @@ import { Button } from '../../../../components/common/Button';
 import { homeStyles } from '../../../../../assets/styles/home.styles';
 import { commonStyles } from '../../../../../assets/styles/common.styles';
 import { COLORS } from '../../../../../constants/colors';
-import { useAuth } from "@clerk/expo";
+import { useAuth, useUser } from "@clerk/expo";
 
 export default function CustomerHomeScreen() {
     const { getToken } = useAuth();
-    const testBackend = async () => {
+    const { user } = useUser();
+   const syncUser = async () => {
   try {
     const token = await getToken();
 
     const response = await fetch(
-      "http://192.168.137.236:5000/api/users/me",
+      "http://10.230.5.136:5000/api/users/sync",
       {
-        method: "GET",
+        method: "POST",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({
+          fullName: user?.fullName,
+          email: user?.primaryEmailAddress?.emailAddress,
+          phone: user?.primaryPhoneNumber?.phoneNumber,
+        }),
       }
     );
 
     const data = await response.json();
 
     console.log("STATUS:", response.status);
-    console.log("BACKEND:", data);
+    console.log("SYNC RESULT:", data);
   } catch (error) {
-    console.error("Backend error:", error);
+    console.error("Sync error:", error);
   }
 };
 
@@ -125,7 +132,7 @@ export default function CustomerHomeScreen() {
         <View>
       <Button
   title="Test Backend"
-  onPress={testBackend}
+  onPress={syncUser}
 
       /></View>
         <NearestBranchCard
