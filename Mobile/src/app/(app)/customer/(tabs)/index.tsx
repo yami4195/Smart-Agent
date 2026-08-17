@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, ScrollView,  } from 'react-native';
 import { useRouter } from 'expo-router';
-import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Header } from '../../../../components/common/Header';
 import { QuickActionCard } from '../../../../components/customer/QuickActionCard';
 import { ForexRateCard } from '../../../../components/customer/ForexRateCard';
@@ -10,7 +10,33 @@ import { Button } from '../../../../components/common/Button';
 import { homeStyles } from '../../../../../assets/styles/home.styles';
 import { commonStyles } from '../../../../../assets/styles/common.styles';
 import { COLORS } from '../../../../../constants/colors';
+import { useAuth } from "@clerk/expo";
+
 export default function CustomerHomeScreen() {
+    const { getToken } = useAuth();
+    const testBackend = async () => {
+  try {
+    const token = await getToken();
+
+    const response = await fetch(
+      "http://192.168.137.236:5000/api/users/me",
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    console.log("STATUS:", response.status);
+    console.log("BACKEND:", data);
+  } catch (error) {
+    console.error("Backend error:", error);
+  }
+};
+
   const router = useRouter();
 
   const handleFindNearbyBranches = () => {
@@ -50,6 +76,8 @@ export default function CustomerHomeScreen() {
             Your digital gateway to Wegagen Bank services.
           </Text>
         </View>
+        {/**temporary test button */}
+        
 
         {/* Main CTA Button: Find Nearby Branches */}
         <Button
@@ -94,6 +122,12 @@ export default function CustomerHomeScreen() {
         </View>
 
         {/* Nearest Branch Overview Card */}
+        <View>
+      <Button
+  title="Test Backend"
+  onPress={testBackend}
+
+      /></View>
         <NearestBranchCard
           branchName="Wegagen - Bole Branch"
           status="Open"
