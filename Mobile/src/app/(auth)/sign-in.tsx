@@ -45,7 +45,7 @@ const handleSignIn = async () => {
     });
 
     // Invalid credentials
-   if (error) {
+    if (error) {
   console.log('Sign-in error:', JSON.stringify(error, null, 2));
 
   setErrorMsg('Incorrect email or password. Please try again.');
@@ -85,6 +85,7 @@ const handleSignIn = async () => {
         <TextInput
           style={authStyles.input}
           autoCapitalize="none"
+          autoComplete='email'
           keyboardType="email-address"
           placeholder="Enter email"
           placeholderTextColor="#999"
