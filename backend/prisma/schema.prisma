@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -17,14 +15,22 @@ enum UserRole {
   admin
 }
 
+enum TicketStatus {
+  WAITING
+  SERVING
+  COMPLETED
+  CANCELLED
+}
+
 model User {
   id String @id @default(uuid())
 
   clerkUserId String @unique
 
-  fullName String?
-  email    String?
-  phone    String?
+  firstName String?
+  lastName  String?
+  email     String?
+  phone     String?
 
   role UserRole @default(customer)
 
@@ -32,4 +38,96 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  tickets       QueueTicket[]
+  forexAlerts   ForexAlert[]
+  notifications Notification[]
+}
+
+model Service {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+
+  branches Branch[]
+  tickets  QueueTicket[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Branch {
+  id           String   @id @default(uuid())
+  name         String
+  address      String
+  latitude     Float
+  longitude    Float
+  openingHours String   @default("8:00 AM - 5:00 PM")
+  isOpen       Boolean  @default(true)
+  phone        String?
+
+  services Service[]
+  tickets  QueueTicket[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model QueueTicket {
+  id                String       @id @default(uuid())
+  ticketNumber      String       // e.g. "A024"
+  status            TicketStatus @default(WAITING)
+  estimatedWaitMins Int          @default(10)
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  branchId  String
+  branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  serviceId String
+  service   Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ForexRate {
+  id           String   @id @default(uuid())
+  currencyCode String   @unique // e.g. "USD", "EUR"
+  currencyName String   // e.g. "US Dollar"
+  flagEmoji    String   // e.g. "🇺🇸"
+  cashBuy      Decimal  @db.Decimal(10, 4)
+  cashSell     Decimal  @db.Decimal(10, 4)
+  ttBuy        Decimal  @db.Decimal(10, 4)
+  ttSell       Decimal  @db.Decimal(10, 4)
+  change24h    String   // e.g. "+0.35%"
+  isPositive   Boolean  @default(true)
+  isMajor      Boolean  @default(false)
+
+  updatedAt DateTime @updatedAt
+}
+
+model ForexAlert {
+  id           String   @id @default(uuid())
+  currencyCode String   // e.g. "USD"
+  targetRate   Decimal  @db.Decimal(10, 4)
+  isActive     Boolean  @default(true)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
 }

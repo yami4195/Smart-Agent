@@ -13,36 +13,7 @@ import { COLORS } from '../../../../../constants/colors';
 import { useAuth, useUser } from "@clerk/expo";
 
 export default function CustomerHomeScreen() {
-    const { getToken } = useAuth();
-    const { user } = useUser();
-   const syncUser = async () => {
-  try {
-    const token = await getToken();
-
-    const response = await fetch(
-      "http://10.230.5.136:5000/api/users/sync",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          fullName: user?.fullName,
-          email: user?.primaryEmailAddress?.emailAddress,
-          phone: user?.primaryPhoneNumber?.phoneNumber,
-        }),
-      }
-    );
-
-    const data = await response.json();
-
-    console.log("STATUS:", response.status);
-    console.log("SYNC RESULT:", data);
-  } catch (error) {
-    console.error("Sync error:", error);
-  }
-};
+    
 
   const router = useRouter();
 
@@ -129,12 +100,7 @@ export default function CustomerHomeScreen() {
         </View>
 
         {/* Nearest Branch Overview Card */}
-        <View>
-      <Button
-  title="Test Backend"
-  onPress={syncUser}
-
-      /></View>
+        
         <NearestBranchCard
           branchName="Wegagen - Bole Branch"
           status="Open"

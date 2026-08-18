@@ -2,7 +2,8 @@ import prisma from "../config/prisma";
 
 interface CreateUserData {
     clerkUserId: string;
-    fullName?: string;
+    firstName?: string;
+    lastName?: string;
     email?: string;
     phone?: string;
 }
@@ -19,7 +20,8 @@ export const createUser = async (data: CreateUserData) => {
     return prisma.user.create({
     data: {
         clerkUserId: data.clerkUserId,
-        fullName: data.fullName,
+        firstName: data.firstName,
+        lastName: data.lastName,
         email: data.email,
         phone: data.phone,
     },

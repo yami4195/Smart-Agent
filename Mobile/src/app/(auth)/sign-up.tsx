@@ -20,19 +20,34 @@ export default function SignUpScreen() {
   const { signUp } = useSignUp();
   const router = useRouter();
 
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [showPassword, SetshowPassword] = useState(false);
 
   const handleSignUp = async () => {
     if (!emailAddress) {
-      setErrorMsg('Email address required');
+      setErrorMsg('Email address is required');
       return;
     }
     if (!password) {
-      setErrorMsg('Password required');
+      setErrorMsg('Password is required');
+      return;
+    }
+    if (!firstName) {
+      setErrorMsg('First Name is required');
+      return;
+    }
+    if (!lastName) {
+      setErrorMsg('Last Name is required');
+      return;
+    }
+    if (!phone) {
+      setErrorMsg('phone number is required');
       return;
     }
     if (password.length < 8) {
@@ -47,6 +62,11 @@ export default function SignUpScreen() {
       const { error } = await signUp.password({
         emailAddress: emailAddress.trim(),
         password,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        unsafeMetadata: {
+          phone: `+251${phone}`,
+        },
       });
 
       if (error) {
@@ -78,10 +98,50 @@ export default function SignUpScreen() {
       keyboardVerticalOffset={Platform.OS ==="ios" ? 64 :0}
       style={authStyles.keyboardView}
       >
-    <View style={authStyles.container}>
+        <ScrollView
+        contentContainerStyle={[
+      authStyles.container,
+      { flexGrow: 1, paddingBottom: 40 },
+    ]}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+        >
+    
       <Text style={authStyles.title}>Sign Up</Text>
 
       {errorMsg ? <Text style={authStyles.errorText}>{errorMsg}</Text> : null}
+
+      <View style={authStyles.inputContainer}>
+        <Text style={authStyles.label}>FirstName</Text>
+        <TextInput
+          style={authStyles.input}
+          autoCapitalize="words"
+          keyboardType='default'
+          returnKeyType="next"
+          textContentType="givenName"
+          autoComplete="name-given"
+          placeholder="Enter first name"
+          placeholderTextColor="#999"
+          value={firstName}
+          onChangeText={setFirstName}
+        />
+      </View>
+
+      <View style={authStyles.inputContainer}>
+        <Text style={authStyles.label}>LastName</Text>
+        <TextInput
+          style={authStyles.input}
+          autoCapitalize="words"
+          keyboardType='default'
+          returnKeyType="next"
+          textContentType="familyName"
+          autoComplete="name-family"
+          placeholder="Enter last name"
+          placeholderTextColor="#999"
+          value={lastName}
+          onChangeText={setLastName}
+        />
+      </View>
 
       <View style={authStyles.inputContainer}>
         <Text style={authStyles.label}>Email</Text>
@@ -89,6 +149,7 @@ export default function SignUpScreen() {
           style={authStyles.input}
           autoCapitalize="none"
           keyboardType="email-address"
+          autoComplete="email"
           placeholder="Enter email"
           placeholderTextColor="#999"
           value={emailAddress}
@@ -119,6 +180,23 @@ export default function SignUpScreen() {
         </Pressable>
       </View>
 
+      <View style={authStyles.inputContainer}>
+        <Text style={authStyles.label}>Phone</Text>
+        <TextInput
+          style={authStyles.input}
+          autoCapitalize="none"
+          keyboardType="phone-pad"
+          autoComplete="tel"
+          returnKeyType="next"
+          maxLength={13}
+          textContentType="telephoneNumber"
+          placeholder="+251xxxxx"
+          placeholderTextColor="#999"
+          value={phone}
+          onChangeText={setPhone}
+        />
+      </View>
+
       <Pressable
         style={[authStyles.button, loading && authStyles.buttonDisabled]}
         onPress={handleSignUp}
@@ -141,8 +219,7 @@ export default function SignUpScreen() {
           </Pressable>
         </Link>
       </View>
-      </View>
+      </ScrollView>
       </KeyboardAvoidingView>
-   
   );
 }

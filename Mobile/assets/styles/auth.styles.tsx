@@ -1,7 +1,6 @@
 import { StyleSheet } from "react-native";
 export const authStyles = StyleSheet.create({
   container: {
-    flex: 1,
     padding: 24,
     justifyContent: 'center',
     backgroundColor: '#ffffff',

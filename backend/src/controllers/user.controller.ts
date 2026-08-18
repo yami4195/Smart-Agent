@@ -15,7 +15,7 @@ import {
         });
         }
 
-        const { fullName, email, phone } = req.body;
+        const { firstName, lastName, email, phone } = req.body;
 
         const existingUser = await findUserByClerkId(clerkUserId);
 
@@ -28,7 +28,8 @@ import {
 
         const user = await createUser({
         clerkUserId,
-        fullName,
+        firstName,
+        lastName,
         email,
         phone,
         });
