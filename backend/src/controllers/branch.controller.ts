@@ -11,14 +11,15 @@ import {
  */
 export const getBranches = async (req: Request, res: Response) => {
     try {
-    const { search, filter, lat, lng } = req.query;
-
+    const { search, openNow, forexOnly, lowQueueOnly, lat, lng } = req.query;
     const parsedLat = lat ? parseFloat(lat as string) : undefined;
     const parsedLng = lng ? parseFloat(lng as string) : undefined;
 
     const branches = await getBranchesService({
         search: typeof search === "string" ? search : undefined,
-        filter: typeof filter === "string" ? (filter as any) : undefined,
+        openNow: openNow === "true",
+        forexOnly: forexOnly === "true",
+        lowQueueOnly: lowQueueOnly === "true",
         lat: parsedLat && !isNaN(parsedLat) ? parsedLat : undefined,
         lng: parsedLng && !isNaN(parsedLng) ? parsedLng : undefined,
     });

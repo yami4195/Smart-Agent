@@ -10,7 +10,7 @@ import { requireUser } from "../middlewares/auth.middlware";
 const router = Router();
 
 router.get("/",requireUser, getBranches);
-router.get("/nearest", getNearestBranch);
-router.get("/:id", getBranchById);
+router.get("/nearest",requireUser, getNearestBranch);
+router.get("/:id",requireUser, getBranchById);
 
 export default router;

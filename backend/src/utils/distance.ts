@@ -39,7 +39,7 @@ export function calculateDistanceKm(
 export function formatDistance(km: number): string {
     if (km < 1) {
         const meters = Math.round(km * 1000);
-        return meters < 100 ? `${km.toFixed(1)} km away` : `${km.toFixed(1)} km away`;
+        return `${meters} m away`;
     }
     return `${km.toFixed(1)} km away`;
-}
+    }

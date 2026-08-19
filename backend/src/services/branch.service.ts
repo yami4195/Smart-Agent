@@ -3,7 +3,9 @@ import { calculateDistanceKm, formatDistance } from "../utils/distance";
 
 export interface GetBranchesQuery {
     search?: string;
-    filter?: "ALL" | "OPEN" | "FOREX" | "LOW_QUEUE" | string;
+    openNow?: boolean;
+    forexOnly?: boolean;
+    lowQueueOnly?: boolean;
     lat?: number;
     lng?: number;
 }
@@ -74,7 +76,7 @@ function formatBranchRecord(
     services: (branch.services || []).map((s: { name: string }) => s.name),
     distance,
     distanceKm,
-  };
+    };
 }
 
 /**
@@ -83,7 +85,7 @@ function formatBranchRecord(
 export const getBranchesService = async (
     query: GetBranchesQuery
     ): Promise<FormattedBranch[]> => {
-    const { search, filter, lat, lng } = query;
+    const { search,  openNow, forexOnly, lowQueueOnly, lat, lng } = query;
 
     // Build Prisma where clause
     const whereClause: any = {};
@@ -95,13 +97,13 @@ export const getBranchesService = async (
         ];
     }
 
-    if (filter === "OPEN") {
+    if (openNow) {
         whereClause.isOpen = true;
-    } else if (filter === "FOREX") {
+    }
+
+    if (forexOnly) {
         whereClause.services = {
-        some: {
-            name: { contains: "Forex", mode: "insensitive" },
-        },
+        some: { name: { contains: "Forex", mode: "insensitive" }},
         };
     }
 
@@ -132,9 +134,9 @@ export const getBranchesService = async (
     // Map and calculate distances
     let formatted = branches.map((b) => formatBranchRecord(b, lat, lng));
 
-    // Apply LOW_QUEUE filter in memory based on computed waiting count
-    if (filter === "LOW_QUEUE") {
-    formatted = formatted.filter((b) => b.waitingCount < 10);
+    // low-queue needs the computed waitingCount, so it's applied after fetch
+    if (lowQueueOnly) {
+        formatted = formatted.filter((b) => b.waitingCount < 10);
     }
 
     // If user coordinates provided, sort branches by proximity (closest first)
@@ -154,7 +156,7 @@ export const getNearestBranchService = async (
 ): Promise<FormattedBranch | null> => {
     const branches = await prisma.branch.findMany({
         where: {
-        isOpen: true, // Prioritize open branches
+        isOpen: true, // just Prioritize open branches
         },
         include: {
         services: {
