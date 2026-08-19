@@ -8,13 +8,7 @@ import {
 
     export const syncUser = async (req: Request, res: Response) => {
     try {
-        const { userId: clerkUserId } = getAuth(req);
-
-        if (!clerkUserId) {
-        return res.status(401).json({
-            message: "Unauthorized - Clerk User ID not found",
-        });
-        }
+        const clerkUserId = req.clerkUserId!; //middleware already authenticates
 
         const { firstName, lastName, email, phone } = req.body;
 
@@ -40,13 +34,7 @@ import {
 
     export const getMe = async (req: Request, res: Response) => {
     try {
-        const { userId: clerkUserId } = getAuth(req);
-
-        if (!clerkUserId) {
-        return res.status(401).json({
-            message: "Unauthorized",
-        });
-        }
+       const clerkUserId = req.clerkUserId!; //middleware already authenticates
 
         const user = await findUserByClerkId(clerkUserId);
 
@@ -69,13 +57,7 @@ import {
 
     export const updateMe = async (req: Request, res: Response) => {
     try {
-        const { userId: clerkUserId } = getAuth(req);
-
-        if (!clerkUserId) {
-        return res.status(401).json({
-            message: "Unauthorized",
-        });
-        }
+        const clerkUserId = req.clerkUserId!; //middleware already authenticates
 
         const { firstName, lastName, phone } = req.body;
 

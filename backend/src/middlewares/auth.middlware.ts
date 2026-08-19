@@ -9,6 +9,7 @@ export const requireUser = (req: Request, res: Response, next: NextFunction) => 
         message: "Unauthorized - User is not authenticated",
         });
     }
+    req.clerkUserId = userId;
 
     next();
 };
