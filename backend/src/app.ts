@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import { clerkMiddleware } from "@clerk/express";
 import UserRoutes from './routes/user.routes';
+import BranchRoutes from './routes/branch.routes';
 
 
 const app = express();
@@ -29,5 +30,6 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/users", UserRoutes);
+app.use("/api/branches", BranchRoutes);
 
 export default app;
