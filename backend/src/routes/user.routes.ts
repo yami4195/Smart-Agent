@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { syncUser, getMe, updateMe } from "../controllers/user.controller";
+import { 
+    syncUser, 
+    getMe, 
+    updateMe 
+} from "../controllers/user.controller";
 import { requireUser } from "../middlewares/auth.middlware";
 
 const router = Router();

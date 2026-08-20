@@ -13,8 +13,11 @@ for (const name of Object.keys(interfaces)) {
     }
 }
 
-const envContent = `EXPO_PUBLIC_API_URL=http://${localIp}:5000/api\n`;
-fs.writeFileSync('.env', envContent);
-console.log(`Set API URL to: http://${localIp}:5000/api`);
+const clerkKey = 'pk_test_dG9wLXJhcHRvci0zMC5jbGVyay5hY2NvdW50cy5kZXYk';
 
-//this is temporary file , created for setting the ip during run time instead of manually inserting pc's ip!!
+const envContent = `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=${clerkKey}
+EXPO_PUBLIC_API_URL=http://${localIp}:5000/api
+`;
+
+fs.writeFileSync('.env', envContent);
+console.log(`✅ Updated .env -> API: http://${localIp}:5000/api & Clerk Key preserved.`);

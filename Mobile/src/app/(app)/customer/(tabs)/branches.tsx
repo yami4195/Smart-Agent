@@ -9,7 +9,6 @@ import { BranchMapPreview } from '../../../../components/branch/BranchMapPreview
 import { branchesStyles } from '../../../../../assets/styles/branches.styles';
 import { commonStyles } from '../../../../../assets/styles/common.styles';
 import { COLORS } from '../../../../../constants/colors';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import {SAMPLE_WEGAGEN_BRANCHES} from '../../../../../src/data/Branch_Mock_Data';
 
 
@@ -48,7 +47,7 @@ export default function BranchesScreen() {
   };
 
   return (
-    <SafeAreaView style={commonStyles.safeArea}>
+    <View style={commonStyles.safeArea}>
       {/* Top Header */}
       <Header title="Tera Mobile Banking" />
 
@@ -134,6 +133,6 @@ export default function BranchesScreen() {
           />
         ))}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

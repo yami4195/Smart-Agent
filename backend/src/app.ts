@@ -5,6 +5,10 @@ import morgan from 'morgan';
 import { clerkMiddleware } from "@clerk/express";
 import UserRoutes from './routes/user.routes';
 import BranchRoutes from './routes/branch.routes';
+import ForexRoutes from './routes/forex.routes';
+import QueueRoutes from './routes/queue.routes';
+import NotificationRoutes from './routes/notification.routes';
+import ServiceRoutes from './routes/service.routes' ;
 
 
 const app = express();
@@ -31,5 +35,9 @@ app.get("/api/health", (_req, res) => {
 
 app.use("/api/users", UserRoutes);
 app.use("/api/branches", BranchRoutes);
+app.use("/api/forex", ForexRoutes);
+app.use("/api/queues", QueueRoutes);
+app.use("/api/notifications", NotificationRoutes);
+app.use("/api/services", ServiceRoutes);
 
 export default app;

@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useAuth, useUser } from '@clerk/expo';
 import { Platform } from 'react-native';
 
-const DEFAULT_API_URL = Platform.OS === 'android' ? 'http://192.168.137.120/api' : 'http://localhost:5000/api';
+const DEFAULT_API_URL = Platform.OS === 'android' ? 'http://10.0.2.2:5000/api' : 'http://localhost:5000/api';
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || DEFAULT_API_URL;
 
 export function useSyncUser() {
@@ -20,6 +20,11 @@ export function useSyncUser() {
       try {
         const token = await getToken();
         if (!token) return;
+
+        //Log token for testing in Bruno / Postman
+        console.log('\n================ CLERK TOKEN ================');
+        console.log(`Bearer ${token}`);
+        console.log('========================================================\n');
 
         const response = await fetch(`${API_BASE_URL}/users/sync`, {
           method: 'POST',
