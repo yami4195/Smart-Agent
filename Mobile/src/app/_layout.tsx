@@ -5,6 +5,8 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { tokenCache } from '../cache';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {COLORS} from '../../constants/colors';
+import { authStyles } from '../../assets/styles/auth.styles';
+import { registerTokenGetter } from '../api/axiosInstance';
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim() || '';
 
@@ -13,9 +15,13 @@ if (!publishableKey) {
 }
 
 function InitialLayout() {
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn, getToken } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+
+  useEffect(() => {
+    registerTokenGetter(getToken);
+  }, [getToken]);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -31,7 +37,7 @@ function InitialLayout() {
 
   if (!isLoaded) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={authStyles.loadingContainer}>
         <ActivityIndicator size="large" color="#2563eb" />
       </View>
     );
@@ -51,11 +57,3 @@ export default function RootLayout() {
   );
 }
 
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-  },
-});

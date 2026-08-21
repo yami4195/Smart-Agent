@@ -104,4 +104,10 @@ resendButtonText: {
   color: '#2563EB', // Primary blue link color
   textDecorationLine: 'underline',
 },
+loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+  },
 });

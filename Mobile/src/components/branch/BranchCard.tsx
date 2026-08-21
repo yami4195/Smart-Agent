@@ -10,9 +10,13 @@ export interface BranchData {
   id: string;
   name: string;
   address: string;
-  distance: string;
+  distance?: string;
+  distanceKm?: number;
+  latitude?: number;
+  longitude?: number;
   isOpen: boolean;
   hours: string;
+  phone?: string | null;
   waitingCount: number;
   estimatedWaitMins: number;
   services: string[];
@@ -35,7 +39,9 @@ export const BranchCard: React.FC<BranchCardProps> = ({
       <View style={branchesStyles.branchHeaderRow}>
         <Text style={branchesStyles.branchTitle}>{branch.name}</Text>
         <View style={branchesStyles.badgeRow}>
-          <Text style={branchesStyles.distanceTag}>{branch.distance}</Text>
+          {branch.distance ? (
+            <Text style={branchesStyles.distanceTag}>{branch.distance}</Text>
+          ) : null}
           <Badge
             label={branch.isOpen ? 'Open Now' : 'Closed'}
             variant={branch.isOpen ? 'open' : 'danger'}
