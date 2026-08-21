@@ -6,7 +6,7 @@ import { COLORS } from '../../../constants/colors';
 interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'outline' | 'text';
+  variant?: 'primary' | 'navy' | 'secondary' | 'outline' | 'outlineNavy' | 'text';
   icon?: React.ReactNode;
   loading?: boolean;
   disabled?: boolean;
@@ -27,13 +27,15 @@ export const Button: React.FC<ButtonProps> = ({
   
   const styleMap = {
     primary: { container: commonStyles.buttonPrimary, text: commonStyles.buttonPrimaryText },
+    navy: { container: commonStyles.buttonNavy, text: commonStyles.buttonNavyText },
     secondary: { container: commonStyles.buttonSecondary, text: commonStyles.buttonSecondaryText },
     outline: { container: commonStyles.buttonOutline, text: commonStyles.buttonOutlineText },
+    outlineNavy: { container: commonStyles.buttonOutlineNavy, text: commonStyles.buttonOutlineNavyText },
     text: { container: commonStyles.buttonText, text: commonStyles.buttonTextOnly },
   };
 
   const { container: baseStyle, text: baseTextStyle } = styleMap[variant];
-  const isPrimary = variant === 'primary';
+  const isLightText = variant === 'primary' || variant === 'navy';
 
   return (
     <Pressable
@@ -42,7 +44,7 @@ export const Button: React.FC<ButtonProps> = ({
       disabled={disabled || loading}
     >
       {loading ? (
-        <ActivityIndicator color={isPrimary ? COLORS.white : COLORS.primary} size="small" />
+        <ActivityIndicator color={isLightText ? COLORS.white : COLORS.primary} size="small" />
       ) : (
         <>
           {icon}

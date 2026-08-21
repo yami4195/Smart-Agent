@@ -98,7 +98,7 @@ export default function BranchesScreen() {
   };
 
   return (
-    <ScrollView style={commonStyles.safeArea}>
+    <View style={commonStyles.safeArea}>
       {/* Top Header */}
       <Header title="Tera Mobile Banking" />
 
@@ -255,6 +255,6 @@ export default function BranchesScreen() {
           </>
         )}
       </ScrollView>
-    </ScrollView>
+    </View>
   );
 }

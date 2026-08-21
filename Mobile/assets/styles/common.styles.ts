@@ -53,6 +53,21 @@ export const commonStyles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
+  buttonNavy: {
+    backgroundColor: COLORS.navy,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  buttonNavyText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: '700',
+  },
   buttonSecondary: {
     backgroundColor: COLORS.primaryLight,
     borderRadius: 10,
@@ -66,39 +81,53 @@ export const commonStyles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-
-  // common.styles.ts
-
-buttonOutline: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'center',
-  paddingVertical: 12,
-  paddingHorizontal: 20,
-  borderRadius: 10,
-  borderWidth: 1.5,
-  borderColor: COLORS.primary,
-  backgroundColor: 'transparent',
-},
-buttonOutlineText: {
-  color: COLORS.primary,
-  fontSize: 15,
-  fontWeight: '600',
-},
-
-buttonText: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'center',
-  paddingVertical: 12,
-  paddingHorizontal: 12,
-  backgroundColor: 'transparent',
-},
-buttonTextOnly: {
-  color: COLORS.primary,
-  fontSize: 15,
-  fontWeight: '600',
-},
+  buttonOutline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: COLORS.primary,
+    backgroundColor: 'transparent',
+    gap: 8,
+  },
+  buttonOutlineText: {
+    color: COLORS.primary,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  buttonOutlineNavy: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.white,
+    gap: 8,
+  },
+  buttonOutlineNavyText: {
+    color: COLORS.navy,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  buttonText: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    backgroundColor: 'transparent',
+  },
+  buttonTextOnly: {
+    color: COLORS.primary,
+    fontSize: 15,
+    fontWeight: '600',
+  },
 
   // Input / TextField Primitives
   inputWrapper: {
