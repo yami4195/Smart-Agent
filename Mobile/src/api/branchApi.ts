@@ -20,20 +20,27 @@ forexOnly?: boolean;
 lowQueueOnly?: boolean;
 lat?: number;
 lng?: number;
+page?: number;
+limit?: number;
 }
 
-interface BranchResponse {
+export interface BranchResponse {
 success: boolean;
 count: number;
+total: number;
+page: number;
+limit: number;
+totalPages: number;
+hasMore: boolean;
 branches: Branch[];
 }
 
 // 2. Export API call functions
 export const branchApi = {
     // GET: Fetch list of branches with optional query params
-    getBranches: async (params?: BranchQueryParams): Promise<Branch[]> => {
+    getBranches: async (params?: BranchQueryParams): Promise<BranchResponse> => {
         const response = await api.get<BranchResponse>('/branches', { params });
-        return response.data.branches;
+        return response.data;
     },
     // GET: Fetch nearest branch
     getNearestBranch: async (lat: number, lng: number): Promise<Branch> => {

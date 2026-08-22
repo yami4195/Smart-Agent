@@ -8,11 +8,18 @@ export interface BranchQueryParams {
   lowQueueOnly?: boolean;
   lat?: number;
   lng?: number;
+  page?: number;
+  limit?: number;
 }
 
 export interface GetBranchesResponse {
   success: boolean;
   count: number;
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasMore: boolean;
   branches: BranchData[];
 }
 
@@ -23,11 +30,11 @@ export interface GetBranchResponse {
 
 export const branchApi = {
   /**
-   * Fetch all branches with optional search, filter, and geo parameters
+   * Fetch branches with pagination, optional search, filter, and geo parameters
    */
-  getBranches: async (params?: BranchQueryParams): Promise<BranchData[]> => {
+  getBranches: async (params?: BranchQueryParams): Promise<GetBranchesResponse> => {
     const response = await api.get<GetBranchesResponse>('/branches', { params });
-    return response.data.branches;
+    return response.data;
   },
 
   /**

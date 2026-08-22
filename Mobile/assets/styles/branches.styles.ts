@@ -367,4 +367,44 @@ export const branchesStyles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
   },
+
+  // Pagination / Load More
+  loadMoreContainer: {
+    marginTop: 8,
+    marginBottom: 24,
+    alignItems: 'center',
+  },
+  loadMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.white,
+    paddingVertical: 13,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: COLORS.primary,
+    gap: 8,
+    width: '100%',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  loadMoreText: {
+    color: COLORS.primary,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  endOfListContainer: {
+    paddingVertical: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  endOfListText: {
+    fontSize: 12,
+    color: COLORS.textMuted,
+    fontWeight: '600',
+  },
 });

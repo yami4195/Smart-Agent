@@ -1,4 +1,3 @@
-import React from 'react';
 import { View, Text, TextInput, ScrollView, Pressable } from 'react-native';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { branchesStyles } from '../../../assets/styles/branches.styles';

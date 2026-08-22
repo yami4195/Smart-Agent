@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -21,73 +21,109 @@ import { commonStyles } from '../../../../../assets/styles/common.styles';
 import { COLORS } from '../../../../../constants/colors';
 import { branchApi } from '../../../../api/branch.api';
 
+const PAGE_SIZE = 10;
+
 export default function BranchesScreen() {
   const router = useRouter();
   const [viewMode, setViewMode] = useState<'LIST' | 'MAP'>('LIST');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterCategory>('ALL');
 
-  // API State variables
+  // API & Pagination State variables
   const [branches, setBranches] = useState<BranchData[]>([]);
+  const [page, setPage] = useState<number>(1);
+  const [totalBranches, setTotalBranches] = useState<number>(0);
+  const [hasMore, setHasMore] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+  const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch branches from backend API
-  const fetchBranches = useCallback(async (isRefresh = false) => {
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
-      setError(null);
+  // Keep a ref to debounce timer for search queries
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-      const data = await branchApi.getBranches();
-      setBranches(data);
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        const msg =
-          err.response?.data?.message ||
-          err.message ||
-          'Failed to connect to the server. Please check your connection.';
-        setError(msg);
-      } else {
-        setError('An unexpected error occurred while loading branches.');
-      }
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
+  // Fetch branches with pagination
+  const fetchBranches = useCallback(
+    async (
+      targetPage: number = 1,
+      options: { isRefresh?: boolean; isLoadMore?: boolean; search?: string; filter?: FilterCategory } = {}
+    ) => {
+      const { isRefresh = false, isLoadMore = false, search = searchQuery, filter = activeFilter } = options;
 
-  // Initial load
+      try {
+        if (isRefresh) {
+          setRefreshing(true);
+        } else if (isLoadMore) {
+          setLoadingMore(true);
+        } else {
+          setLoading(true);
+        }
+        setError(null);
+
+        const response = await branchApi.getBranches({
+          page: targetPage,
+          limit: PAGE_SIZE,
+          search: search.trim().length > 0 ? search.trim() : undefined,
+          openNow: filter === 'OPEN' ? true : undefined,
+          forexOnly: filter === 'FOREX' ? true : undefined,
+          lowQueueOnly: filter === 'LOW_QUEUE' ? true : undefined,
+        });
+
+        if (isLoadMore) {
+          setBranches((prev) => [...prev, ...response.branches]);
+        } else {
+          setBranches(response.branches);
+        }
+
+        setPage(response.page);
+        setTotalBranches(response.total);
+        setHasMore(response.hasMore);
+      } catch (err) {
+        if (axios.isAxiosError(err)) {
+          const msg =
+            err.response?.data?.message ||
+            err.message ||
+            'Failed to connect to the server. Please check your connection.';
+          setError(msg);
+        } else {
+          setError('An unexpected error occurred while loading branches.');
+        }
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+        setRefreshing(false);
+      }
+    },
+    [searchQuery, activeFilter]
+  );
+
+  // Trigger search/filter with debounce
   useEffect(() => {
-    fetchBranches();
-  }, [fetchBranches]);
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      fetchBranches(1, { search: searchQuery, filter: activeFilter });
+    }, 350);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [searchQuery, activeFilter]);
 
   // Pull-to-refresh handler
   const handleRefresh = () => {
-    fetchBranches(true);
+    fetchBranches(1, { isRefresh: true, search: searchQuery, filter: activeFilter });
   };
 
-  // Client-side filtering on fetched branches for instant search & chip responsiveness
-  const filteredBranches = branches.filter((branch) => {
-    const matchesSearch =
-      branch.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      branch.address.toLowerCase().includes(searchQuery.toLowerCase());
-
-    let matchesCategory = true;
-    if (activeFilter === 'OPEN') {
-      matchesCategory = branch.isOpen;
-    } else if (activeFilter === 'FOREX') {
-      matchesCategory = branch.services?.some((s) => s.toLowerCase().includes('forex')) ?? false;
-    } else if (activeFilter === 'LOW_QUEUE') {
-      matchesCategory = branch.waitingCount < 10;
-    }
-
-    return matchesSearch && matchesCategory;
-  });
+  // Load more handler
+  const handleLoadMore = () => {
+    if (loading || loadingMore || refreshing || !hasMore) return;
+    fetchBranches(page + 1, { isLoadMore: true, search: searchQuery, filter: activeFilter });
+  };
 
   const handleJoinQueue = (branch: BranchData) => {
     router.push('/(app)/customer/queue');
@@ -198,7 +234,7 @@ export default function BranchesScreen() {
               {error}
             </Text>
             <TouchableOpacity
-              onPress={() => fetchBranches()}
+              onPress={() => fetchBranches(1)}
               style={{
                 marginTop: 12,
                 backgroundColor: COLORS.primary,
@@ -216,12 +252,12 @@ export default function BranchesScreen() {
             <View style={branchesStyles.sectionHeaderRow}>
               <Text style={branchesStyles.sectionTitle}>Wegagen Branches</Text>
               <Text style={branchesStyles.branchCountBadge}>
-                {filteredBranches.length} {filteredBranches.length === 1 ? 'Branch' : 'Branches'} Found
+                {branches.length} of {totalBranches} {totalBranches === 1 ? 'Branch' : 'Branches'}
               </Text>
             </View>
 
             {/* Empty State */}
-            {filteredBranches.length === 0 ? (
+            {branches.length === 0 ? (
               <View style={{ paddingVertical: 36, alignItems: 'center' }}>
                 <Ionicons name="search-outline" size={40} color={COLORS.textMuted} />
                 <Text style={{ marginTop: 8, fontSize: 14, fontWeight: '700', color: COLORS.navy }}>
@@ -236,13 +272,13 @@ export default function BranchesScreen() {
                 {/* Conditional Rendering: Map Preview vs List Cards */}
                 {viewMode === 'MAP' ? (
                   <BranchMapPreview
-                    branches={filteredBranches}
+                    branches={branches}
                     onSelectBranchPin={(branch) => handleJoinQueue(branch)}
                   />
                 ) : null}
 
                 {/* Branch Cards List */}
-                {filteredBranches.map((branch) => (
+                {branches.map((branch) => (
                   <BranchCard
                     key={branch.id}
                     branch={branch}
@@ -250,6 +286,38 @@ export default function BranchesScreen() {
                     onGetDirections={handleGetDirections}
                   />
                 ))}
+
+                {/* Load More Button or End of List Indicator */}
+                {hasMore ? (
+                  <View style={branchesStyles.loadMoreContainer}>
+                    <TouchableOpacity
+                      style={branchesStyles.loadMoreButton}
+                      onPress={handleLoadMore}
+                      disabled={loadingMore}
+                      activeOpacity={0.8}
+                    >
+                      {loadingMore ? (
+                        <>
+                          <ActivityIndicator size="small" color={COLORS.primary} />
+                          <Text style={branchesStyles.loadMoreText}>Loading more branches...</Text>
+                        </>
+                      ) : (
+                        <>
+                          <Ionicons name="chevron-down-circle-outline" size={18} color={COLORS.primary} />
+                          <Text style={branchesStyles.loadMoreText}>
+                            Load More ({branches.length} of {totalBranches})
+                          </Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                ) : branches.length > 0 ? (
+                  <View style={branchesStyles.endOfListContainer}>
+                    <Text style={branchesStyles.endOfListText}>
+                      ✓ All {totalBranches} branches loaded
+                    </Text>
+                  </View>
+                ) : null}
               </>
             )}
           </>

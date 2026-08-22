@@ -8,6 +8,17 @@ export interface GetBranchesQuery {
     lowQueueOnly?: boolean;
     lat?: number;
     lng?: number;
+    page?: number;
+    limit?: number;
+}
+
+export interface PaginatedBranchesResult {
+    branches: FormattedBranch[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasMore: boolean;
 }
 
 export interface FormattedBranch {
@@ -80,12 +91,25 @@ function formatBranchRecord(
 }
 
 /**
- * Fetch all branches with search, category filtering, and distance calculation
+ * Fetch branches with pagination, search, category filtering, and distance calculation
  */
 export const getBranchesService = async (
     query: GetBranchesQuery
-    ): Promise<FormattedBranch[]> => {
-    const { search,  openNow, forexOnly, lowQueueOnly, lat, lng } = query;
+    ): Promise<PaginatedBranchesResult> => {
+    const {
+        search,
+        openNow,
+        forexOnly,
+        lowQueueOnly,
+        lat,
+        lng,
+        page = 1,
+        limit = 10,
+    } = query;
+
+    const safePage = Math.max(1, page);
+    const safeLimit = Math.max(1, Math.min(50, limit));
+    const skip = (safePage - 1) * safeLimit;
 
     // Build Prisma where clause
     const whereClause: any = {};
@@ -103,48 +127,106 @@ export const getBranchesService = async (
 
     if (forexOnly) {
         whereClause.services = {
-        some: { name: { contains: "Forex", mode: "insensitive" }},
+        some: { name: { contains: "Forex", mode: "insensitive" } },
         };
     }
 
-    const branches = await prisma.branch.findMany({
-        where: whereClause,
-        include: {
-        services: {
-            select: {
-            id: true,
-            name: true,
-            },
-        },
-        _count: {
-            select: {
-            tickets: {
-                where: {
-                status: "WAITING",
+    const hasGeoSorting = lat !== undefined && lng !== undefined && !isNaN(lat) && !isNaN(lng);
+
+    // If distance sorting or lowQueue filtering is needed, fetch candidate records to rank accurately
+    if (hasGeoSorting || lowQueueOnly) {
+        const branches = await prisma.branch.findMany({
+            where: whereClause,
+            include: {
+                services: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                _count: {
+                    select: {
+                        tickets: {
+                            where: {
+                                status: "WAITING",
+                            },
+                        },
+                    },
                 },
             },
+            orderBy: {
+                name: "asc",
             },
-        },
-        },
-        orderBy: {
-        name: "asc",
-        },
-    });
+        });
 
-    // Map and calculate distances
-    let formatted = branches.map((b) => formatBranchRecord(b, lat, lng));
+        // Map and calculate distances
+        let formatted = branches.map((b) => formatBranchRecord(b, lat, lng));
 
-    // low-queue needs the computed waitingCount, so it's applied after fetch
-    if (lowQueueOnly) {
-        formatted = formatted.filter((b) => b.waitingCount < 10);
+        // low-queue needs the computed waitingCount
+        if (lowQueueOnly) {
+            formatted = formatted.filter((b) => b.waitingCount < 10);
+        }
+
+        // If user coordinates provided, sort branches by proximity (closest first)
+        if (hasGeoSorting) {
+            formatted.sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
+        }
+
+        const total = formatted.length;
+        const totalPages = Math.ceil(total / safeLimit) || 1;
+        const paginatedBranches = formatted.slice(skip, skip + safeLimit);
+
+        return {
+            branches: paginatedBranches,
+            total,
+            page: safePage,
+            limit: safeLimit,
+            totalPages,
+            hasMore: safePage < totalPages,
+        };
     }
 
-    // If user coordinates provided, sort branches by proximity (closest first)
-    if (lat !== undefined && lng !== undefined && !isNaN(lat) && !isNaN(lng)) {
-        formatted.sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
-    }
+    // Direct database pagination for standard queries
+    const [total, branches] = await Promise.all([
+        prisma.branch.count({ where: whereClause }),
+        prisma.branch.findMany({
+            where: whereClause,
+            include: {
+                services: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                _count: {
+                    select: {
+                        tickets: {
+                            where: {
+                                status: "WAITING",
+                            },
+                        },
+                    },
+                },
+            },
+            orderBy: {
+                name: "asc",
+            },
+            skip,
+            take: safeLimit,
+        }),
+    ]);
 
-    return formatted;
+    const formatted = branches.map((b) => formatBranchRecord(b, lat, lng));
+    const totalPages = Math.ceil(total / safeLimit) || 1;
+
+    return {
+        branches: formatted,
+        total,
+        page: safePage,
+        limit: safeLimit,
+        totalPages,
+        hasMore: safePage < totalPages,
+    };
 };
 
 /**

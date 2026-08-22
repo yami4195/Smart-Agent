@@ -7,27 +7,36 @@ import {
 
 /**
  * GET /api/branches
- * Query params: ?search=&filter=&lat=&lng=
+ * Query params: ?search=&filter=&lat=&lng=&page=&limit=
  */
 export const getBranches = async (req: Request, res: Response) => {
     try {
-    const { search, openNow, forexOnly, lowQueueOnly, lat, lng } = req.query;
+    const { search, openNow, forexOnly, lowQueueOnly, lat, lng, page, limit } = req.query;
     const parsedLat = lat ? parseFloat(lat as string) : undefined;
     const parsedLng = lng ? parseFloat(lng as string) : undefined;
+    const parsedPage = page ? parseInt(page as string, 10) : 1;
+    const parsedLimit = limit ? parseInt(limit as string, 10) : 10;
 
-    const branches = await getBranchesService({
+    const result = await getBranchesService({
         search: typeof search === "string" ? search : undefined,
         openNow: openNow === "true",
         forexOnly: forexOnly === "true",
         lowQueueOnly: lowQueueOnly === "true",
         lat: parsedLat && !isNaN(parsedLat) ? parsedLat : undefined,
         lng: parsedLng && !isNaN(parsedLng) ? parsedLng : undefined,
+        page: !isNaN(parsedPage) && parsedPage > 0 ? parsedPage : 1,
+        limit: !isNaN(parsedLimit) && parsedLimit > 0 ? parsedLimit : 10,
     });
 
     return res.status(200).json({
         success: true,
-        count: branches.length,
-        branches,
+        count: result.branches.length,
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
+        totalPages: result.totalPages,
+        hasMore: result.hasMore,
+        branches: result.branches,
     });
     } catch (error) {
         console.error("Error in getBranches controller:", error);
