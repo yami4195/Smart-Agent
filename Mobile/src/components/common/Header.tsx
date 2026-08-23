@@ -6,6 +6,10 @@ import { COLORS } from '../../../constants/colors';
 
 interface HeaderProps {
   title?: string;
+  subtitle?: string;
+  showBankIcon?: boolean;
+  showAiAgent?: boolean;
+  showNotification?: boolean;
   onBankPress?: () => void;
   onAiAgentPress?: () => void;
   onNotificationPress?: () => void;
@@ -13,35 +17,46 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   title = "Tera Mobile Banking",
+  subtitle,
+  showBankIcon = true,
+  showAiAgent = true,
+  showNotification = true,
   onBankPress,
   onAiAgentPress,
   onNotificationPress,
 }) => {
   return (
     <View style={headerStyles.container}>
-      {/* Left: Bank Icon (Replaces 3-line hamburger menu) */}
+      {/* Left: Bank Icon + Title & Subtitle */}
       <View style={headerStyles.leftContainer}>
-        <Pressable style={headerStyles.bankIconCircle} onPress={onBankPress}>
-          <FontAwesome5 name="university" size={18} color={COLORS.primary} />
-        </Pressable>
-        <Text style={headerStyles.title}>{title}</Text>
+        {showBankIcon && (
+          <Pressable style={headerStyles.bankIconCircle} onPress={onBankPress}>
+            <FontAwesome5 name="university" size={18} color={COLORS.primary} />
+          </Pressable>
+        )}
+        <View style={headerStyles.titleContainer}>
+          <Text style={headerStyles.title}>{title}</Text>
+          {subtitle ? <Text style={headerStyles.subtitle}>{subtitle}</Text> : null}
+        </View>
       </View>
 
       {/* Right: AI Agent Icon + Notification Icon */}
       <View style={headerStyles.rightContainer}>
-        {/* AI Agent Icon (Just before Notification Icon) */}
-        <Pressable
-          style={[headerStyles.iconButton, headerStyles.aiIconButton]}
-          onPress={onAiAgentPress}
-        >
-          <MaterialCommunityIcons name="robot-outline" size={20} color={COLORS.aiPurple} />
-        </Pressable>
+        {showAiAgent && (
+          <Pressable
+            style={[headerStyles.iconButton, headerStyles.aiIconButton]}
+            onPress={onAiAgentPress}
+          >
+            <MaterialCommunityIcons name="robot-outline" size={20} color={COLORS.aiPurple} />
+          </Pressable>
+        )}
 
-        {/* Notification Icon */}
-        <Pressable style={headerStyles.iconButton} onPress={onNotificationPress}>
-          <Ionicons name="notifications-outline" size={20} color={COLORS.navy} />
-          <View style={headerStyles.notificationBadgeDot} />
-        </Pressable>
+        {showNotification && (
+          <Pressable style={headerStyles.iconButton} onPress={onNotificationPress}>
+            <Ionicons name="notifications-outline" size={20} color={COLORS.navy} />
+            <View style={headerStyles.notificationBadgeDot} />
+          </Pressable>
+        )}
       </View>
     </View>
   );

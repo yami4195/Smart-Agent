@@ -31,11 +31,20 @@ export const headerStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  titleContainer: {
+    justifyContent: 'center',
+  },
   title: {
     fontSize: 18,
     fontWeight: '800',
     color: COLORS.navy,
     letterSpacing: -0.2,
+  },
+  subtitle: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginTop: 2,
+    fontWeight: '500',
   },
   rightContainer: {
     flexDirection: 'row',

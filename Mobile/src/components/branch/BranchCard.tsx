@@ -25,12 +25,14 @@ export interface BranchData {
 interface BranchCardProps {
   branch: BranchData;
   onJoinQueue: (branch: BranchData) => void;
+  onDetails?: (branch: BranchData) => void;
   onGetDirections?: (branch: BranchData) => void;
 }
 
 export const BranchCard: React.FC<BranchCardProps> = ({
   branch,
   onJoinQueue,
+  onDetails,
   onGetDirections,
 }) => {
   return (
@@ -103,27 +105,25 @@ export const BranchCard: React.FC<BranchCardProps> = ({
         </View>
       </View>
 
-      {/* Action Buttons Stack */}
+      {/* Action Buttons: Details & Join Queue */}
       <View style={branchesStyles.cardActionsRow}>
-        
+        <Button
+          title="Details"
+          onPress={() => (onDetails ? onDetails(branch) : onGetDirections && onGetDirections(branch))}
+          variant="outlineNavy"
+          icon={<Ionicons name="information-circle-outline" size={16} color={COLORS.navy} />}
+          style={branchesStyles.detailsButton}
+          textStyle={branchesStyles.detailsText}
+        />
+
         <Button
           title="Join Queue"
-          onPress={()=>onJoinQueue(branch)}
+          onPress={() => onJoinQueue(branch)}
           variant="primary"
           icon={<MaterialCommunityIcons name="ticket-confirmation-outline" size={18} color={COLORS.white} />}
           style={branchesStyles.joinQueueButton}
           textStyle={branchesStyles.joinQueueText}
-        ></Button>
-
-        <Button
-          title="Directions"
-          onPress={()=>onGetDirections && onGetDirections(branch)}
-          variant="secondary"
-          icon={<FontAwesome5 name="directions" size={14} color={COLORS.navy} />}
-          style={branchesStyles.directionsButton}
-          textStyle={branchesStyles.directionsText}
-        ></Button>
-      
+        />
       </View>
     </View>
   );

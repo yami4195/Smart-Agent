@@ -28,6 +28,7 @@ export default function BranchesScreen() {
   const [viewMode, setViewMode] = useState<'LIST' | 'MAP'>('LIST');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterCategory>('ALL');
+  const [selectedBranch, setSelectedBranch] = useState<BranchData | null>(null);
 
   // API & Pagination State variables
   const [branches, setBranches] = useState<BranchData[]>([]);
@@ -73,6 +74,9 @@ export default function BranchesScreen() {
           setBranches((prev) => [...prev, ...response.branches]);
         } else {
           setBranches(response.branches);
+          if (response.branches.length > 0) {
+            setSelectedBranch(response.branches[0]);
+          }
         }
 
         setPage(response.page);
@@ -129,14 +133,20 @@ export default function BranchesScreen() {
     router.push('/(app)/customer/queue');
   };
 
-  const handleGetDirections = (branch: BranchData) => {
-    console.log(`Directions requested for ${branch.name}`);
+  const handleViewDetails = (branch: BranchData) => {
+    console.log(`Details requested for ${branch.name}`);
   };
 
   return (
     <View style={commonStyles.safeArea}>
-      {/* Top Header */}
-      <Header title="Tera Mobile Banking" />
+      {/* 1. Top Bar Header */}
+      <Header
+        title="Find Nearby Branch"
+        subtitle="Find the nearest branch or agent"
+        showBankIcon={false}
+        showAiAgent={true}
+        showNotification={true}
+      />
 
       <ScrollView
         style={branchesStyles.container}
@@ -150,7 +160,15 @@ export default function BranchesScreen() {
           />
         }
       >
-        {/* View Mode Toggle: List vs Map */}
+        {/* 2. Search Bar & Categories Filter */}
+        <BranchFilterBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          activeFilter={activeFilter}
+          onFilterChange={setActiveFilter}
+        />
+
+        {/* 3. View Mode Switcher: List vs Map */}
         <View style={branchesStyles.viewModeContainer}>
           <Pressable
             style={[
@@ -197,14 +215,6 @@ export default function BranchesScreen() {
           </Pressable>
         </View>
 
-        {/* Search & Category Filter Bar */}
-        <BranchFilterBar
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          activeFilter={activeFilter}
-          onFilterChange={setActiveFilter}
-        />
-
         {/* Loading Indicator */}
         {loading ? (
           <View style={{ paddingVertical: 40, alignItems: 'center', justifyContent: 'center' }}>
@@ -250,7 +260,9 @@ export default function BranchesScreen() {
           <>
             {/* Section Title & Count Badge */}
             <View style={branchesStyles.sectionHeaderRow}>
-              <Text style={branchesStyles.sectionTitle}>Wegagen Branches</Text>
+              <Text style={branchesStyles.sectionTitle}>
+                {viewMode === 'MAP' ? 'Branch Map' : 'Nearby Branches'}
+              </Text>
               <Text style={branchesStyles.branchCountBadge}>
                 {branches.length} of {totalBranches} {totalBranches === 1 ? 'Branch' : 'Branches'}
               </Text>
@@ -267,23 +279,24 @@ export default function BranchesScreen() {
                   Try changing your search terms or filters
                 </Text>
               </View>
+            ) : viewMode === 'MAP' ? (
+              /* MAP VIEW MODE: Expanded OpenStreetMap Preview with Interactive Card */
+              <BranchMapPreview
+                branches={branches}
+                selectedBranch={selectedBranch}
+                onSelectBranch={setSelectedBranch}
+                onJoinQueue={handleJoinQueue}
+                onViewDetails={handleViewDetails}
+              />
             ) : (
+              /* LIST VIEW MODE: Branch Cards List with Details & Join Queue Buttons */
               <>
-                {/* Conditional Rendering: Map Preview vs List Cards */}
-                {viewMode === 'MAP' ? (
-                  <BranchMapPreview
-                    branches={branches}
-                    onSelectBranchPin={(branch) => handleJoinQueue(branch)}
-                  />
-                ) : null}
-
-                {/* Branch Cards List */}
                 {branches.map((branch) => (
                   <BranchCard
                     key={branch.id}
                     branch={branch}
                     onJoinQueue={handleJoinQueue}
-                    onGetDirections={handleGetDirections}
+                    onDetails={handleViewDetails}
                   />
                 ))}
 
