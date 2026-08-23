@@ -20,6 +20,7 @@ export interface BranchData {
   waitingCount: number;
   estimatedWaitMins: number;
   services: string[];
+  imageUrl?: string;
 }
 
 interface BranchCardProps {
@@ -86,29 +87,12 @@ export const BranchCard: React.FC<BranchCardProps> = ({
         </View>
       </View>
 
-      {/* Available Services Section */}
-      <View style={branchesStyles.servicesContainer}>
-        <Text style={branchesStyles.servicesLabel}>Available Services</Text>
-        <View style={branchesStyles.servicesWrap}>
-          {branch.services.map((service, idx) => (
-            <View key={idx} style={branchesStyles.servicePill}>
-              {service.includes('Forex') ? (
-                <MaterialCommunityIcons name="currency-usd" size={12} color={COLORS.primary} />
-              ) : service.includes('ATM') ? (
-                <FontAwesome5 name="credit-card" size={10} color={COLORS.navy} />
-              ) : (
-                <Ionicons name="checkmark-circle" size={12} color={COLORS.success} />
-              )}
-              <Text style={branchesStyles.servicePillText}>{service}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
+    
 
       {/* Action Buttons: Details & Join Queue */}
       <View style={branchesStyles.cardActionsRow}>
         <Button
-          title="Details"
+          title="View Details"
           onPress={() => (onDetails ? onDetails(branch) : onGetDirections && onGetDirections(branch))}
           variant="outlineNavy"
           icon={<Ionicons name="information-circle-outline" size={16} color={COLORS.navy} />}

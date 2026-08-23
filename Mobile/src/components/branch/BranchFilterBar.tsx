@@ -25,7 +25,7 @@ export const BranchFilterBar: React.FC<BranchFilterBarProps> = ({
         <Feather name="search" size={18} color={COLORS.textMuted} />
         <TextInput
           style={branchesStyles.searchInput}
-          placeholder="Search branch name or location (e.g. Bole, Kazanchis)..."
+          placeholder="Search branch name or location"
           placeholderTextColor={COLORS.textMuted}
           value={searchQuery}
           onChangeText={onSearchChange}
@@ -70,7 +70,7 @@ export const BranchFilterBar: React.FC<BranchFilterBarProps> = ({
           <Ionicons
             name="checkmark-circle-outline"
             size={14}
-            color={activeFilter === 'OPEN' ? COLORS.primary : COLORS.textSecondary}
+            color={activeFilter === 'OPEN' ? COLORS.white : COLORS.textSecondary}
           />
           <Text
             style={[
@@ -92,7 +92,7 @@ export const BranchFilterBar: React.FC<BranchFilterBarProps> = ({
           <MaterialCommunityIcons
             name="currency-usd"
             size={14}
-            color={activeFilter === 'FOREX' ? COLORS.primary : COLORS.textSecondary}
+            color={activeFilter === 'FOREX' ? COLORS.white : COLORS.textSecondary}
           />
           <Text
             style={[
@@ -114,7 +114,7 @@ export const BranchFilterBar: React.FC<BranchFilterBarProps> = ({
           <Ionicons
             name="people-outline"
             size={14}
-            color={activeFilter === 'LOW_QUEUE' ? COLORS.primary : COLORS.textSecondary}
+            color={activeFilter === 'LOW_QUEUE' ? COLORS.white : COLORS.textSecondary}
           />
           <Text
             style={[

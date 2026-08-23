@@ -1,16 +1,25 @@
 import React from 'react';
 import { View, Text } from 'react-native';
+import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Header } from '../../../../components/common/Header';
 import { placeholderStyles } from '../../../../../assets/styles/placeholder.styles';
 import { commonStyles } from '../../../../../assets/styles/common.styles';
 import { COLORS } from '../../../../../constants/colors';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function MyQueueScreen() {
+  const router = useRouter();
+
+  
+
   return (
     <View style={commonStyles.safeArea}>
-      <Header title="Tera Mobile Banking" />
+      <Header
+        title="My Queue"
+        subtitle="Live Queue & Token Status"
+        showBack={router.canGoBack()}
+        onBackPress={() => router.back()}
+      />
       <View style={placeholderStyles.container}>
         <View style={placeholderStyles.iconCircle}>
           <MaterialCommunityIcons name="ticket-confirmation-outline" size={36} color={COLORS.primary} />

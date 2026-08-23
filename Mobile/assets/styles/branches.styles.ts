@@ -32,7 +32,7 @@ export const branchesStyles = StyleSheet.create({
     borderRadius: 8,
   },
   viewModeActive: {
-    backgroundColor: COLORS.navy,
+    backgroundColor: COLORS.primary,
     elevation: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -85,8 +85,8 @@ export const branchesStyles = StyleSheet.create({
     gap: 6,
   },
   filterChipActive: {
-    backgroundColor: COLORS.primaryLight,
-    borderColor: COLORS.primary,
+    backgroundColor: COLORS.navy,
+    borderColor: COLORS.navy,
   },
   filterChipText: {
     fontSize: 12,
@@ -94,7 +94,7 @@ export const branchesStyles = StyleSheet.create({
     color: COLORS.textSecondary,
   },
   filterChipTextActive: {
-    color: COLORS.primary,
+    color: COLORS.white,
     fontWeight: '700',
   },
 
@@ -284,7 +284,7 @@ export const branchesStyles = StyleSheet.create({
   },
   joinQueueButton: {
     flex: 1,
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.navy,
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: 'center',

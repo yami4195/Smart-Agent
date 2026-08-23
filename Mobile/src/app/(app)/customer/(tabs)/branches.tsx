@@ -134,7 +134,10 @@ export default function BranchesScreen() {
   };
 
   const handleViewDetails = (branch: BranchData) => {
-    console.log(`Details requested for ${branch.name}`);
+    router.push({
+      pathname: '/(app)/customer/Branches/[id]',
+      params: { id: branch.id },
+    });
   };
 
   return (
@@ -143,8 +146,8 @@ export default function BranchesScreen() {
       <Header
         title="Find Nearby Branch"
         subtitle="Find the nearest branch or agent"
-        showBankIcon={false}
-        showAiAgent={true}
+        showBankIcon={true}
+        showAiAgent={false}
         showNotification={true}
       />
 
@@ -160,13 +163,17 @@ export default function BranchesScreen() {
           />
         }
       >
-        {/* 2. Search Bar & Categories Filter */}
+
+
+{/* 2. Search Bar & Categories Filter */}
         <BranchFilterBar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           activeFilter={activeFilter}
           onFilterChange={setActiveFilter}
         />
+
+        
 
         {/* 3. View Mode Switcher: List vs Map */}
         <View style={branchesStyles.viewModeContainer}>
@@ -214,7 +221,7 @@ export default function BranchesScreen() {
             </Text>
           </Pressable>
         </View>
-
+        
         {/* Loading Indicator */}
         {loading ? (
           <View style={{ paddingVertical: 40, alignItems: 'center', justifyContent: 'center' }}>

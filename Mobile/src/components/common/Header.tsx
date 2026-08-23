@@ -7,6 +7,8 @@ import { COLORS } from '../../../constants/colors';
 interface HeaderProps {
   title?: string;
   subtitle?: string;
+  showBack?: boolean;
+  onBackPress?: () => void;
   showBankIcon?: boolean;
   showAiAgent?: boolean;
   showNotification?: boolean;
@@ -18,6 +20,8 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   title = "Tera Mobile Banking",
   subtitle,
+  showBack = false,
+  onBackPress,
   showBankIcon = true,
   showAiAgent = true,
   showNotification = true,
@@ -27,12 +31,18 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   return (
     <View style={headerStyles.container}>
-      {/* Left: Bank Icon + Title & Subtitle */}
+      {/* Left: Back Button OR Bank Icon + Title & Subtitle */}
       <View style={headerStyles.leftContainer}>
-        {showBankIcon && (
-          <Pressable style={headerStyles.bankIconCircle} onPress={onBankPress}>
-            <FontAwesome5 name="university" size={18} color={COLORS.primary} />
+        {showBack ? (
+          <Pressable style={headerStyles.backButton} onPress={onBackPress}>
+            <Ionicons name="arrow-back" size={20} color={COLORS.navy} />
           </Pressable>
+        ) : (
+          showBankIcon && (
+            <Pressable style={headerStyles.bankIconCircle} onPress={onBankPress}>
+              <FontAwesome5 name="university" size={18} color={COLORS.primary} />
+            </Pressable>
+          )
         )}
         <View style={headerStyles.titleContainer}>
           <Text style={headerStyles.title}>{title}</Text>
