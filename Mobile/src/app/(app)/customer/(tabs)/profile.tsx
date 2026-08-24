@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,8 @@ import {
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
-import { useAuth } from '@clerk/expo';
+import { useAuth, useUser } from '@clerk/expo';
+import { useFocusEffect } from '@react-navigation/native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 
@@ -25,6 +26,7 @@ import { userApi, UserData } from '../../../../api/user.api';
 
 export default function ProfileScreen() {
   const { signOut } = useAuth();
+  const { user: clerkUser } = useUser();
 
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -32,7 +34,10 @@ export default function ProfileScreen() {
   const [error, setError] = useState<string | null>(null);
   const [isEditModalVisible, setIsEditModalVisible] = useState<boolean>(false);
 
-  // Fetch user data directly from the PostgreSQL database via API
+  /**
+   * Fetch user profile from DB.
+   * If the user row does not exist in DB yet, sync from Clerk and then fetch.
+   */
   const fetchUserProfile = useCallback(async (isRefresh = false) => {
     try {
       if (isRefresh) {
@@ -42,7 +47,33 @@ export default function ProfileScreen() {
       }
       setError(null);
 
-      const user = await userApi.getMe();
+      // Attempt to fetch current user row from PostgreSQL DB
+      let user = await userApi.getMe();
+
+      if (!user && clerkUser) {
+        // User row missing in DB — sync Clerk user first
+        const rawPhone =
+          clerkUser.primaryPhoneNumber?.phoneNumber ||
+          (clerkUser.unsafeMetadata?.phone as string) ||
+          '';
+        const rawFirstName =
+          clerkUser.firstName ||
+          (clerkUser.unsafeMetadata?.firstName as string) ||
+          '';
+        const rawLastName =
+          clerkUser.lastName ||
+          (clerkUser.unsafeMetadata?.lastName as string) ||
+          '';
+        const rawEmail = clerkUser.primaryEmailAddress?.emailAddress || '';
+
+        user = await userApi.syncUser({
+          firstName: rawFirstName,
+          lastName: rawLastName,
+          email: rawEmail,
+          phone: rawPhone,
+        });
+      }
+
       setUserData(user);
     } catch (err: any) {
       if (axios.isAxiosError(err)) {
@@ -58,54 +89,54 @@ export default function ProfileScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [clerkUser]);
 
-  // Initial load
-  useEffect(() => {
-    fetchUserProfile();
-  }, [fetchUserProfile]);
+  // Reload every time the profile tab comes into focus so switching accounts re-fetches immediately
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserProfile();
+    }, [fetchUserProfile])
+  );
 
-  const handleRefresh = () => {
-    fetchUserProfile(true);
-  };
-
-  // Memoized user display attributes from DB record
-  const fullName = useMemo(() => {
-    if (!userData) return 'Abebe Kebede';
-    if (userData.firstName || userData.lastName) {
+  // ── Derived display values ──────────────────────────────────────────────
+  const fullName = (() => {
+    if (userData?.firstName || userData?.lastName) {
       return `${userData.firstName || ''} ${userData.lastName || ''}`.trim();
     }
-    return 'Abebe Kebede';
-  }, [userData]);
-
-  const phoneNumber = useMemo(() => {
-    return userData?.phone || '+251 911 234 567';
-  }, [userData]);
-
-  const email = useMemo(() => {
-    return userData?.email || 'abebe.k@example.com';
-  }, [userData]);
-
-  const memberSince = useMemo(() => {
-    if (userData?.createdAt) {
-      try {
-        const date = new Date(userData.createdAt);
-        return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-      } catch {
-        return 'January 2022';
-      }
+    if (clerkUser?.firstName || clerkUser?.lastName) {
+      return `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim();
     }
-    return 'January 2022';
-  }, [userData?.createdAt]);
+    return '—';
+  })();
 
-  const accountStatus = useMemo(() => {
-    return userData?.isActive === false ? 'Inactive' : 'Active';
-  }, [userData]);
+  const phoneNumber =
+    userData?.phone ||
+    clerkUser?.primaryPhoneNumber?.phoneNumber ||
+    (clerkUser?.unsafeMetadata?.phone as string) ||
+    '—';
 
-  const isVerified = useMemo(() => {
-    return Boolean(userData?.email || userData?.phone);
-  }, [userData]);
+  const email =
+    userData?.email ||
+    clerkUser?.primaryEmailAddress?.emailAddress ||
+    '—';
 
+  const memberSince = (() => {
+    const rawDate = userData?.createdAt || clerkUser?.createdAt;
+    if (!rawDate) return '—';
+    try {
+      return new Date(rawDate).toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric',
+      });
+    } catch {
+      return '—';
+    }
+  })();
+
+  const accountStatus = userData?.isActive === false ? 'Inactive' : 'Active';
+  const isVerified = Boolean(email !== '—' || phoneNumber !== '—');
+
+  // ── Handlers ────────────────────────────────────────────────────────────
   const handleSignOut = () => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
       { text: 'Cancel', style: 'cancel' },
@@ -133,30 +164,39 @@ export default function ProfileScreen() {
     lastName: string;
     phone: string;
   }) => {
+    // 1. Update in PostgreSQL Database
     const updatedUser = await userApi.updateMe({
       firstName,
       lastName,
       phone,
     });
     setUserData(updatedUser);
-    Alert.alert('Success', 'Profile updated successfully in database.');
-  };
 
-  const handleAiAgentPress = () => {
-    console.log('AI Agent pressed from Profile');
-  };
+    // 2. Also sync to Clerk account
+    try {
+      if (clerkUser) {
+        await clerkUser.update({
+          firstName,
+          lastName,
+          unsafeMetadata: {
+            ...clerkUser.unsafeMetadata,
+            phone,
+          },
+        });
+      }
+    } catch (clerkErr) {
+      console.warn('Could not sync update to Clerk:', clerkErr);
+    }
 
-  const handleNotificationPress = () => {
-    console.log('Notifications pressed from Profile');
+    Alert.alert('Success', 'Profile updated successfully.');
   };
 
   return (
     <View style={commonStyles.safeArea}>
-      {/* Top Header - Consistent with other tabs */}
       <Header
         title="Profile"
-        onAiAgentPress={handleAiAgentPress}
-        onNotificationPress={handleNotificationPress}
+        onAiAgentPress={() => {}}
+        onNotificationPress={() => {}}
       />
 
       <ScrollView
@@ -166,13 +206,13 @@ export default function ProfileScreen() {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={handleRefresh}
+            onRefresh={() => fetchUserProfile(true)}
             colors={[COLORS.primary]}
             tintColor={COLORS.primary}
           />
         }
       >
-        {loading ? (
+        {loading && !refreshing && !userData ? (
           <View style={{ paddingVertical: 60, alignItems: 'center', justifyContent: 'center' }}>
             <ActivityIndicator size="large" color={COLORS.primary} />
             <Text style={{ marginTop: 12, color: COLORS.textSecondary, fontSize: 14, fontWeight: '600' }}>
@@ -213,7 +253,8 @@ export default function ProfileScreen() {
           </View>
         ) : (
           <>
-            {/* 1. Personal Information Card */}
+            {/* 1. Personal Information Header & Card */}
+            <Text style={profileStyles.sectionTitle}>Personal Information</Text>
             <ProfileInfoCard
               fullName={fullName}
               phoneNumber={phoneNumber}
@@ -266,9 +307,14 @@ export default function ProfileScreen() {
       <EditProfileModal
         visible={isEditModalVisible}
         onClose={() => setIsEditModalVisible(false)}
-        initialFirstName={userData?.firstName || ''}
-        initialLastName={userData?.lastName || ''}
-        initialPhone={userData?.phone || ''}
+        initialFirstName={userData?.firstName || clerkUser?.firstName || ''}
+        initialLastName={userData?.lastName || clerkUser?.lastName || ''}
+        initialPhone={
+          userData?.phone ||
+          clerkUser?.primaryPhoneNumber?.phoneNumber ||
+          (clerkUser?.unsafeMetadata?.phone as string) ||
+          ''
+        }
         onSave={handleSaveProfile}
       />
     </View>

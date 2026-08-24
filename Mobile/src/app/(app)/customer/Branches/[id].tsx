@@ -26,6 +26,7 @@ import { branchDetailsStyles } from '../../../../../assets/styles/branch-details
 import { commonStyles } from '../../../../../assets/styles/common.styles';
 import { COLORS } from '../../../../../constants/colors';
 import { branchApi } from '../../../../api/branch.api';
+import { queueApi } from '../../../../api/queue.api';
 
 const FALLBACK_BRANCH: BranchData = {
   id: 'default-branch',
@@ -56,6 +57,7 @@ export default function BranchDetailsScreen() {
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedService, setSelectedService] = useState<string>('Cash Services');
 
   const fetchBranchDetails = useCallback(async (isRefresh: boolean = false) => {
     if (!id) return;
@@ -70,13 +72,15 @@ export default function BranchDetailsScreen() {
 
       const branchData = await branchApi.getBranchById(id);
       setBranch(branchData);
+      if (branchData?.services && branchData.services.length > 0) {
+        setSelectedService(branchData.services[0]);
+      }
     } catch (err) {
       if (axios.isAxiosError(err)) {
         const msg =
           err.response?.data?.message ||
           err.message ||
           'Failed to load branch details from server.';
-        // If server is not responding, fallback gracefully so user sees the UI
         console.warn('Branch fetch error:', msg);
         setBranch(FALLBACK_BRANCH);
       } else {
@@ -96,8 +100,33 @@ export default function BranchDetailsScreen() {
     router.back();
   };
 
-  const handleJoinQueue = () => {
-    router.push('/(app)/customer/queue');
+  const handleSelectService = (serviceName: string) => {
+    setSelectedService(serviceName);
+  };
+
+  const handleJoinQueue = async () => {
+    const activeBranch = branch || FALLBACK_BRANCH;
+    const chosenService = selectedService || 'Cash Services';
+
+    try {
+      await queueApi.joinQueue({
+        branchId: activeBranch.id,
+        branchName: activeBranch.name,
+        serviceName: chosenService,
+      });
+    } catch (e) {
+      console.warn('Error joining queue:', e);
+    }
+
+    // Navigate to My Queue tab screen with selected branch & service parameters
+    router.push({
+      pathname: '/(app)/customer/(tabs)/queue',
+      params: {
+        branchId: activeBranch.id,
+        branchName: activeBranch.name,
+        serviceName: chosenService,
+      },
+    });
   };
 
   const handleGetDirections = () => {
@@ -176,9 +205,16 @@ export default function BranchDetailsScreen() {
               onJoinQueue={handleJoinQueue}
             />
 
-            {/* 4. Available Services Section (Dynamic from DB) */}
-            <Text style={branchDetailsStyles.sectionHeader}>Available Services</Text>
-            <BranchServicesGrid services={activeBranch.services} />
+            {/* 4. Available Services Section (Dynamic with interactive selection) */}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <Text style={[branchDetailsStyles.sectionHeader, { marginBottom: 0 }]}>Available Services</Text>
+              <Text style={{ fontSize: 12, color: COLORS.textSecondary }}>Tap to select</Text>
+            </View>
+            <BranchServicesGrid
+              services={activeBranch.services}
+              selectedService={selectedService}
+              onSelectService={handleSelectService}
+            />
 
             {/* 5. Branch Information Section */}
             <Text style={branchDetailsStyles.sectionHeader}>Branch Information</Text>

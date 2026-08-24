@@ -1,10 +1,10 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { branchDetailsStyles } from '../../../../assets/styles/branch-details.styles';
 import { COLORS } from '../../../../constants/colors';
 
-interface ServiceItem {
+export interface ServiceItem {
   id: string;
   title: string;
   description: string;
@@ -13,6 +13,8 @@ interface ServiceItem {
 
 interface BranchServicesGridProps {
   services?: string[];
+  selectedService?: string | null;
+  onSelectService?: (serviceName: string) => void;
 }
 
 /**
@@ -111,7 +113,11 @@ const DEFAULT_SERVICES: ServiceItem[] = [
   },
 ];
 
-export const BranchServicesGrid: React.FC<BranchServicesGridProps> = ({ services }) => {
+export const BranchServicesGrid: React.FC<BranchServicesGridProps> = ({
+  services,
+  selectedService,
+  onSelectService,
+}) => {
   const serviceCards: ServiceItem[] =
     services && services.length > 0
       ? services.map((s, idx) => mapDbServiceToCard(s, idx))
@@ -119,17 +125,72 @@ export const BranchServicesGrid: React.FC<BranchServicesGridProps> = ({ services
 
   return (
     <View style={branchDetailsStyles.servicesGrid}>
-      {serviceCards.map((service) => (
-        <View key={service.id} style={branchDetailsStyles.serviceCard}>
-          <View style={branchDetailsStyles.serviceIconWrap}>{service.icon}</View>
-          <Text style={branchDetailsStyles.serviceTitle} numberOfLines={1}>
-            {service.title}
-          </Text>
-          <Text style={branchDetailsStyles.serviceDescription} numberOfLines={2}>
-            {service.description}
-          </Text>
-        </View>
-      ))}
+      {serviceCards.map((service) => {
+        const isSelected = selectedService === service.title;
+
+        return (
+          <TouchableOpacity
+            key={service.id}
+            style={[
+              branchDetailsStyles.serviceCard,
+              isSelected && {
+                borderColor: '#0A2540',
+                borderWidth: 2,
+                backgroundColor: '#F0F7FF',
+              },
+            ]}
+            onPress={() => onSelectService && onSelectService(service.title)}
+            activeOpacity={0.75}
+          >
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+              }}
+            >
+              <View
+                style={[
+                  branchDetailsStyles.serviceIconWrap,
+                  isSelected && { backgroundColor: '#DBEAFE' },
+                ]}
+              >
+                {service.icon}
+              </View>
+
+              {isSelected && (
+                <View
+                  style={{
+                    backgroundColor: '#0A2540',
+                    width: 20,
+                    height: 20,
+                    borderRadius: 10,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Ionicons name="checkmark" size={12} color="#FFFFFF" />
+                </View>
+              )}
+            </View>
+
+            <Text
+              style={[
+                branchDetailsStyles.serviceTitle,
+                isSelected && { color: '#0A2540', fontWeight: '800' },
+              ]}
+              numberOfLines={1}
+            >
+              {service.title}
+            </Text>
+            <Text style={branchDetailsStyles.serviceDescription} numberOfLines={2}>
+              {service.description}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 };
+
+export default BranchServicesGrid;

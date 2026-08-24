@@ -14,17 +14,26 @@ export function useSyncUser() {
     async function sync() {
       if (!isSignedIn || !user) return;
 
-      // Prevent syncing multiple times in the same session for the same user ID
-      if (syncedRef.current === user.id) return;
+      // Extract phone from unsafeMetadata or primaryPhoneNumber
+      const rawPhone =
+        user.primaryPhoneNumber?.phoneNumber ||
+        (user.unsafeMetadata?.phone as string) ||
+        '';
+      const rawFirstName =
+        user.firstName ||
+        (user.unsafeMetadata?.firstName as string) ||
+        '';
+      const rawLastName =
+        user.lastName ||
+        (user.unsafeMetadata?.lastName as string) ||
+        '';
+      const rawEmail =
+        user.primaryEmailAddress?.emailAddress ||
+        '';
 
       try {
         const token = await getToken();
         if (!token) return;
-
-        //Log token for testing in Bruno / Postman
-        console.log('\n================ CLERK TOKEN ================');
-        console.log(`Bearer ${token}`);
-        console.log('========================================================\n');
 
         const response = await fetch(`${API_BASE_URL}/users/sync`, {
           method: 'POST',
@@ -33,25 +42,25 @@ export function useSyncUser() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            firstName: user.firstName || '',
-            lastName: user.lastName || '',
-            email: user.primaryEmailAddress?.emailAddress || '',
-            phone: user.primaryPhoneNumber?.phoneNumber || '',
+            firstName: rawFirstName,
+            lastName: rawLastName,
+            email: rawEmail,
+            phone: rawPhone,
           }),
         });
 
         if (response.ok) {
           syncedRef.current = user.id;
           const data = await response.json();
-          console.log(' User successfully synced to PostgreSQL:', data.user?.email || data.user?.id);
+          console.log('User successfully synced to PostgreSQL:', data.user?.email || data.user?.id);
         } else {
-          console.warn(' User sync response status:', response.status);
+          console.warn('User sync response status:', response.status);
         }
       } catch (error) {
-        console.error(' Failed to sync user to database:', error);
+        console.error('Failed to sync user to database:', error);
       }
     }
 
     sync();
-  }, [isSignedIn, user?.id]);
+  }, [isSignedIn, user?.id, user?.firstName, user?.lastName, user?.unsafeMetadata]);
 }

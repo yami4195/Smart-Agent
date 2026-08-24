@@ -22,21 +22,21 @@ export const ProfileInfoCard: React.FC<ProfileInfoCardProps> = ({
       <ProfileInfoRow
         icon={<Ionicons name="person-outline" size={22} color={COLORS.textSecondary} />}
         label="FULL NAME"
-        value={fullName || 'Abebe Kebede'}
+        value={fullName || '—'}
       />
 
       {/* Phone Number */}
       <ProfileInfoRow
         icon={<Ionicons name="phone-portrait-outline" size={22} color={COLORS.textSecondary} />}
         label="PHONE NUMBER"
-        value={phoneNumber || '+251 911 234 567'}
+        value={phoneNumber || '—'}
       />
 
       {/* Email Address */}
       <ProfileInfoRow
         icon={<Feather name="mail" size={20} color={COLORS.textSecondary} />}
         label="EMAIL ADDRESS"
-        value={email || 'abebe.k@example.com'}
+        value={email || '—'}
         isLast
       />
     </View>
