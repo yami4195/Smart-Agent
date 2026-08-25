@@ -43,7 +43,7 @@ export const authStyles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: COLORS.primary,
     marginBottom: 6,
     textAlign: 'center',
   },
@@ -52,7 +52,7 @@ export const authStyles = StyleSheet.create({
     color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 19,
-    paddingHorizontal: 8,
+    paddingHorizontal: 20,
   },
   row: {
     flexDirection: 'row',

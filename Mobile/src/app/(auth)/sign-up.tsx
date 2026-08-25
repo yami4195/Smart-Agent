@@ -124,7 +124,7 @@ export default function SignUpScreen() {
             <Text style={authStyles.title}>Create Account</Text>
             <Text style={authStyles.subtitle}>
               Welcome to Wegagen bank!{'\n'}reserve your spot in the branch queue
-              right from your phone. Plus, get live forex curruncies!
+              right from your phone.
             </Text>
           </View>
 
@@ -163,7 +163,7 @@ export default function SignUpScreen() {
                 returnKeyType="next"
                 textContentType="familyName"
                 autoComplete="name-family"
-                placeholder="YOUR Last Name"
+                placeholder="Your Last Name"
                 placeholderTextColor="#94A3B8"
                 value={lastName}
                 onChangeText={setLastName}
@@ -212,7 +212,7 @@ export default function SignUpScreen() {
                 returnKeyType="next"
                 maxLength={15}
                 textContentType="telephoneNumber"
-                placeholder="+251 911 234 567"
+                placeholder="+2519xxxxx"
                 placeholderTextColor="#94A3B8"
                 value={phone}
                 onChangeText={setPhone}
