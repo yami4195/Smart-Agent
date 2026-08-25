@@ -176,7 +176,7 @@ export default function ForgotPasswordScreen() {
             <Text style={authStyles.subtitle}>
               {step === 'email' && "Enter the Email associated with your account, and we'll send you a  code!"}
               {step === 'code' && `Check your inbox! We've sent a 6-digit code to ${maskEmail(emailAddress)} Enter it below to continue resetting your password.`}
-              {step === 'password' && "Create a new password for your account. Make sure it's at least 8 characters and includes a number."}
+              {step === 'password' && "Create a new password for your account. Make sure it's at least 8 characters and includes a number and character."}
             </Text>
           </View>
 
