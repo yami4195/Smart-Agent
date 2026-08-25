@@ -1,16 +1,22 @@
 import { useSignIn } from '@clerk/expo';
 import { Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { authStyles } from '../../../assets/styles/auth.styles';
+import { COLORS } from '../../../constants/colors';
 import {
   ActivityIndicator,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
+  ScrollView,
   Text,
   TextInput,
   View,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
+
+const wegagenLogo = require('../../../assets/images/Wegagen logo.webp');
 
 type Step = 'email' | 'code' | 'password';
 
@@ -43,16 +49,19 @@ export default function ForgotPasswordScreen() {
       if (createError) {
         if (createError.code === 'form_identifier_not_found') {
           setErrorMsg('No account found with that email address.');
-        }else{
-        setErrorMsg(createError.message || 'Could not find the account.');
-      }
+        } else {
+          setErrorMsg(createError.message || 'Could not find the account.');
+        }
         return;
       }
 
-      const { error: sendError } = await signIn.resetPasswordEmailCode.sendCode();
+      const { error: sendError } =
+        await signIn.resetPasswordEmailCode.sendCode();
 
       if (sendError) {
-        setErrorMsg(sendError.message || 'Could not send reset code. Try Again!');
+        setErrorMsg(
+          sendError.message || 'Could not send reset code. Try Again!'
+        );
         return;
       }
 
@@ -76,7 +85,8 @@ export default function ForgotPasswordScreen() {
     setErrorMsg('');
 
     try {
-      const { error } = await signIn.resetPasswordEmailCode.verifyCode({ code });
+      const { error } =
+        await signIn.resetPasswordEmailCode.verifyCode({ code });
 
       if (error) {
         setErrorMsg(error.message || 'Invalid or expired code.');
@@ -107,9 +117,10 @@ export default function ForgotPasswordScreen() {
     setErrorMsg('');
 
     try {
-      const { error } = await signIn.resetPasswordEmailCode.submitPassword({
-        password: newPassword,
-      });
+      const { error } =
+        await signIn.resetPasswordEmailCode.submitPassword({
+          password: newPassword,
+        });
 
       if (error) {
         setErrorMsg(error.message || 'Could not reset password.');
@@ -132,115 +143,179 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-      <KeyboardAvoidingView
-              behavior={Platform.OS ==="ios" ? "padding" : "height"}
-              keyboardVerticalOffset={Platform.OS ==="ios" ? 64:0}
-              style={authStyles.keyboardView}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+      style={authStyles.keyboardView}
+    >
+      <ScrollView
+        contentContainerStyle={authStyles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={authStyles.card}>
+          <View style={authStyles.logoContainer}>
+            <Image
+              source={wegagenLogo}
+              style={authStyles.logo}
+              resizeMode="contain"
+            />
+          </View>
+
+          <View style={authStyles.headerContainer}>
+            <Text style={authStyles.title}>Reset Password</Text>
+            <Text style={authStyles.subtitle}>
+              {step === 'email' && 'Enter your email to receive a password reset code.'}
+              {step === 'code' && 'Enter the reset code sent to your email.'}
+              {step === 'password' && 'Enter your new secure password.'}
+            </Text>
+          </View>
+
+          {errorMsg ? (
+            <View style={authStyles.errorBanner}>
+              <Ionicons name="alert-circle-outline" size={18} color="#DC2626" />
+              <Text style={authStyles.errorText}>{errorMsg}</Text>
+            </View>
+          ) : null}
+
+          {step === 'email' && (
+            <>
+              <View style={authStyles.inputContainer}>
+                <Text style={authStyles.label}>Email Address</Text>
+                <View style={authStyles.inputWrapper}>
+                  <Ionicons
+                    name="mail-outline"
+                    size={19}
+                    color="#94A3B8"
+                    style={authStyles.inputIcon}
+                  />
+                  <TextInput
+                    style={authStyles.input}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    placeholder="Enter your email"
+                    placeholderTextColor="#94A3B8"
+                    value={emailAddress}
+                    onChangeText={setEmailAddress}
+                  />
+                </View>
+              </View>
+
+              <Pressable
+                style={[
+                  authStyles.button,
+                  loading && authStyles.buttonDisabled,
+                ]}
+                onPress={handleSendCode}
+                disabled={loading}
               >
-    <View style={authStyles.container}>
-      <Text style={authStyles.title}>Reset Password</Text>
+                {loading ? (
+                  <ActivityIndicator color="#ffffff" />
+                ) : (
+                  <Text style={authStyles.buttonText}>Send Reset Code</Text>
+                )}
+              </Pressable>
+            </>
+          )}
 
-      {errorMsg ? <Text style={authStyles.errorText}>{errorMsg}</Text> : null}
+          {step === 'code' && (
+            <>
+              <View style={authStyles.inputContainer}>
+                <Text style={authStyles.label}>Verification Code</Text>
+                <View style={authStyles.inputWrapper}>
+                  <Ionicons
+                    name="key-outline"
+                    size={19}
+                    color="#94A3B8"
+                    style={authStyles.inputIcon}
+                  />
+                  <TextInput
+                    style={authStyles.input}
+                    keyboardType="number-pad"
+                    placeholder="Enter code"
+                    placeholderTextColor="#94A3B8"
+                    value={code}
+                    onChangeText={setCode}
+                  />
+                </View>
+              </View>
 
-      {step === 'email' && (
-        <>
-          <View style={authStyles.inputContainer}>
-            <Text style={authStyles.label}>Email</Text>
-            <TextInput
-              style={authStyles.input}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              placeholder="Enter your email"
-              placeholderTextColor="#999"
-              value={emailAddress}
-              onChangeText={setEmailAddress}
-            />
+              <Pressable
+                style={authStyles.resendButton}
+                onPress={handleSendCode}
+                disabled={loading}
+              >
+                <Text style={authStyles.resendButtonText}>Resend code</Text>
+              </Pressable>
+
+              <Pressable
+                style={[
+                  authStyles.button,
+                  loading && authStyles.buttonDisabled,
+                ]}
+                onPress={handleVerifyCode}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#ffffff" />
+                ) : (
+                  <Text style={authStyles.buttonText}>Verify Code</Text>
+                )}
+              </Pressable>
+            </>
+          )}
+
+          {step === 'password' && (
+            <>
+              <View style={authStyles.inputContainer}>
+                <Text style={authStyles.label}>New Password</Text>
+                <View style={authStyles.inputWrapper}>
+                  <Ionicons
+                    name="lock-closed-outline"
+                    size={19}
+                    color="#94A3B8"
+                    style={authStyles.inputIcon}
+                  />
+                  <TextInput
+                    style={authStyles.input}
+                    secureTextEntry
+                    placeholder="Enter new password"
+                    placeholderTextColor="#94A3B8"
+                    value={newPassword}
+                    onChangeText={setNewPassword}
+                  />
+                </View>
+              </View>
+
+              <Pressable
+                style={[
+                  authStyles.button,
+                  loading && authStyles.buttonDisabled,
+                ]}
+                onPress={handleResetPassword}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#ffffff" />
+                ) : (
+                  <Text style={authStyles.buttonText}>Reset Password</Text>
+                )}
+              </Pressable>
+            </>
+          )}
+
+          <View style={authStyles.footer}>
+            <Text style={authStyles.footerText}>
+              Remembered your password?{' '}
+            </Text>
+            <Link href="/(auth)/sign-in" asChild>
+              <Pressable hitSlop={8}>
+                <Text style={authStyles.linkText}>Sign In</Text>
+              </Pressable>
+            </Link>
           </View>
-
-          <Pressable
-            style={[authStyles.button, loading && authStyles.buttonDisabled]}
-            onPress={handleSendCode}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#ffffff" />
-            ) : (
-              <Text style={authStyles.buttonText}>Send Reset Code</Text>
-            )}
-          </Pressable>
-        </>
-      )}
-
-      {step === 'code' && (
-        <>
-          <View style={authStyles.inputContainer}>
-            <Text style={authStyles.label}>Verification Code</Text>
-            <TextInput
-              style={authStyles.input}
-              keyboardType="number-pad"
-              placeholder="Enter the code we emailed you"
-              placeholderTextColor="#999"
-              value={code}
-              onChangeText={setCode}
-            />
-          </View>
-
-          <Pressable onPress={handleSendCode} disabled={loading}>
-              <Text style={authStyles.linkText}>Resend code</Text>
-          </Pressable>
-
-          <Pressable
-            style={[authStyles.button, loading && authStyles.buttonDisabled]}
-            onPress={handleVerifyCode}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#ffffff" />
-            ) : (
-              <Text style={authStyles.buttonText}>Verify Code</Text>
-            )}
-          </Pressable>
-        </>
-      )}
-
-      {step === 'password' && (
-        <>
-          <View style={authStyles.inputContainer}>
-            <Text style={authStyles.label}>New Password</Text>
-            <TextInput
-              style={authStyles.input}
-              secureTextEntry
-              placeholder="Enter new password"
-              placeholderTextColor="#999"
-              value={newPassword}
-              onChangeText={setNewPassword}
-            />
-          </View>
-
-          <Pressable
-            style={[authStyles.button, loading && authStyles.buttonDisabled]}
-            onPress={handleResetPassword}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#ffffff" />
-            ) : (
-              <Text style={authStyles.buttonText}>Reset Password</Text>
-            )}
-          </Pressable>
-        </>
-      )}
-
-      <View style={authStyles.footer}>
-        <Text style={authStyles.footerText}>Remembered your password? </Text>
-        <Link href="/(auth)/sign-in" asChild>
-          <Pressable>
-            <Text style={authStyles.linkText}>Sign In</Text>
-          </Pressable>
-        </Link>
-      </View>
-      
-    </View>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }

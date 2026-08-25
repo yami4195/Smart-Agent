@@ -1,15 +1,22 @@
 import { useSignUp } from '@clerk/expo';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import {authStyles} from '../../../assets/styles/auth.styles';
+import { Ionicons } from '@expo/vector-icons';
+import { authStyles } from '../../../assets/styles/auth.styles';
+import { COLORS } from '../../../constants/colors';
 import {
   ActivityIndicator,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
-  StyleSheet,
+  ScrollView,
   Text,
   TextInput,
   View,
 } from 'react-native';
+
+const wegagenLogo = require('../../../assets/images/Wegagen logo.webp');
 
 export default function VerifyEmailScreen() {
   const { signUp } = useSignUp();
@@ -90,60 +97,99 @@ export default function VerifyEmailScreen() {
   };
 
   return (
-    <View style={authStyles.container}>
-      <Text style={authStyles.title}>Verify Email</Text>
-      <Text style={authStyles.subtitle}>
-        We sent a verification code to {emailDisplay}. Enter it below to activate your account.
-      </Text>
-
-      {errorMsg ? <Text style={authStyles.errorText}>{errorMsg}</Text> : null}
-      {infoMsg ? <Text style={authStyles.infoText}>{infoMsg}</Text> : null}
-
-      <View style={authStyles.inputContainer}>
-        <Text style={authStyles.label}>Verification Code</Text>
-        <TextInput
-          style={authStyles.input}
-          keyboardType="number-pad"
-          placeholder="Enter verification code"
-          placeholderTextColor="#999"
-          value={code}
-          onChangeText={setCode}
-        />
-      </View>
-
-      <Pressable
-        style={[authStyles.button, loading && authStyles.buttonDisabled]}
-        onPress={onVerifyPress}
-        disabled={loading}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+      style={authStyles.keyboardView}
+    >
+      <ScrollView
+        contentContainerStyle={authStyles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        {loading ? (
-          <ActivityIndicator color="#ffffff" />
-        ) : (
-          <Text style={authStyles.buttonText}>Verify Email</Text>
-        )}
-      </Pressable>
+        <View style={authStyles.card}>
+          <View style={authStyles.logoContainer}>
+            <Image
+              source={wegagenLogo}
+              style={authStyles.logo}
+              resizeMode="contain"
+            />
+          </View>
 
-      <Pressable
-        style={[authStyles.resendButton, resending && authStyles.buttonDisabled]}
-        onPress={onResendPress}
-        disabled={resending || loading}
-      >
-        {resending ? (
-          <ActivityIndicator color="#2563eb" />
-        ) : (
-          <Text style={authStyles.resendButtonText}>Resend Code</Text>
-        )}
-      </Pressable>
+          <View style={authStyles.headerContainer}>
+            <Text style={authStyles.title}>Verify Email</Text>
+            <Text style={authStyles.subtitle}>
+              We sent a verification code to {emailDisplay}. Enter it below to activate your account.
+            </Text>
+          </View>
 
-      <View style={authStyles.footer}>
-        <Text style={authStyles.footerText}>Back to </Text>
-        <Link href="/(auth)/sign-in" asChild>
-          <Pressable>
-            <Text style={authStyles.linkText}>Sign In</Text>
+          {errorMsg ? (
+            <View style={authStyles.errorBanner}>
+              <Ionicons name="alert-circle-outline" size={18} color="#DC2626" />
+              <Text style={authStyles.errorText}>{errorMsg}</Text>
+            </View>
+          ) : null}
+
+          {infoMsg ? <Text style={authStyles.infoText}>{infoMsg}</Text> : null}
+
+          <View style={authStyles.inputContainer}>
+            <Text style={authStyles.label}>Verification Code</Text>
+            <View style={authStyles.inputWrapper}>
+              <Ionicons
+                name="key-outline"
+                size={19}
+                color="#94A3B8"
+                style={authStyles.inputIcon}
+              />
+              <TextInput
+                style={authStyles.input}
+                keyboardType="number-pad"
+                placeholder="Enter verification code"
+                placeholderTextColor="#94A3B8"
+                value={code}
+                onChangeText={setCode}
+              />
+            </View>
+          </View>
+
+          <Pressable
+            style={[authStyles.button, loading && authStyles.buttonDisabled]}
+            onPress={onVerifyPress}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text style={authStyles.buttonText}>Verify Email</Text>
+            )}
           </Pressable>
-        </Link>
-      </View>
-    </View>
+
+          <Pressable
+            style={[
+              authStyles.resendButton,
+              resending && authStyles.buttonDisabled,
+            ]}
+            onPress={onResendPress}
+            disabled={resending || loading}
+          >
+            {resending ? (
+              <ActivityIndicator color={COLORS.primary} />
+            ) : (
+              <Text style={authStyles.resendButtonText}>Resend Code</Text>
+            )}
+          </Pressable>
+
+          <View style={authStyles.footer}>
+            <Text style={authStyles.footerText}>Back to </Text>
+            <Link href="/(auth)/sign-in" asChild>
+              <Pressable hitSlop={8}>
+                <Text style={authStyles.linkText}>Sign In</Text>
+              </Pressable>
+            </Link>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 

@@ -1,20 +1,22 @@
 import { useSignUp } from '@clerk/expo';
 import { Link, useRouter } from 'expo-router';
-import  { useState } from 'react';
-import {Ionicons} from "@expo/vector-icons";
-
+import React, { useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { authStyles } from '../../../assets/styles/auth.styles';
+import { COLORS } from '../../../constants/colors';
 import {
   ActivityIndicator,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
+  ScrollView,
   Text,
   TextInput,
   View,
-  KeyboardAvoidingView,
-  ScrollView,
-  Platform,
 } from 'react-native';
-import { COLORS } from '../../../constants/colors';
+
+const wegagenLogo = require('../../../assets/images/Wegagen logo.webp');
 
 export default function SignUpScreen() {
   const { signUp } = useSignUp();
@@ -27,27 +29,27 @@ export default function SignUpScreen() {
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [showPassword, SetshowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSignUp = async () => {
-    if (!emailAddress) {
+    if (!firstName.trim()) {
+      setErrorMsg('First Name is required');
+      return;
+    }
+    if (!lastName.trim()) {
+      setErrorMsg('Last Name is required');
+      return;
+    }
+    if (!emailAddress.trim()) {
       setErrorMsg('Email address is required');
+      return;
+    }
+    if (!phone.trim()) {
+      setErrorMsg('Phone number is required');
       return;
     }
     if (!password) {
       setErrorMsg('Password is required');
-      return;
-    }
-    if (!firstName) {
-      setErrorMsg('First Name is required');
-      return;
-    }
-    if (!lastName) {
-      setErrorMsg('Last Name is required');
-      return;
-    }
-    if (!phone) {
-      setErrorMsg('phone number is required');
       return;
     }
     if (password.length < 8) {
@@ -59,13 +61,17 @@ export default function SignUpScreen() {
     setErrorMsg('');
 
     try {
+      const formattedPhone = phone.trim().startsWith('+251')
+        ? phone.trim()
+        : `+251${phone.trim().replace(/^0+/, '')}`;
+
       const { error } = await signUp.password({
         emailAddress: emailAddress.trim(),
         password,
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         unsafeMetadata: {
-          phone: `+251${phone}`,
+          phone: formattedPhone,
         },
       });
 
@@ -94,132 +100,192 @@ export default function SignUpScreen() {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS ==="ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS ==="ios" ? 64 :0}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
       style={authStyles.keyboardView}
+    >
+      <ScrollView
+        contentContainerStyle={authStyles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <ScrollView
-        contentContainerStyle={[
-      authStyles.container,
-      { flexGrow: 1, paddingBottom: 40 },
-    ]}
-      keyboardShouldPersistTaps="handled"
-      showsVerticalScrollIndicator={false}
-        >
-    
-      <Text style={authStyles.title}>Sign Up</Text>
+        <View style={authStyles.card}>
+          {/* Wegagen Bank Logo */}
+          <View style={authStyles.logoContainer}>
+            <Image
+              source={wegagenLogo}
+              style={authStyles.logo}
+              resizeMode="contain"
+            />
+          </View>
 
-      {errorMsg ? <Text style={authStyles.errorText}>{errorMsg}</Text> : null}
+          {/* Header */}
+          <View style={authStyles.headerContainer}>
+            <Text style={authStyles.title}>Create Account</Text>
+            <Text style={authStyles.subtitle}>
+              Welcome to Wegagen bank!{'\n'}reserve your spot in the branch queue
+              right from your phone. Plus, get live forex curruncies!
+            </Text>
+          </View>
 
-      <View style={authStyles.inputContainer}>
-        <Text style={authStyles.label}>FirstName</Text>
-        <TextInput
-          style={authStyles.input}
-          autoCapitalize="words"
-          keyboardType='default'
-          returnKeyType="next"
-          textContentType="givenName"
-          autoComplete="name-given"
-          placeholder="Enter first name"
-          placeholderTextColor="#999"
-          value={firstName}
-          onChangeText={setFirstName}
-        />
-      </View>
+          {/* Error Message */}
+          {errorMsg ? (
+            <View style={authStyles.errorBanner}>
+              <Ionicons name="alert-circle-outline" size={18} color="#DC2626" />
+              <Text style={authStyles.errorText}>{errorMsg}</Text>
+            </View>
+          ) : null}
 
-      <View style={authStyles.inputContainer}>
-        <Text style={authStyles.label}>LastName</Text>
-        <TextInput
-          style={authStyles.input}
-          autoCapitalize="words"
-          keyboardType='default'
-          returnKeyType="next"
-          textContentType="familyName"
-          autoComplete="name-family"
-          placeholder="Enter last name"
-          placeholderTextColor="#999"
-          value={lastName}
-          onChangeText={setLastName}
-        />
-      </View>
+          {/* Name Row (First Name & Last Name) */}
+          <View style={authStyles.row}>
+            <View style={[authStyles.col, authStyles.inputContainer]}>
+              <Text style={authStyles.label}>First Name</Text>
+              <TextInput
+                style={authStyles.inputPlain}
+                autoCapitalize="words"
+                keyboardType="default"
+                returnKeyType="next"
+                textContentType="givenName"
+                autoComplete="name-given"
+                placeholder="John"
+                placeholderTextColor="#94A3B8"
+                value={firstName}
+                onChangeText={setFirstName}
+              />
+            </View>
 
-      <View style={authStyles.inputContainer}>
-        <Text style={authStyles.label}>Email</Text>
-        <TextInput
-          style={authStyles.input}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          autoComplete="email"
-          placeholder="Enter email"
-          placeholderTextColor="#999"
-          value={emailAddress}
-          onChangeText={setEmailAddress}
-        />
-      </View>
+            <View style={[authStyles.col, authStyles.inputContainer]}>
+              <Text style={authStyles.label}>Last Name</Text>
+              <TextInput
+                style={authStyles.inputPlain}
+                autoCapitalize="words"
+                keyboardType="default"
+                returnKeyType="next"
+                textContentType="familyName"
+                autoComplete="name-family"
+                placeholder="Doe"
+                placeholderTextColor="#94A3B8"
+                value={lastName}
+                onChangeText={setLastName}
+              />
+            </View>
+          </View>
 
-      <View style={authStyles.inputContainer}>
-        <Text style={authStyles.label}>Password</Text>
-        <TextInput
-          style={authStyles.input}
-          secureTextEntry={!showPassword}
-          placeholder="Enter password"
-          placeholderTextColor="#999"
-          value={password}
-          onChangeText={setPassword}
-        />
+          {/* Email Field */}
+          <View style={authStyles.inputContainer}>
+            <Text style={authStyles.label}>Email Address</Text>
+            <View style={authStyles.inputWrapper}>
+              <Ionicons
+                name="mail-outline"
+                size={19}
+                color="#94A3B8"
+                style={authStyles.inputIcon}
+              />
+              <TextInput
+                style={authStyles.input}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                autoComplete="email"
+                placeholder="john.doe@example.com"
+                placeholderTextColor="#94A3B8"
+                value={emailAddress}
+                onChangeText={setEmailAddress}
+              />
+            </View>
+          </View>
 
-        <Pressable 
-        style={authStyles.eyeButton}
-        onPress={()=> SetshowPassword(!showPassword)}
-        >
-          <Ionicons
-          name={showPassword ? "eye-outline" : "eye-off-outline"}
-          size={20}
-          color={COLORS.primary}
-          />
-        </Pressable>
-      </View>
+          {/* Phone Field */}
+          <View style={authStyles.inputContainer}>
+            <Text style={authStyles.label}>Phone Number</Text>
+            <View style={authStyles.inputWrapper}>
+              <Ionicons
+                name="call-outline"
+                size={19}
+                color="#94A3B8"
+                style={authStyles.inputIcon}
+              />
+              <TextInput
+                style={authStyles.input}
+                autoCapitalize="none"
+                keyboardType="phone-pad"
+                autoComplete="tel"
+                returnKeyType="next"
+                maxLength={15}
+                textContentType="telephoneNumber"
+                placeholder="+251 911 234 567"
+                placeholderTextColor="#94A3B8"
+                value={phone}
+                onChangeText={setPhone}
+              />
+            </View>
+          </View>
 
-      <View style={authStyles.inputContainer}>
-        <Text style={authStyles.label}>Phone</Text>
-        <TextInput
-          style={authStyles.input}
-          autoCapitalize="none"
-          keyboardType="phone-pad"
-          autoComplete="tel"
-          returnKeyType="next"
-          maxLength={13}
-          textContentType="telephoneNumber"
-          placeholder="+251xxxxx"
-          placeholderTextColor="#999"
-          value={phone}
-          onChangeText={setPhone}
-        />
-      </View>
+          {/* Password Field */}
+          <View style={authStyles.inputContainer}>
+            <Text style={authStyles.label}>Password</Text>
+            <View style={authStyles.inputWrapper}>
+              <Ionicons
+                name="lock-closed-outline"
+                size={19}
+                color="#94A3B8"
+                style={authStyles.inputIcon}
+              />
+              <TextInput
+                style={authStyles.input}
+                secureTextEntry={!showPassword}
+                placeholder="••••••••"
+                placeholderTextColor="#94A3B8"
+                value={password}
+                onChangeText={setPassword}
+              />
+              <Pressable
+                style={authStyles.eyeButton}
+                onPress={() => setShowPassword(!showPassword)}
+                hitSlop={8}
+              >
+                <Ionicons
+                  name={showPassword ? 'eye-outline' : 'eye-off-outline'}
+                  size={19}
+                  color={COLORS.primary}
+                />
+              </Pressable>
+            </View>
+          </View>
 
-      <Pressable
-        style={[authStyles.button, loading && authStyles.buttonDisabled]}
-        onPress={handleSignUp}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#ffffff" />
-        ) : (
-          <Text style={authStyles.buttonText}>Sign Up</Text>
-        )}
-      </Pressable>
-
-      <View nativeID="clerk-captcha" />
-
-      <View style={authStyles.footer}>
-        <Text style={authStyles.footerText}>Already have an account? </Text>
-        <Link href="/(auth)/sign-in" asChild>
-          <Pressable>
-            <Text style={authStyles.linkText}>Sign In</Text>
+          {/* Sign Up Button */}
+          <Pressable
+            style={[authStyles.button, loading && authStyles.buttonDisabled]}
+            onPress={handleSignUp}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <>
+                <Text style={authStyles.buttonText}>Sign Up</Text>
+                <Ionicons
+                  name="arrow-forward"
+                  size={18}
+                  color="#FFFFFF"
+                  style={authStyles.buttonIcon}
+                />
+              </>
+            )}
           </Pressable>
-        </Link>
-      </View>
+
+          <View nativeID="clerk-captcha" />
+
+          {/* Footer */}
+          <View style={authStyles.footer}>
+            <Text style={authStyles.footerText}>Already have an account? </Text>
+            <Link href="/(auth)/sign-in" asChild>
+              <Pressable hitSlop={8}>
+                <Text style={authStyles.linkText}>Sign In</Text>
+              </Pressable>
+            </Link>
+          </View>
+        </View>
       </ScrollView>
-      </KeyboardAvoidingView>
+    </KeyboardAvoidingView>
   );
 }
