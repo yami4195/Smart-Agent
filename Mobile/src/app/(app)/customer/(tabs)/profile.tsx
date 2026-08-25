@@ -138,7 +138,7 @@ export default function ProfileScreen() {
 
   // ── Handlers ────────────────────────────────────────────────────────────
   const handleSignOut = () => {
-    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+    Alert.alert('Sign out?', 'Are you sure you want to sign out?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Sign Out',
@@ -172,7 +172,7 @@ export default function ProfileScreen() {
     });
     setUserData(updatedUser);
 
-    // 2. Also sync to Clerk account
+    // 2. We Also sync to Clerk account
     try {
       if (clerkUser) {
         await clerkUser.update({

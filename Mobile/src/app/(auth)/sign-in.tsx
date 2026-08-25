@@ -55,7 +55,7 @@ export default function SignInScreen() {
         return;
       }
 
-      // ✅ Check whether the sign-in is actually complete
+      //Check whether the sign-in is actually complete
       if (signIn.status === 'complete') {
         await signIn.finalize();
         router.replace('/(app)');
@@ -154,7 +154,7 @@ export default function SignInScreen() {
                 <Ionicons
                   name={showPassword ? 'eye-outline' : 'eye-off-outline'}
                   size={19}
-                  color={COLORS.primary}
+                  color={COLORS.navy}
                 />
               </Pressable>
             </View>

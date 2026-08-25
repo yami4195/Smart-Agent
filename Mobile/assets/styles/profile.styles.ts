@@ -145,7 +145,7 @@ export const profileStyles = StyleSheet.create({
     borderRadius: 12,
     borderColor: COLORS.border,
     borderWidth: 1.5,
-    height: 52,
+    height: 53,
   },
 
   // Modal Styles

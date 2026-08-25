@@ -142,6 +142,15 @@ export default function ForgotPasswordScreen() {
     }
   };
 
+
+  //Since this is a banking app We need to mask the EmailAddress
+  const maskEmail = (email: string) => {
+  const [name, domain] = email.split('@');
+  if (!name || !domain) return email;
+  const visible = name.slice(0, 2);
+  return `${visible}${'*'.repeat(Math.max(name.length - 2, 3))}@${domain}`;
+};
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -165,9 +174,9 @@ export default function ForgotPasswordScreen() {
           <View style={authStyles.headerContainer}>
             <Text style={authStyles.title}>Reset Password</Text>
             <Text style={authStyles.subtitle}>
-              {step === 'email' && 'Enter your email to receive a password reset code.'}
-              {step === 'code' && 'Enter the reset code sent to your email.'}
-              {step === 'password' && 'Enter your new secure password.'}
+              {step === 'email' && "Enter the Email associated with your account, and we'll send you a  code!"}
+              {step === 'code' && `Check your inbox! We've sent a 6-digit code to ${maskEmail(emailAddress)} Enter it below to continue resetting your password.`}
+              {step === 'password' && "Create a new password for your account. Make sure it's at least 8 characters and includes a number."}
             </Text>
           </View>
 
