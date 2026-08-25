@@ -147,7 +147,7 @@ export default function SignUpScreen() {
                 returnKeyType="next"
                 textContentType="givenName"
                 autoComplete="name-given"
-                placeholder="John"
+                placeholder="Your First Name"
                 placeholderTextColor="#94A3B8"
                 value={firstName}
                 onChangeText={setFirstName}
@@ -163,7 +163,7 @@ export default function SignUpScreen() {
                 returnKeyType="next"
                 textContentType="familyName"
                 autoComplete="name-family"
-                placeholder="Doe"
+                placeholder="YOUR Last Name"
                 placeholderTextColor="#94A3B8"
                 value={lastName}
                 onChangeText={setLastName}
@@ -186,7 +186,7 @@ export default function SignUpScreen() {
                 autoCapitalize="none"
                 keyboardType="email-address"
                 autoComplete="email"
-                placeholder="john.doe@example.com"
+                placeholder="You@example.com"
                 placeholderTextColor="#94A3B8"
                 value={emailAddress}
                 onChangeText={setEmailAddress}
