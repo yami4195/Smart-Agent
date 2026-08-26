@@ -4,13 +4,14 @@ import {
     findUserByClerkId,
     syncUserWithDb,
     updateUserProfile,
+    updateUserRole,
     } from "../services/user.service";
 
     export const syncUser = async (req: Request, res: Response) => {
     try {
         const clerkUserId = req.clerkUserId!; //middleware already authenticates
 
-        const { firstName, lastName, email, phone } = req.body;
+        const { firstName, lastName, email, phone, role } = req.body;
 
         const user = await syncUserWithDb({
         clerkUserId,
@@ -18,6 +19,7 @@ import {
         lastName,
         email,
         phone,
+        role,
         });
 
         return res.status(200).json({
@@ -75,6 +77,31 @@ import {
         console.error("Update profile error:", error);
         return res.status(500).json({
         message: "Internal server error while updating profile",
+        });
+    }
+    };
+
+    export const updateRole = async (req: Request, res: Response) => {
+    try {
+        const clerkUserId = req.clerkUserId!;
+        const { role } = req.body;
+
+        if (!role || !["customer", "employee", "admin"].includes(role)) {
+        return res.status(400).json({
+            message: "Invalid role. Allowed values: customer, employee, admin",
+        });
+        }
+
+        const updatedUser = await updateUserRole(clerkUserId, role);
+
+        return res.status(200).json({
+        message: "Role updated successfully",
+        user: updatedUser,
+        });
+    } catch (error) {
+        console.error("Update role error:", error);
+        return res.status(500).json({
+        message: "Internal server error while updating role",
         });
     }
     };

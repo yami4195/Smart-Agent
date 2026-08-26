@@ -32,7 +32,7 @@ const getBranchCoords = (branch: BranchData, index: number) => {
   return DEFAULT_COORDS[index % DEFAULT_COORDS.length];
 };
 
-export const BranchMapPreview: React.FC<BranchMapPreviewProps> = ({
+  export const BranchMapPreview: React.FC<BranchMapPreviewProps> = ({
   branches,
   selectedBranch: propSelectedBranch,
   onSelectBranch,

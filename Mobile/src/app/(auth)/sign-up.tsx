@@ -110,7 +110,7 @@ export default function SignUpScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={authStyles.card}>
-          {/* Wegagen Bank Logo */}
+          {/* Logo */}
           <View style={authStyles.logoContainer}>
             <Image
               source={wegagenLogo}
@@ -123,7 +123,7 @@ export default function SignUpScreen() {
           <View style={authStyles.headerContainer}>
             <Text style={authStyles.title}>Create Account</Text>
             <Text style={authStyles.subtitle}>
-              Welcome to Wegagen bank!{'\n'}reserve your spot in the branch queue
+              Welcome to Wegagen bank!{'\n'}Reserve your spot in the branch queue
               right from your phone.
             </Text>
           </View>

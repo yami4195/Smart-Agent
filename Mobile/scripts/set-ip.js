@@ -20,4 +20,4 @@ EXPO_PUBLIC_API_URL=http://${localIp}:5000/api
 `;
 
 fs.writeFileSync('.env', envContent);
-console.log(`✅ Updated .env -> API: http://${localIp}:5000/api & Clerk Key preserved.`);
+console.log(` Updated .env -> API: http://${localIp}:5000/api & Clerk Key preserved.`);

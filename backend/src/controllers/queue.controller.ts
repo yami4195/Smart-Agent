@@ -6,6 +6,11 @@ import {
     getUserQueueHistoryService,
     cancelTicketService,
     getBranchQueueSummaryService,
+    getBranchTicketsService,
+    callNextTicketService,
+    updateTicketStatusService,
+    createWalkInTicketService,
+    getEmployeeStatsService,
 } from "../services/queue.service";
 
 /**
@@ -176,6 +181,184 @@ export const getBranchQueueSummary = async (req: Request, res: Response) => {
     return res.status(500).json({
         success: false,
         message: "Internal server error while fetching branch queue summary",
+        });
+    }
+};
+
+/**
+ * GET /api/queues/branch/:branchId/tickets
+ * Query: { status?: string, serviceId?: string }
+ */
+export const getBranchTickets = async (req: Request, res: Response) => {
+    try {
+        const branchId = req.params.branchId as string;
+        const status = req.query.status as string | undefined;
+        const serviceId = req.query.serviceId as string | undefined;
+
+        if (!branchId) {
+            return res.status(400).json({
+                success: false,
+                message: "Branch ID is required",
+            });
+        }
+
+        const tickets = await getBranchTicketsService(branchId, status, serviceId);
+
+        return res.status(200).json({
+            success: true,
+            count: tickets.length,
+            tickets,
+        });
+    } catch (error) {
+        console.error("Error in getBranchTickets controller:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch branch tickets",
+        });
+    }
+};
+
+/**
+ * POST /api/queues/call-next
+ * Body: { branchId: string, serviceId?: string, counterNumber?: string }
+ */
+export const callNextTicket = async (req: Request, res: Response) => {
+    try {
+        const { branchId, serviceId, counterNumber } = req.body;
+
+        if (!branchId) {
+            return res.status(400).json({
+                success: false,
+                message: "Branch ID is required",
+            });
+        }
+
+        const ticket = await callNextTicketService(branchId, serviceId, counterNumber);
+
+        if (!ticket) {
+            return res.status(200).json({
+                success: true,
+                hasTicket: false,
+                message: "No waiting tickets in queue",
+                ticket: null,
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            hasTicket: true,
+            message: `Now serving ticket ${ticket.ticketNumber}`,
+            ticket,
+        });
+    } catch (error) {
+        console.error("Error in callNextTicket controller:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to call next ticket",
+        });
+    }
+};
+
+/**
+ * PATCH /api/queues/:id/status
+ * Body: { status: 'WAITING' | 'SERVING' | 'COMPLETED' | 'CANCELLED' }
+ */
+export const updateTicketStatus = async (req: Request, res: Response) => {
+    try {
+        const ticketId = req.params.id as string;
+        const { status } = req.body;
+
+        if (!ticketId) {
+            return res.status(400).json({
+                success: false,
+                message: "Ticket ID is required",
+            });
+        }
+
+        if (!["WAITING", "SERVING", "COMPLETED", "CANCELLED"].includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid status value",
+            });
+        }
+
+        const ticket = await updateTicketStatusService(ticketId, status);
+
+        return res.status(200).json({
+            success: true,
+            message: `Ticket status updated to ${status}`,
+            ticket,
+        });
+    } catch (error) {
+        console.error("Error in updateTicketStatus controller:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to update ticket status",
+        });
+    }
+};
+
+/**
+ * POST /api/queues/walk-in
+ * Body: { branchId: string, serviceId?: string, customerName?: string, phone?: string }
+ */
+export const createWalkInTicket = async (req: Request, res: Response) => {
+    try {
+        const { branchId, serviceId, customerName, phone } = req.body;
+
+        if (!branchId) {
+            return res.status(400).json({
+                success: false,
+                message: "Branch ID is required",
+            });
+        }
+
+        const ticket = await createWalkInTicketService({
+            branchId,
+            serviceId,
+            customerName,
+            phone,
+        });
+
+        return res.status(201).json({
+            success: true,
+            message: "Walk-in ticket created successfully",
+            ticket,
+        });
+    } catch (error: any) {
+        console.error("Error in createWalkInTicket controller:", error);
+        return res.status(400).json({
+            success: false,
+            message: error.message || "Failed to create walk-in ticket",
+        });
+    }
+};
+
+/**
+ * GET /api/queues/employee/stats/:branchId
+ */
+export const getEmployeeStats = async (req: Request, res: Response) => {
+    try {
+        const branchId = req.params.branchId as string;
+
+        if (!branchId) {
+            return res.status(400).json({
+                success: false,
+                message: "Branch ID is required",
+            });
+        }
+
+        const stats = await getEmployeeStatsService(branchId);
+
+        return res.status(200).json({
+            success: true,
+            stats,
+        });
+    } catch (error) {
+        console.error("Error in getEmployeeStats controller:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch employee stats",
         });
     }
 };

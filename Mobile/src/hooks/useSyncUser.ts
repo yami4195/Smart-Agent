@@ -30,6 +30,7 @@ export function useSyncUser() {
       const rawEmail =
         user.primaryEmailAddress?.emailAddress ||
         '';
+      const rawRole = (user.unsafeMetadata?.role as string) || undefined;
 
       try {
         const token = await getToken();
@@ -46,6 +47,7 @@ export function useSyncUser() {
             lastName: rawLastName,
             email: rawEmail,
             phone: rawPhone,
+            role: rawRole,
           }),
         });
 

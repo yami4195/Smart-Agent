@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useAuth, useUser } from '@clerk/expo';
 import { useFocusEffect } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 
@@ -25,6 +26,7 @@ import { COLORS } from '../../../../../constants/colors';
 import { userApi, UserData } from '../../../../api/user.api';
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const { signOut } = useAuth();
   const { user: clerkUser } = useUser();
 

@@ -6,6 +6,7 @@ export interface SyncUserData {
   lastName?: string;
   email?: string;
   phone?: string;
+  role?: "customer" | "employee" | "admin";
 }
 
 export interface UpdateProfileData {
@@ -42,6 +43,9 @@ export const syncUserWithDb = async (data: SyncUserData) => {
     if (data.phone && data.phone.trim() !== '') {
       updatePayload.phone = data.phone.trim();
     }
+    if (data.role) {
+      updatePayload.role = data.role;
+    }
 
     if (Object.keys(updatePayload).length > 0) {
       return prisma.user.update({
@@ -60,7 +64,7 @@ export const syncUserWithDb = async (data: SyncUserData) => {
       lastName: data.lastName?.trim() || '',
       email: data.email?.trim() || '',
       phone: data.phone?.trim() || '',
-      role: "customer",
+      role: data.role || "customer",
     },
   });
 };
@@ -74,6 +78,17 @@ export const updateUserProfile = async (clerkUserId: string, data: UpdateProfile
       ...(data.firstName !== undefined && { firstName: data.firstName.trim() }),
       ...(data.lastName !== undefined && { lastName: data.lastName.trim() }),
       ...(data.phone !== undefined && { phone: data.phone.trim() }),
+    },
+  });
+};
+
+export const updateUserRole = async (clerkUserId: string, role: "customer" | "employee" | "admin") => {
+  return prisma.user.update({
+    where: {
+      clerkUserId,
+    },
+    data: {
+      role,
     },
   });
 };
