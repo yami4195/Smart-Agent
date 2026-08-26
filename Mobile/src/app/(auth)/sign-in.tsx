@@ -39,6 +39,11 @@ export default function SignInScreen() {
       return;
     }
 
+    if (!signIn) {
+      setErrorMsg('Sign in service is initializing. Please try again.');
+      return;
+    }
+
     setLoading(true);
     setErrorMsg('');
 
@@ -51,16 +56,25 @@ export default function SignInScreen() {
       // Invalid credentials
       if (error) {
         console.log('Sign-in error:', JSON.stringify(error, null, 2));
-        setErrorMsg('Incorrect email or password. Please try again.');
+        setErrorMsg(error.message || 'Incorrect email or password. Please try again.');
         return;
       }
 
-      //Check whether the sign-in is actually complete
+      console.log('Sign-in current status:', signIn.status);
+
+      // Check whether the sign-in is actually complete
       if (signIn.status === 'complete') {
-        await signIn.finalize();
+        const { error: finalizeError } = await signIn.finalize();
+        if (finalizeError) {
+          console.error('Finalize error:', finalizeError);
+          setErrorMsg(finalizeError.message || 'Could not finalize session.');
+          return;
+        }
         router.replace('/(app)');
+      } else if (signIn.status === 'needs_first_factor' || signIn.status === 'needs_second_factor') {
+        setErrorMsg('Additional verification required. Please verify your email address.');
       } else {
-        setErrorMsg('Sign-in could not be completed.');
+        setErrorMsg(`Sign-in status: ${signIn.status || 'incomplete'}. Please check your account.`);
       }
     } catch (err: any) {
       console.error('Sign-in error:', err);
