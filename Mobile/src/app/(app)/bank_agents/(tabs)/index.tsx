@@ -7,38 +7,35 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Modal,
+  StyleSheet,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
-import {
-  EmployeeHeader,
-  NowServingCard,
-  CallNextCard,
-  QueueTicketItem,
-  StatCard,
-  WalkInModal,
-  CounterStatus,
-} from '../../../../components/employee';
+import { EmployeeHeader, CounterStatus } from '../../../../components/employee/EmployeeHeader';
+import { StatCard } from '../../../../components/employee/StatCard';
+import { QueueTicketItem } from '../../../../components/employee/QueueTicketItem';
 import { employeeStyles } from '../../../../../assets/styles/employee.styles';
 import { commonStyles } from '../../../../../assets/styles/common.styles';
 import { COLORS } from '../../../../../constants/colors';
 import { employeeApi, EmployeeTicket, EmployeeStats } from '../../../../api/employee.api';
 import { branchApi } from '../../../../api/branch.api';
 
-export default function CounterDeskScreen() {
+export default function EmployeeDashboardScreen() {
   const router = useRouter();
 
   // Active teller session state
   const [branchId, setBranchId] = useState<string>('');
-  const [branchName, setBranchName] = useState<string>('Wegagen - Bole Branch');
+  const [branchName, setBranchName] = useState<string>('Bole Medhanialem Branch');
   const [counterNumber, setCounterNumber] = useState<string>('01');
   const [counterStatus, setCounterStatus] = useState<CounterStatus>('Available');
 
   // Queue state
   const [currentlyServing, setCurrentlyServing] = useState<EmployeeTicket | null>(null);
   const [waitingTickets, setWaitingTickets] = useState<EmployeeTicket[]>([]);
+  const [appointmentsCount, setAppointmentsCount] = useState<number>(0);
   const [stats, setStats] = useState<EmployeeStats>({
     totalWaiting: 0,
     totalServing: 0,
@@ -46,13 +43,13 @@ export default function CounterDeskScreen() {
     totalCancelled: 0,
     totalServedToday: 0,
     avgWaitMins: 0,
-    avgServiceMins: 3.5,
+    avgServiceMins: 0,
   });
 
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [callingNext, setCallingNext] = useState<boolean>(false);
-  const [isWalkInModalVisible, setIsWalkInModalVisible] = useState<boolean>(false);
+  const [selectedTicket, setSelectedTicket] = useState<EmployeeTicket | null>(null);
 
   // Initialize branch
   useEffect(() => {
@@ -64,7 +61,6 @@ export default function CounterDeskScreen() {
           setBranchName(res.branches[0].name);
         }
       } catch {
-        // Fallback default
         setBranchId('branch-bole');
       }
     }
@@ -88,7 +84,6 @@ export default function CounterDeskScreen() {
         employeeApi.getEmployeeStats(branchId),
       ]);
 
-      // Determine currently serving ticket at this counter or overall
       const serving = allTickets.find((t) => t.status === 'SERVING') || null;
       const waiting = allTickets.filter((t) => t.status === 'WAITING');
 
@@ -116,9 +111,14 @@ export default function CounterDeskScreen() {
     }, [branchId, fetchDeskData])
   );
 
-  // 1. Call Next Customer
+  // Call Next Customer
   const handleCallNext = async () => {
     if (!branchId) return;
+
+    if (waitingTickets.length === 0) {
+      Alert.alert('Queue Empty', 'There are no waiting customers currently in line.');
+      return;
+    }
 
     try {
       setCallingNext(true);
@@ -127,8 +127,11 @@ export default function CounterDeskScreen() {
       if (result.hasTicket && result.ticket) {
         setCurrentlyServing(result.ticket);
         setCounterStatus('Serving');
-        // Refresh waiting list
         fetchDeskData(true);
+        Alert.alert(
+          'Customer Called 📢',
+          `Ticket ${result.ticket.ticketNumber} called to Counter ${counterNumber}.`
+        );
       } else {
         Alert.alert('Queue Empty', 'There are no waiting customers in the queue.');
       }
@@ -139,11 +142,12 @@ export default function CounterDeskScreen() {
     }
   };
 
-  // 2. Complete Serving
+  // Complete Serving
   const handleCompleteServing = async (ticketId: string) => {
     try {
       await employeeApi.updateTicketStatus(ticketId, 'COMPLETED');
       setCurrentlyServing(null);
+      setSelectedTicket(null);
       setCounterStatus('Available');
       fetchDeskData(true);
       Alert.alert('Service Completed', 'Customer ticket has been completed successfully.');
@@ -152,26 +156,30 @@ export default function CounterDeskScreen() {
     }
   };
 
-  // 3. No-Show
-  const handleNoShow = async (ticketId: string) => {
+  // Cancel / No-Show
+  const handleCancelTicket = async (ticketId: string) => {
     try {
       await employeeApi.updateTicketStatus(ticketId, 'CANCELLED');
-      setCurrentlyServing(null);
-      setCounterStatus('Available');
+      if (currentlyServing?.id === ticketId) {
+        setCurrentlyServing(null);
+        setCounterStatus('Available');
+      }
+      setSelectedTicket(null);
       fetchDeskData(true);
-      Alert.alert('Ticket Cancelled', 'Marked customer as No-Show.');
+      Alert.alert('Ticket Cancelled', 'Marked customer ticket as cancelled / no-show.');
     } catch {
       Alert.alert('Error', 'Could not cancel ticket.');
     }
   };
 
-  // 4. Serve directly from waiting list
-  const handleServeDirect = async (ticket: EmployeeTicket) => {
+  // Serve specific ticket
+  const handleServeTicket = async (ticket: EmployeeTicket) => {
     try {
       const updated = await employeeApi.updateTicketStatus(ticket.id, 'SERVING');
       if (updated) {
         setCurrentlyServing(updated);
         setCounterStatus('Serving');
+        setSelectedTicket(null);
         fetchDeskData(true);
       }
     } catch {
@@ -179,36 +187,22 @@ export default function CounterDeskScreen() {
     }
   };
 
-  // 5. Issue Walk-in ticket
-  const handleIssueWalkIn = async (payload: {
-    customerName: string;
-    phone: string;
-    serviceName: string;
-  }) => {
-    if (!branchId) return;
-
-    const newTicket = await employeeApi.createWalkInTicket({
-      branchId,
-      customerName: payload.customerName,
-      phone: payload.phone,
-    });
-
-    Alert.alert(
-      'Token Issued 🎫',
-      `Walk-in Ticket ${newTicket?.ticketNumber || 'issued'} generated for ${payload.serviceName}.`
-    );
-
-    fetchDeskData(true);
-  };
+  // Format today's date (e.g. "Oct 24, 2023")
+  const todayFormatted = new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date());
 
   return (
     <View style={commonStyles.safeArea}>
-      {/* 1. Counter Top Header */}
+      {/* 1. Top Header with Bank Icon, Assigned Branch, Status Pill & Notifications */}
       <EmployeeHeader
         branchName={branchName}
         counterNumber={counterNumber}
         status={counterStatus}
         onStatusChange={(newStatus) => setCounterStatus(newStatus)}
+        onNotificationPress={() => Alert.alert('Notifications', 'No new branch notifications.')}
       />
 
       <ScrollView
@@ -224,133 +218,275 @@ export default function CounterDeskScreen() {
           />
         }
       >
-        {/* 2. Now Serving Hero Card (if active ticket) */}
-        {currentlyServing ? (
-          <NowServingCard
-            ticket={currentlyServing}
-            counterNumber={counterNumber}
-            onComplete={handleCompleteServing}
-            onNoShow={handleNoShow}
-          />
-        ) : (
-          /* 3. Call Next Action Card (when counter is free) */
-          <CallNextCard
-            waitingCount={waitingTickets.length}
-            calling={callingNext}
-            onCallNext={handleCallNext}
-            disabled={counterStatus === 'On Break'}
-          />
-        )}
+        {/* 2. Today's Overview Section Header */}
+        <View style={employeeStyles.sectionHeaderRow}>
+          <Text style={employeeStyles.overviewTitle}>Today's Overview</Text>
+          <Text style={employeeStyles.overviewDateText}>{todayFormatted}</Text>
+        </View>
 
-        {/* 4. Shift Statistics Summary Grid */}
-        <View style={employeeStyles.statsGrid}>
+        {/* 3. 2x2 Overview Stat Cards Grid */}
+        <View style={employeeStyles.overviewGrid}>
+          {/* Card 1: Total Served */}
           <StatCard
-            label="SERVED TODAY"
+            icon={
+              <MaterialCommunityIcons
+                name="account-group-outline"
+                size={20}
+                color="#334155"
+              />
+            }
+            label="Total Served"
             value={stats.totalServedToday || 0}
-            hint="Completed tickets"
-            valueColor="#10B981"
+            trend={stats.totalServedToday > 0 ? '+12%' : undefined}
           />
+
+          {/* Card 2: Pending Queue */}
           <StatCard
-            label="IN LINE"
+            icon={
+              <MaterialCommunityIcons
+                name="timer-sand"
+                size={20}
+                color="#D97706"
+              />
+            }
+            label="Pending Queue"
             value={waitingTickets.length}
-            hint="Waiting customers"
-            valueColor={COLORS.primary}
+            subtext={
+              waitingTickets.length > 0
+                ? `Avg ${stats.avgWaitMins || 12}m wait`
+                : 'Avg 0m wait'
+            }
           />
+
+          {/* Card 3: Appointments */}
           <StatCard
-            label="EST. WAIT TIME"
-            value={`${stats.avgWaitMins || 4}m`}
-            hint="Average queue delay"
+            icon={
+              <MaterialCommunityIcons
+                name="calendar-blank-outline"
+                size={20}
+                color="#334155"
+              />
+            }
+            label="Appointments"
+            value={appointmentsCount}
+            subtext={`${appointmentsCount} remaining`}
           />
+
+          {/* Card 4: Avg Wait Time */}
           <StatCard
-            label="AVG HANDLE"
-            value={`${stats.avgServiceMins || 3.5}m`}
-            hint="Per transaction"
+            icon={<Feather name="clock" size={18} color="#334155" />}
+            label="Avg Wait Time"
+            value={waitingTickets.length > 0 ? `${stats.avgWaitMins || 14}m` : '0m'}
+            subtext="Today"
           />
         </View>
 
-        {/* 5. Quick Actions Bar */}
-        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}>
+        {/* 4. Next in Queue Card */}
+        <View style={employeeStyles.nextInQueueContainer}>
+          {/* Header with View All */}
+          <View style={employeeStyles.nextInQueueHeader}>
+            <Text style={employeeStyles.nextInQueueTitle}>Next in Queue</Text>
+            <TouchableOpacity
+              onPress={() => router.push('/(app)/bank_agents/(tabs)/queue')}
+              activeOpacity={0.7}
+            >
+              <Text style={employeeStyles.viewAllText}>View All</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Main Call Next Button */}
           <TouchableOpacity
-            style={{
-              flex: 1,
-              backgroundColor: '#FFFFFF',
-              borderRadius: 12,
-              paddingVertical: 12,
-              paddingHorizontal: 14,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderWidth: 1,
-              borderColor: '#E2E8F0',
-            }}
-            onPress={() => setIsWalkInModalVisible(true)}
-            activeOpacity={0.8}
+            style={employeeStyles.callNextBannerBtn}
+            onPress={handleCallNext}
+            disabled={waitingTickets.length === 0 || callingNext}
+            activeOpacity={0.85}
           >
-            <MaterialCommunityIcons name="ticket-confirmation-outline" size={18} color={COLORS.primary} />
-            <Text style={{ fontSize: 13, fontWeight: '700', color: '#0F172A', marginLeft: 6 }}>
-              Issue Walk-in
-            </Text>
+            {callingNext ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <>
+                <Ionicons name="megaphone-outline" size={19} color="#FFFFFF" />
+                <Text style={employeeStyles.callNextBannerText}>
+                  Call Next ({waitingTickets.length} Waiting)
+                </Text>
+              </>
+            )}
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={{
-              flex: 1,
-              backgroundColor: '#FFFFFF',
-              borderRadius: 12,
-              paddingVertical: 12,
-              paddingHorizontal: 14,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderWidth: 1,
-              borderColor: '#E2E8F0',
-            }}
-            onPress={() => router.push('/(app)/bank_agents/(tabs)/queue')}
-            activeOpacity={0.8}
-          >
-            <Feather name="list" size={18} color={COLORS.primary} />
-            <Text style={{ fontSize: 13, fontWeight: '700', color: '#0F172A', marginLeft: 6 }}>
-              Full Branch Queue
-            </Text>
-          </TouchableOpacity>
+          {/* Ticket List or Clean Empty State */}
+          {loading && !refreshing ? (
+            <View style={{ paddingVertical: 24, alignItems: 'center' }}>
+              <ActivityIndicator size="small" color={COLORS.primary} />
+            </View>
+          ) : waitingTickets.length > 0 ? (
+            <View style={employeeStyles.ticketListWrapper}>
+              {waitingTickets.slice(0, 3).map((ticket) => (
+                <QueueTicketItem
+                  key={ticket.id}
+                  ticket={ticket}
+                  actionText="Details"
+                  onPress={(t) => setSelectedTicket(t)}
+                  onActionPress={(t) => setSelectedTicket(t)}
+                />
+              ))}
+            </View>
+          ) : (
+            <View style={employeeStyles.cleanEmptyState}>
+              <MaterialCommunityIcons name="ticket-outline" size={32} color="#94A3B8" />
+              <Text style={employeeStyles.cleanEmptyTitle}>No Customers in Queue</Text>
+              <Text style={employeeStyles.cleanEmptySub}>
+                Waiting tickets will automatically appear here when customers check in.
+              </Text>
+            </View>
+          )}
         </View>
-
-        {/* 6. Upcoming Customers Section */}
-        <View style={employeeStyles.sectionHeader}>
-          <Text style={employeeStyles.sectionTitle}>Next in Line</Text>
-          <Text style={employeeStyles.sectionCount}>{waitingTickets.length} waiting</Text>
-        </View>
-
-        {loading && !refreshing ? (
-          <View style={{ paddingVertical: 30, alignItems: 'center' }}>
-            <ActivityIndicator size="small" color={COLORS.primary} />
-          </View>
-        ) : waitingTickets.length > 0 ? (
-          waitingTickets.slice(0, 5).map((ticket) => (
-            <QueueTicketItem
-              key={ticket.id}
-              ticket={ticket}
-              onServe={handleServeDirect}
-              showServeAction={!currentlyServing}
-            />
-          ))
-        ) : (
-          <View style={employeeStyles.emptyState}>
-            <MaterialCommunityIcons name="check-all" size={32} color="#10B981" />
-            <Text style={employeeStyles.emptyTitle}>Queue is Clean</Text>
-            <Text style={employeeStyles.emptySubtitle}>
-              All customers have been served or no new tokens have been requested.
-            </Text>
-          </View>
-        )}
       </ScrollView>
 
-      {/* Issue Walk-in Modal */}
-      <WalkInModal
-        visible={isWalkInModalVisible}
-        onClose={() => setIsWalkInModalVisible(false)}
-        onSubmit={handleIssueWalkIn}
-      />
+      {/* Ticket Details & Action Modal */}
+      {selectedTicket && (
+        <Modal visible={true} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <View style={styles.modalTokenBadge}>
+                  <Text style={styles.modalTokenBadgeText}>{selectedTicket.ticketNumber}</Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => setSelectedTicket(null)}
+                  style={{ padding: 4 }}
+                >
+                  <Ionicons name="close" size={24} color="#64748B" />
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.modalServiceTitle}>{selectedTicket.serviceName}</Text>
+              <Text style={styles.modalStatusText}>Status: {selectedTicket.status}</Text>
+
+              <View style={styles.modalRow}>
+                <Text style={styles.modalLabel}>Customer</Text>
+                <Text style={styles.modalVal}>{selectedTicket.customerName || 'Walk-in Customer'}</Text>
+              </View>
+
+              <View style={styles.modalRow}>
+                <Text style={styles.modalLabel}>Est. Wait Time</Text>
+                <Text style={styles.modalVal}>~{selectedTicket.estimatedWaitMins || 5} mins</Text>
+              </View>
+
+              <View style={styles.modalRow}>
+                <Text style={styles.modalLabel}>Branch</Text>
+                <Text style={styles.modalVal}>{branchName}</Text>
+              </View>
+
+              {/* Action Buttons */}
+              <View style={styles.modalActions}>
+                {selectedTicket.status === 'WAITING' && (
+                  <TouchableOpacity
+                    style={[styles.modalActionBtn, { backgroundColor: COLORS.primary }]}
+                    onPress={() => handleServeTicket(selectedTicket)}
+                  >
+                    <Text style={styles.modalActionBtnText}>Serve Now</Text>
+                  </TouchableOpacity>
+                )}
+
+                {selectedTicket.status === 'SERVING' && (
+                  <TouchableOpacity
+                    style={[styles.modalActionBtn, { backgroundColor: '#10B981' }]}
+                    onPress={() => handleCompleteServing(selectedTicket.id)}
+                  >
+                    <Text style={styles.modalActionBtnText}>Complete Service</Text>
+                  </TouchableOpacity>
+                )}
+
+                <TouchableOpacity
+                  style={[
+                    styles.modalActionBtn,
+                    { backgroundColor: '#FEE2E2', borderWidth: 1, borderColor: '#EF4444' },
+                  ]}
+                  onPress={() => handleCancelTicket(selectedTicket.id)}
+                >
+                  <Text style={[styles.modalActionBtnText, { color: '#EF4444' }]}>
+                    Cancel / No-Show
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  modalTokenBadge: {
+    backgroundColor: '#EEF2FF',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 10,
+  },
+  modalTokenBadgeText: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#1E293B',
+  },
+  modalServiceTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  modalStatusText: {
+    fontSize: 13,
+    color: '#64748B',
+    marginBottom: 14,
+    marginTop: 2,
+  },
+  modalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  modalLabel: {
+    fontSize: 13,
+    color: '#64748B',
+  },
+  modalVal: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#0F172A',
+  },
+  modalActions: {
+    marginTop: 20,
+    gap: 10,
+    marginBottom: 10,
+  },
+  modalActionBtn: {
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalActionBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+});

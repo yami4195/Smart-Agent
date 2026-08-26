@@ -1,0 +1,368 @@
+import React, { useState, useCallback, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  ScrollView,
+  RefreshControl,
+  TouchableOpacity,
+  ActivityIndicator,
+  Modal,
+  Alert,
+  StyleSheet,
+} from 'react-native';
+import { Ionicons, Feather, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import { EmployeeHeader, CounterStatus } from '../../../../components/employee/EmployeeHeader';
+import { employeeStyles } from '../../../../../assets/styles/employee.styles';
+import { commonStyles } from '../../../../../assets/styles/common.styles';
+import { COLORS } from '../../../../../constants/colors';
+import { branchApi } from '../../../../api/branch.api';
+
+export interface AppointmentItem {
+  id: string;
+  customerName: string;
+  customerPhone?: string;
+  serviceName: string;
+  appointmentTime: string;
+  date: string;
+  status: 'SCHEDULED' | 'CHECKED_IN' | 'COMPLETED' | 'CANCELLED';
+  notes?: string;
+}
+
+const APPOINTMENT_FILTERS = ['ALL', 'SCHEDULED', 'CHECKED_IN', 'COMPLETED'];
+
+export default function AppointmentScreen() {
+  const [branchId, setBranchId] = useState<string>('');
+  const [branchName, setBranchName] = useState<string>('Bole Medhanialem Branch');
+  const [counterStatus, setCounterStatus] = useState<CounterStatus>('Available');
+
+  const [appointments, setAppointments] = useState<AppointmentItem[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedFilter, setSelectedFilter] = useState<string>('ALL');
+  const [loading, setLoading] = useState<boolean>(true);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<AppointmentItem | null>(null);
+
+  // Initialize branch info
+  useEffect(() => {
+    async function initBranch() {
+      try {
+        const res = await branchApi.getBranches({ limit: 1 });
+        if (res.branches && res.branches.length > 0) {
+          setBranchId(res.branches[0].id);
+          setBranchName(res.branches[0].name);
+        }
+      } catch {
+        setBranchId('branch-bole');
+      } finally {
+        setLoading(false);
+      }
+    }
+    initBranch();
+  }, []);
+
+  const fetchAppointments = useCallback(async (isRefresh = false) => {
+    try {
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+      // Currently empty state as no mock data requested
+      setAppointments([]);
+    } catch {
+      setAppointments([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  const filteredAppointments = appointments.filter((item) => {
+    const matchesFilter = selectedFilter === 'ALL' || item.status === selectedFilter;
+    const matchesSearch =
+      searchQuery.trim() === '' ||
+      item.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.serviceName.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
+
+  return (
+    <View style={commonStyles.safeArea}>
+      {/* Header */}
+      <EmployeeHeader
+        branchName={branchName}
+        status={counterStatus}
+        onStatusChange={(s) => setCounterStatus(s)}
+      />
+
+      <ScrollView
+        style={employeeStyles.screenContainer}
+        contentContainerStyle={employeeStyles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => fetchAppointments(true)}
+            colors={[COLORS.primary]}
+            tintColor={COLORS.primary}
+          />
+        }
+      >
+        {/* Search Bar */}
+        <View style={employeeStyles.searchBarContainer}>
+          <Feather name="search" size={18} color="#94A3B8" />
+          <TextInput
+            style={employeeStyles.searchInput}
+            placeholder="Search appointment or customer..."
+            placeholderTextColor="#94A3B8"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery ? (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Ionicons name="close-circle" size={18} color="#94A3B8" />
+            </TouchableOpacity>
+          ) : null}
+        </View>
+
+        {/* Filter Pills */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={employeeStyles.filterPillsScroll}
+        >
+          {APPOINTMENT_FILTERS.map((f) => (
+            <TouchableOpacity
+              key={f}
+              style={[
+                employeeStyles.filterPill,
+                selectedFilter === f && employeeStyles.filterPillActive,
+              ]}
+              onPress={() => setSelectedFilter(f)}
+            >
+              <Text
+                style={[
+                  employeeStyles.filterPillText,
+                  selectedFilter === f && employeeStyles.filterPillTextActive,
+                ]}
+              >
+                {f}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* Section Header */}
+        <View style={employeeStyles.sectionHeaderRow}>
+          <Text style={employeeStyles.overviewTitle}>Scheduled Appointments</Text>
+          <Text style={employeeStyles.overviewDateText}>
+            {filteredAppointments.length} Booked
+          </Text>
+        </View>
+
+        {/* Appointments List or Clean Empty State */}
+        {loading && !refreshing ? (
+          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+            <ActivityIndicator size="small" color={COLORS.primary} />
+          </View>
+        ) : filteredAppointments.length > 0 ? (
+          filteredAppointments.map((apt) => (
+            <TouchableOpacity
+              key={apt.id}
+              style={styles.appointmentCard}
+              onPress={() => setSelectedAppointment(apt)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.appointmentTimeBox}>
+                <Feather name="clock" size={14} color={COLORS.primary} />
+                <Text style={styles.appointmentTimeText}>{apt.appointmentTime}</Text>
+              </View>
+
+              <View style={styles.appointmentDetails}>
+                <Text style={styles.appointmentCustomerName}>{apt.customerName}</Text>
+                <Text style={styles.appointmentService}>{apt.serviceName}</Text>
+              </View>
+
+              <View style={styles.appointmentStatusBadge}>
+                <Text style={styles.appointmentStatusText}>{apt.status}</Text>
+              </View>
+            </TouchableOpacity>
+          ))
+        ) : (
+          <View style={[employeeStyles.cleanEmptyState, styles.emptyCard]}>
+            <View style={styles.emptyIconCircle}>
+              <MaterialCommunityIcons name="calendar-blank-outline" size={32} color="#94A3B8" />
+            </View>
+            <Text style={employeeStyles.cleanEmptyTitle}>No Appointments Scheduled</Text>
+            <Text style={employeeStyles.cleanEmptySub}>
+              There are currently no customer appointments booked for this branch.
+            </Text>
+          </View>
+        )}
+      </ScrollView>
+
+      {/* Appointment Detail Modal */}
+      {selectedAppointment && (
+        <Modal visible={true} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Appointment Details</Text>
+                <TouchableOpacity onPress={() => setSelectedAppointment(null)}>
+                  <Ionicons name="close" size={24} color="#64748B" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.modalRow}>
+                <Text style={styles.modalLabel}>Customer</Text>
+                <Text style={styles.modalVal}>{selectedAppointment.customerName}</Text>
+              </View>
+
+              <View style={styles.modalRow}>
+                <Text style={styles.modalLabel}>Service</Text>
+                <Text style={styles.modalVal}>{selectedAppointment.serviceName}</Text>
+              </View>
+
+              <View style={styles.modalRow}>
+                <Text style={styles.modalLabel}>Scheduled Time</Text>
+                <Text style={styles.modalVal}>{selectedAppointment.appointmentTime}</Text>
+              </View>
+
+              <View style={styles.modalRow}>
+                <Text style={styles.modalLabel}>Status</Text>
+                <Text style={styles.modalVal}>{selectedAppointment.status}</Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.closeModalBtn}
+                onPress={() => setSelectedAppointment(null)}
+              >
+                <Text style={styles.closeModalBtnText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  emptyCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingVertical: 40,
+    marginTop: 10,
+  },
+  emptyIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  appointmentCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  appointmentTimeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FFF3E0',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginRight: 12,
+  },
+  appointmentTimeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.primary,
+  },
+  appointmentDetails: {
+    flex: 1,
+  },
+  appointmentCustomerName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  appointmentService: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  appointmentStatusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: '#F1F5F9',
+  },
+  appointmentStatusText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  modalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  modalLabel: {
+    fontSize: 13,
+    color: '#64748B',
+  },
+  modalVal: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#0F172A',
+  },
+  closeModalBtn: {
+    backgroundColor: COLORS.primary,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  closeModalBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+});

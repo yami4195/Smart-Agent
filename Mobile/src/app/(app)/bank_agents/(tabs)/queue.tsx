@@ -14,6 +14,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 
+import { EmployeeHeader, CounterStatus } from '../../../../components/employee/EmployeeHeader';
 import { QueueTicketItem } from '../../../../components/employee/QueueTicketItem';
 import { employeeStyles } from '../../../../../assets/styles/employee.styles';
 import { commonStyles } from '../../../../../assets/styles/common.styles';
@@ -26,7 +27,8 @@ const SERVICE_FILTERS = ['All Services', 'Teller Services', 'Forex / FX', 'Accou
 
 export default function LiveQueueScreen() {
   const [branchId, setBranchId] = useState<string>('');
-  const [branchName, setBranchName] = useState<string>('Wegagen - Bole Branch');
+  const [branchName, setBranchName] = useState<string>('Bole Medhanialem Branch');
+  const [counterStatus, setCounterStatus] = useState<CounterStatus>('Available');
 
   const [tickets, setTickets] = useState<EmployeeTicket[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -143,19 +145,11 @@ export default function LiveQueueScreen() {
   return (
     <View style={commonStyles.safeArea}>
       {/* Top Header */}
-      <View style={employeeStyles.headerContainer}>
-        <View style={employeeStyles.headerLeft}>
-          <Text style={employeeStyles.headerBranchTitle}>{branchName}</Text>
-          <Text style={employeeStyles.headerSubtitle}>Live Branch Queue Monitor</Text>
-        </View>
-        <TouchableOpacity
-          onPress={() => fetchTickets(true)}
-          style={{ padding: 6 }}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="refresh" size={20} color={COLORS.primary} />
-        </TouchableOpacity>
-      </View>
+      <EmployeeHeader
+        branchName={branchName}
+        status={counterStatus}
+        onStatusChange={(s) => setCounterStatus(s)}
+      />
 
       <ScrollView
         style={employeeStyles.screenContainer}

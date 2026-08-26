@@ -3,25 +3,44 @@ import { View, Text, StyleSheet } from 'react-native';
 import { employeeStyles } from '../../../assets/styles/employee.styles';
 
 interface StatCardProps {
+  icon: React.ReactNode;
   label: string;
   value: string | number;
-  hint?: string;
-  valueColor?: string;
+  subtext?: string;
+  trend?: string;
+  trendColor?: string;
 }
 
 export const StatCard: React.FC<StatCardProps> = ({
+  icon,
   label,
   value,
-  hint,
-  valueColor,
+  subtext,
+  trend,
+  trendColor = '#10B981',
 }) => {
   return (
-    <View style={employeeStyles.statCard}>
-      <Text style={employeeStyles.statLabel}>{label}</Text>
-      <Text style={[employeeStyles.statValue, valueColor ? { color: valueColor } : null]}>
-        {value}
-      </Text>
-      {hint ? <Text style={employeeStyles.statHint}>{hint}</Text> : null}
+    <View style={employeeStyles.statCardBox}>
+      {/* Top Row: Icon + Label */}
+      <View style={employeeStyles.statTopRow}>
+        <View style={employeeStyles.statIconBox}>{icon}</View>
+        <Text style={employeeStyles.statTitleText} numberOfLines={1}>
+          {label}
+        </Text>
+      </View>
+
+      {/* Main Value + Subtext / Trend Row */}
+      <View style={employeeStyles.statValueRow}>
+        <Text style={employeeStyles.statBigNumber}>{value}</Text>
+        {trend ? (
+          <Text style={[employeeStyles.statTrendBadge, { color: trendColor }]}>{trend}</Text>
+        ) : null}
+        {subtext ? (
+          <Text style={employeeStyles.statSubLabel} numberOfLines={1}>
+            {subtext}
+          </Text>
+        ) : null}
+      </View>
     </View>
   );
 };

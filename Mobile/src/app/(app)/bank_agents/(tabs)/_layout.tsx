@@ -15,11 +15,11 @@ export default function BankAgentTabsLayout() {
         tabBarLabelStyle: tabStyles.tabBarLabel,
       }}
     >
-      {/* 1. Counter Desk (Main Workstation) */}
+      {/* 1. Dashboard */}
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Counter Desk',
+          title: 'Dashboard',
           tabBarIcon: ({ focused, color, size }) => (
             <MaterialCommunityIcons
               name={focused ? 'view-dashboard' : 'view-dashboard-outline'}
@@ -30,14 +30,14 @@ export default function BankAgentTabsLayout() {
         }}
       />
 
-      {/* 2. Branch Queue */}
+      {/* 2. Live Queue */}
       <Tabs.Screen
         name="queue"
         options={{
           title: 'Live Queue',
           tabBarIcon: ({ focused, color, size }) => (
             <MaterialCommunityIcons
-              name={focused ? 'ticket-confirmation' : 'ticket-confirmation-outline'}
+              name={focused ? 'format-list-bulleted' : 'format-list-bulleted'}
               size={size}
               color={color}
             />
@@ -45,14 +45,14 @@ export default function BankAgentTabsLayout() {
         }}
       />
 
-      {/* 3. Walk-in Ticket Issuer */}
+      {/* 3. Appointment */}
       <Tabs.Screen
-        name="walkin"
+        name="appointment"
         options={{
-          title: 'Issue Token',
+          title: 'Appointment',
           tabBarIcon: ({ focused, color, size }) => (
             <MaterialCommunityIcons
-              name={focused ? 'ticket-percent' : 'ticket-percent-outline'}
+              name={focused ? 'calendar-month' : 'calendar-month-outline'}
               size={size}
               color={color}
             />
@@ -60,11 +60,11 @@ export default function BankAgentTabsLayout() {
         }}
       />
 
-      {/* 4. Employee Profile */}
+      {/* 4. Profile */}
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Teller Profile',
+          title: 'Profile',
           tabBarIcon: ({ focused, color, size }) => (
             <Ionicons
               name={focused ? 'person' : 'person-outline'}
@@ -72,6 +72,14 @@ export default function BankAgentTabsLayout() {
               color={color}
             />
           ),
+        }}
+      />
+
+      {/* Hide old walkin tab if accessed directly */}
+      <Tabs.Screen
+        name="walkin"
+        options={{
+          href: null,
         }}
       />
     </Tabs>

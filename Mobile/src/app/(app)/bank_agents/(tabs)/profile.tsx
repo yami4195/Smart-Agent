@@ -15,6 +15,7 @@ import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { employeeStyles } from '../../../../../assets/styles/employee.styles';
 import { commonStyles } from '../../../../../assets/styles/common.styles';
 import { COLORS } from '../../../../../constants/colors';
+import { EmployeeHeader, CounterStatus } from '../../../../components/employee/EmployeeHeader';
 import { userApi, UserData } from '../../../../api/user.api';
 import { employeeApi, EmployeeStats } from '../../../../api/employee.api';
 
@@ -113,12 +114,10 @@ export default function EmployeeProfileScreen() {
   return (
     <View style={commonStyles.safeArea}>
       {/* Top Header */}
-      <View style={employeeStyles.headerContainer}>
-        <View style={employeeStyles.headerLeft}>
-          <Text style={employeeStyles.headerBranchTitle}>Teller Profile</Text>
-          <Text style={employeeStyles.headerSubtitle}>Staff Credentials & Workstation</Text>
-        </View>
-      </View>
+      <EmployeeHeader
+        branchName="Bole Medhanialem Branch"
+        status="Available"
+      />
 
       <ScrollView
         style={employeeStyles.screenContainer}

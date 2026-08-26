@@ -9,15 +9,16 @@ export const employeeStyles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 36,
+    paddingTop: 16,
+    paddingBottom: 40,
   },
 
-  // 1. Employee Counter Top Header
+  // 1. Employee Top Header
   headerContainer: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: Platform.OS === 'ios' ? 8 : 12,
+    paddingBottom: 14,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
     flexDirection: 'row',
@@ -25,60 +26,554 @@ export const employeeStyles = StyleSheet.create({
     alignItems: 'center',
   },
   headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
+  },
+  bankIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: '#FFF3E0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  headerTitleCol: {
+    flex: 1,
+  },
+  headerBankTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0F172A',
+    letterSpacing: -0.2,
   },
   headerBranchTitle: {
     fontSize: 16,
     fontWeight: '700',
     color: '#0F172A',
   },
+  headerBranchSubtitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748B',
+    marginTop: 1,
+  },
   headerSubtitle: {
     fontSize: 12,
     color: '#64748B',
     marginTop: 2,
   },
-  statusPickerContainer: {
+  headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
   },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: '#ECFDF5',
+    borderRadius: 18,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#10B981',
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
     marginRight: 6,
   },
   statusText: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#065F46',
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  notificationBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F8FAFC',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  notificationDot: {
+    position: 'absolute',
+    top: 6,
+    right: 7,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: COLORS.primary,
   },
 
-  // 2. Now Serving Hero Card
-  servingCard: {
-    backgroundColor: '#0F172A', // Deep modern navy
-    borderRadius: 18,
-    padding: 18,
-    marginBottom: 16,
+  // 2. Section Headers
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+    marginTop: 4,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  sectionCount: {
+    fontSize: 13,
+    color: '#64748B',
+    fontWeight: '600',
+  },
+  overviewTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0F172A',
+    letterSpacing: -0.2,
+  },
+  overviewDateText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748B',
+  },
+
+  // 3. 2x2 Overview Stats Grid & Legacy Stats Grid
+  overviewGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginBottom: 20,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 20,
+  },
+  statCardBox: {
+    width: '48%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     ...Platform.select({
       ios: {
         shadowColor: '#0F172A',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.2,
-        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 6,
       },
       android: {
-        elevation: 6,
+        elevation: 1.5,
       },
     }),
+  },
+  statCard: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#64748B',
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  statHint: {
+    fontSize: 11,
+    color: '#94A3B8',
+    marginTop: 4,
+  },
+  statTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  statIconBox: {
+    marginRight: 6,
+  },
+  statTitleText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#64748B',
+    flexShrink: 1,
+  },
+  statValueRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 6,
+  },
+  statBigNumber: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#0F172A',
+    letterSpacing: -0.5,
+  },
+  statTrendBadge: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#10B981',
+  },
+  statSubLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#64748B',
+    flexShrink: 1,
+  },
+
+  // 4. Next in Queue Card Container
+  nextInQueueContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    overflow: 'hidden',
+    marginBottom: 20,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#0F172A',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  nextInQueueHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 14,
+  },
+  nextInQueueTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  viewAllText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.primary,
+  },
+  callNextBannerBtn: {
+    backgroundColor: COLORS.primary,
+    marginHorizontal: 16,
+    marginBottom: 14,
+    paddingVertical: 14,
+    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: COLORS.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
+  },
+  callNextBannerText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+
+  // 5. Queue Ticket Item in Dashboard / List
+  ticketListWrapper: {
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+  },
+  queueRowItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  queueRowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  ticketCircleBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#EEF2FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  ticketCircleText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#1E293B',
+  },
+  ticketRowDetails: {
+    flex: 1,
+    marginRight: 8,
+  },
+  ticketRowService: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  ticketRowWaitTime: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2,
+    fontWeight: '500',
+  },
+  ticketActionBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#FFFFFF',
+  },
+  ticketActionBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#334155',
+  },
+
+  // Legacy Ticket Item
+  ticketItem: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  ticketItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  ticketItemTokenBadge: {
+    width: 50,
+    height: 50,
+    borderRadius: 12,
+    backgroundColor: '#FFF3E0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  ticketItemTokenText: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: COLORS.primary,
+  },
+  ticketItemDetails: {
+    flex: 1,
+  },
+  ticketItemCustomerName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  ticketItemServiceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 3,
+  },
+  ticketItemServiceName: {
+    fontSize: 12,
+    color: '#64748B',
+    marginRight: 8,
+  },
+  ticketItemWaitTime: {
+    fontSize: 11,
+    color: '#94A3B8',
+  },
+  ticketItemRight: {
+    alignItems: 'flex-end',
+  },
+  ticketServeButton: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 8,
+  },
+  ticketServeButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+
+  // 6. Generic Clean Empty State
+  cleanEmptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 32,
+    paddingHorizontal: 20,
+  },
+  cleanEmptyTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginTop: 8,
+  },
+  cleanEmptySub: {
+    fontSize: 12,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    paddingHorizontal: 20,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginTop: 10,
+  },
+  emptySubtitle: {
+    fontSize: 13,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+
+  // 7. Search Bar & Filter Pills (for Queue and Appointment tabs)
+  searchBarContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#0F172A',
+  },
+  filterPillsScroll: {
+    marginBottom: 14,
+  },
+  filterPill: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginRight: 8,
+  },
+  filterPillActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  filterPillText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#64748B',
+  },
+  filterPillTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+
+  // Legacy Call Next Card & Now Serving Hero Card styles
+  callNextButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  callNextLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  callNextIconCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  callNextTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  callNextSubtitle: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.85)',
+    marginTop: 2,
+  },
+  callNextBadge: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+  },
+  callNextBadgeText: {
+    color: COLORS.primary,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  servingCard: {
+    backgroundColor: '#0F172A',
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 16,
   },
   servingTopRow: {
     flexDirection: 'row',
@@ -98,7 +593,6 @@ export const employeeStyles = StyleSheet.create({
     color: '#EE7D17',
     fontSize: 11,
     fontWeight: '700',
-    letterSpacing: 0.5,
   },
   servingTimerContainer: {
     flexDirection: 'row',
@@ -113,7 +607,6 @@ export const employeeStyles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     marginLeft: 4,
-    fontVariant: ['tabular-nums'],
   },
   ticketHeroRow: {
     flexDirection: 'row',
@@ -125,7 +618,6 @@ export const employeeStyles = StyleSheet.create({
     fontSize: 36,
     fontWeight: '800',
     color: '#FFFFFF',
-    letterSpacing: 1,
   },
   ticketServicePill: {
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
@@ -198,229 +690,6 @@ export const employeeStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
-  // 3. Call Next Large CTA Button
-  callNextButton: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-    ...Platform.select({
-      ios: {
-        shadowColor: COLORS.primary,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
-  },
-  callNextLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  callNextIconCircle: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  callNextTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  callNextSubtitle: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.85)',
-    marginTop: 2,
-  },
-  callNextBadge: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
-  },
-  callNextBadgeText: {
-    color: COLORS.primary,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-
-  // 4. Section Headers
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-    marginTop: 4,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
-  sectionCount: {
-    fontSize: 13,
-    color: '#64748B',
-    fontWeight: '600',
-  },
-
-  // 5. Queue Ticket List Item Card
-  ticketItem: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  ticketItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  ticketItemTokenBadge: {
-    width: 50,
-    height: 50,
-    borderRadius: 12,
-    backgroundColor: '#FFF3E0',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  ticketItemTokenText: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: COLORS.primary,
-  },
-  ticketItemDetails: {
-    flex: 1,
-  },
-  ticketItemCustomerName: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
-  ticketItemServiceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 3,
-  },
-  ticketItemServiceName: {
-    fontSize: 12,
-    color: '#64748B',
-    marginRight: 8,
-  },
-  ticketItemWaitTime: {
-    fontSize: 11,
-    color: '#94A3B8',
-  },
-  ticketItemRight: {
-    alignItems: 'flex-end',
-  },
-  ticketServeButton: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 8,
-  },
-  ticketServeButtonText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-
-  // 6. Filter & Search Bar
-  searchBarContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 8,
-    fontSize: 14,
-    color: '#0F172A',
-  },
-  filterPillsScroll: {
-    marginBottom: 14,
-  },
-  filterPill: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 20,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginRight: 8,
-  },
-  filterPillActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
-  },
-  filterPillText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#64748B',
-  },
-  filterPillTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-  },
-
-  // 7. Stats Grid
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    marginBottom: 20,
-  },
-  statCard: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#64748B',
-    fontWeight: '600',
-    marginBottom: 6,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#0F172A',
-  },
-  statHint: {
-    fontSize: 11,
-    color: '#94A3B8',
-    marginTop: 4,
-  },
-
-  // 8. Walk-in Screen Ticket Receipt
   receiptCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
@@ -429,17 +698,6 @@ export const employeeStyles = StyleSheet.create({
     borderColor: '#E2E8F0',
     alignItems: 'center',
     marginVertical: 16,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
   },
   receiptBankName: {
     fontSize: 14,
@@ -488,30 +746,6 @@ export const employeeStyles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: '#0F172A',
-  },
-
-  // 9. Clean Empty State
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-    paddingHorizontal: 20,
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginTop: 10,
-  },
-  emptySubtitle: {
-    fontSize: 13,
-    color: '#64748B',
-    textAlign: 'center',
-    marginTop: 4,
   },
 });
 
