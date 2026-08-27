@@ -18,6 +18,7 @@ import { COLORS } from '../../../../../constants/colors';
 import { employeeApi, EmployeeTicket } from '../../../../api/employee.api';
 import { branchApi } from '../../../../api/branch.api';
 import { authStyles } from '../../../../../assets/styles/auth.styles';
+import { agentsStyles } from '../../../../../assets/styles/agents.styles';
 
 const SERVICES = [
   { id: '1', name: 'Cash Deposit & Withdrawal', icon: 'cash' },
@@ -162,37 +163,37 @@ export default function WalkInScreen() {
             {/* Receipt Actions */}
             <View style={{ flexDirection: 'row', gap: 10, marginBottom: 24 }}>
               <TouchableOpacity
-                style={[styles.primaryBtn, { flex: 1, backgroundColor: COLORS.navy }]}
+                style={[agentsStyles.primaryBtn, { flex: 1, backgroundColor: COLORS.navy }]}
                 onPress={handlePrintSlip}
                 activeOpacity={0.85}
               >
                 <Feather name="printer" size={18} color="#FFFFFF" />
-                <Text style={styles.primaryBtnText}>Print Ticket</Text>
+                <Text style={agentsStyles.primaryBtnText}>Print Ticket</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.primaryBtn, { flex: 1, backgroundColor: COLORS.primary }]}
+                style={[agentsStyles.primaryBtn, { flex: 1, backgroundColor: COLORS.primary }]}
                 onPress={() => setIssuedTicket(null)}
                 activeOpacity={0.85}
               >
                 <Ionicons name="add-circle-outline" size={18} color="#FFFFFF" />
-                <Text style={styles.primaryBtnText}>New Token</Text>
+                <Text style={agentsStyles.primaryBtnText}>New Token</Text>
               </TouchableOpacity>
             </View>
           </View>
         ) : (
           /* Issue Form */
-          <View style={styles.formContainer}>
-            <Text style={styles.formSectionTitle}>Select Banking Service</Text>
-            <View style={styles.serviceCardsGrid}>
+          <View style={agentsStyles.formContainer}>
+            <Text style={agentsStyles.formSectionTitle}>Select Banking Service</Text>
+            <View style={agentsStyles.serviceCardsGrid}>
               {SERVICES.map((srv) => {
                 const isSelected = selectedService === srv.name;
                 return (
                   <TouchableOpacity
                     key={srv.id}
                     style={[
-                      styles.serviceOptionCard,
-                      isSelected && styles.serviceOptionCardActive,
+                      agentsStyles.serviceOptionCard,
+                      isSelected && agentsStyles.serviceOptionCardActive,
                     ]}
                     onPress={() => setSelectedService(srv.name)}
                     activeOpacity={0.8}
@@ -204,8 +205,8 @@ export default function WalkInScreen() {
                     />
                     <Text
                       style={[
-                        styles.serviceOptionTitle,
-                        isSelected && styles.serviceOptionTitleActive,
+                        agentsStyles.serviceOptionTitle,
+                        isSelected && agentsStyles.serviceOptionTitleActive,
                       ]}
                     >
                       {srv.name}
@@ -216,20 +217,20 @@ export default function WalkInScreen() {
             </View>
 
             {/* Customer Details Form */}
-            <Text style={[styles.formSectionTitle, { marginTop: 16 }]}>Customer Information</Text>
+            <Text style={[agentsStyles.formSectionTitle, { marginTop: 16 }]}>Customer Information</Text>
 
-            <Text style={styles.inputLabel}>Customer Name (Optional)</Text>
+            <Text style={agentsStyles.inputLabel}>Customer Name (Optional)</Text>
             <TextInput
-              style={styles.textInput}
+              style={agentsStyles.textInput}
               placeholder="e.g. Almaz Tadesse"
               placeholderTextColor="#94A3B8"
               value={customerName}
               onChangeText={setCustomerName}
             />
 
-            <Text style={styles.inputLabel}>Phone Number (Optional)</Text>
+            <Text style={agentsStyles.inputLabel}>Phone Number (Optional)</Text>
             <TextInput
-              style={styles.textInput}
+              style={agentsStyles.textInput}
               placeholder="0911223344"
               placeholderTextColor="#94A3B8"
               keyboardType="phone-pad"
@@ -239,7 +240,7 @@ export default function WalkInScreen() {
 
             {/* Generate Action */}
             <TouchableOpacity
-              style={[styles.generateButton, submitting && { opacity: 0.7 }]}
+              style={[agentsStyles.generateButton, submitting && { opacity: 0.7 }]}
               onPress={handleGenerateTicket}
               disabled={submitting}
               activeOpacity={0.85}
@@ -249,7 +250,7 @@ export default function WalkInScreen() {
               ) : (
                 <>
                   <MaterialCommunityIcons name="ticket-confirmation" size={20} color="#FFFFFF" />
-                  <Text style={styles.generateButtonText}>Issue Ticket Token</Text>
+                  <Text style={agentsStyles.generateButtonText}>Issue Ticket Token</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -288,93 +289,4 @@ export default function WalkInScreen() {
     </View>
     </KeyboardAvoidingView>
   );
-}
-
-const styles = StyleSheet.create({
-  formContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  formSectionTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginBottom: 12,
-  },
-  serviceCardsGrid: {
-    gap: 8,
-  },
-  serviceOptionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  serviceOptionCardActive: {
-    backgroundColor: '#FFF3E0',
-    borderColor: COLORS.primary,
-  },
-  serviceOptionTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#334155',
-    marginLeft: 10,
-    flex: 1,
-  },
-  serviceOptionTitleActive: {
-    color: COLORS.primary,
-    fontWeight: '700',
-  },
-  inputLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#64748B',
-    marginBottom: 6,
-    marginTop: 12,
-  },
-  textInput: {
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: '#0F172A',
-  },
-  generateButton: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 14,
-    paddingVertical: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: 20,
-  },
-  generateButtonText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  primaryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 12,
-    gap: 6,
-  },
-  primaryBtnText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-});
+};

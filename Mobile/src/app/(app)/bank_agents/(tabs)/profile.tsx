@@ -18,6 +18,8 @@ import { COLORS } from '../../../../../constants/colors';
 import { EmployeeHeader, CounterStatus } from '../../../../components/employee/EmployeeHeader';
 import { userApi, UserData } from '../../../../api/user.api';
 import { employeeApi, EmployeeStats } from '../../../../api/employee.api';
+import { agentsStyles } from '../../../../../assets/styles/agents.styles';
+
 
 export default function EmployeeProfileScreen() {
   const { signOut } = useAuth();
@@ -125,56 +127,56 @@ export default function EmployeeProfileScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* 1. Agent Info Card */}
-        <View style={styles.profileCard}>
-          <View style={styles.avatarCircle}>
-            <Text style={styles.avatarText}>
+        <View style={agentsStyles.profileCard}>
+          <View style={agentsStyles.avatarCircle}>
+            <Text style={agentsStyles.avatarText}>
               {fullName.charAt(0).toUpperCase()}
             </Text>
           </View>
 
-          <Text style={styles.profileName}>{fullName}</Text>
-          <Text style={styles.profileEmail}>{email}</Text>
+          <Text style={agentsStyles.profileName}>{fullName}</Text>
+          <Text style={agentsStyles.profileEmail}>{email}</Text>
 
-          <View style={styles.roleBadge}>
+          <View style={agentsStyles.roleBadge}>
             <MaterialCommunityIcons name="shield-check" size={14} color={COLORS.primary} />
-            <Text style={styles.roleBadgeText}>AUTHORIZED TELLER</Text>
+            <Text style={agentsStyles.roleBadgeText}>AUTHORIZED TELLER</Text>
           </View>
         </View>
 
         {/* 2. Assigned Workstation Section */}
         <Text style={employeeStyles.sectionTitle}>Workstation Assignment</Text>
-        <View style={styles.cardContainer}>
-          <View style={styles.infoRow}>
-            <View style={styles.infoIconBox}>
+        <View style={agentsStyles.cardContainer}>
+          <View style={agentsStyles.infoRow}>
+            <View style={agentsStyles.infoIconBox}>
               <Ionicons name="business" size={18} color={COLORS.primary} />
             </View>
             <View style={{ flex: 1, marginLeft: 12 }}>
-              <Text style={styles.infoLabel}>Assigned Branch</Text>
-              <Text style={styles.infoValue}>Wegagen - Bole Branch</Text>
+              <Text style={agentsStyles.infoLabel}>Assigned Branch</Text>
+              <Text style={agentsStyles.infoValue}>Wegagen - Bole Branch</Text>
             </View>
           </View>
 
-          <View style={styles.divider} />
+          <View style={agentsStyles.divider} />
 
-          <View style={styles.infoRow}>
-            <View style={styles.infoIconBox}>
+          <View style={agentsStyles.infoRow}>
+            <View style={agentsStyles.infoIconBox}>
               <MaterialCommunityIcons name="laptop" size={18} color={COLORS.primary} />
             </View>
             <View style={{ flex: 1, marginLeft: 12 }}>
-              <Text style={styles.infoLabel}>Counter / Window</Text>
-              <Text style={styles.infoValue}>Counter 01 • Teller Desk</Text>
+              <Text style={agentsStyles.infoLabel}>Counter / Window</Text>
+              <Text style={agentsStyles.infoValue}>Counter 01 • Teller Desk</Text>
             </View>
           </View>
 
-          <View style={styles.divider} />
+          <View style={agentsStyles.divider} />
 
-          <View style={styles.infoRow}>
-            <View style={styles.infoIconBox}>
+          <View style={agentsStyles.infoRow}>
+            <View style={agentsStyles.infoIconBox}>
               <Feather name="clock" size={18} color={COLORS.primary} />
             </View>
             <View style={{ flex: 1, marginLeft: 12 }}>
-              <Text style={styles.infoLabel}>Active Shift</Text>
-              <Text style={styles.infoValue}>Morning Shift (8:00 AM - 5:00 PM)</Text>
+              <Text style={agentsStyles.infoLabel}>Active Shift</Text>
+              <Text style={agentsStyles.infoValue}>Morning Shift (8:00 AM - 5:00 PM)</Text>
             </View>
           </View>
         </View>
@@ -199,144 +201,14 @@ export default function EmployeeProfileScreen() {
 
         {/* Sign Out Button */}
         <TouchableOpacity
-          style={styles.signOutButton}
+          style={agentsStyles.signOutButton}
           onPress={handleSignOut}
           activeOpacity={0.85}
         >
           <Feather name="log-out" size={18} color="#EF4444" />
-          <Text style={styles.signOutButtonText}>Sign Out from Agent Portal</Text>
+          <Text style={agentsStyles.signOutButtonText}>Sign Out from Agent Portal</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
   );
-}
-
-const styles = StyleSheet.create({
-  profileCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    padding: 20,
-    alignItems: 'center',
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  avatarCircle: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    backgroundColor: '#FFF3E0',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 10,
-    borderWidth: 2,
-    borderColor: COLORS.primary,
-  },
-  avatarText: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: COLORS.primary,
-  },
-  profileName: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#0F172A',
-  },
-  profileEmail: {
-    fontSize: 13,
-    color: '#64748B',
-    marginTop: 2,
-  },
-  roleBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF3E0',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 20,
-    marginTop: 10,
-    gap: 4,
-  },
-  roleBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: COLORS.primary,
-    letterSpacing: 0.5,
-  },
-  cardContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-    marginBottom: 16,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 4,
-  },
-  infoIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: '#FFF3E0',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  infoLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#94A3B8',
-    textTransform: 'uppercase',
-  },
-  infoValue: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginTop: 1,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#F1F5F9',
-    marginVertical: 10,
-  },
-  switchModeButton: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 12,
-  },
-  switchModeTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
-  switchModeSubtitle: {
-    fontSize: 12,
-    color: '#64748B',
-    marginTop: 2,
-  },
-  signOutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#FEE2E2',
-    backgroundColor: '#FEF2F2',
-    marginTop: 8,
-    marginBottom: 20,
-    gap: 6,
-  },
-  signOutButtonText: {
-    color: '#EF4444',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-});
+};

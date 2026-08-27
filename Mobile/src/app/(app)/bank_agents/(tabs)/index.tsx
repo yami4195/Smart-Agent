@@ -22,7 +22,7 @@ import { commonStyles } from '../../../../../assets/styles/common.styles';
 import { COLORS } from '../../../../../constants/colors';
 import { employeeApi, EmployeeTicket, EmployeeStats } from '../../../../api/employee.api';
 import { branchApi } from '../../../../api/branch.api';
-
+import { agentsStyles } from '../../../../../assets/styles/agents.styles';
 export default function EmployeeDashboardScreen() {
   const router = useRouter();
 
@@ -345,11 +345,11 @@ export default function EmployeeDashboardScreen() {
       {/* Ticket Details & Action Modal */}
       {selectedTicket && (
         <Modal visible={true} transparent animationType="slide">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <View style={styles.modalTokenBadge}>
-                  <Text style={styles.modalTokenBadgeText}>{selectedTicket.ticketNumber}</Text>
+          <View style={agentsStyles.modalOverlay}>
+            <View style={agentsStyles.modalContent}>
+              <View style={agentsStyles.modalHeader}>
+                <View style={agentsStyles.modalTokenBadge}>
+                  <Text style={agentsStyles.modalTokenBadgeText}>{selectedTicket.ticketNumber}</Text>
                 </View>
                 <TouchableOpacity
                   onPress={() => setSelectedTicket(null)}
@@ -359,52 +359,52 @@ export default function EmployeeDashboardScreen() {
                 </TouchableOpacity>
               </View>
 
-              <Text style={styles.modalServiceTitle}>{selectedTicket.serviceName}</Text>
-              <Text style={styles.modalStatusText}>Status: {selectedTicket.status}</Text>
+              <Text style={agentsStyles.modalServiceTitle}>{selectedTicket.serviceName}</Text>
+              <Text style={agentsStyles.modalStatusText}>Status: {selectedTicket.status}</Text>
 
-              <View style={styles.modalRow}>
-                <Text style={styles.modalLabel}>Customer</Text>
-                <Text style={styles.modalVal}>{selectedTicket.customerName || 'Walk-in Customer'}</Text>
+              <View style={agentsStyles.modalRow}>
+                <Text style={agentsStyles.modalLabel}>Customer</Text>
+                <Text style={agentsStyles.modalVal}>{selectedTicket.customerName || 'Walk-in Customer'}</Text>
               </View>
 
-              <View style={styles.modalRow}>
-                <Text style={styles.modalLabel}>Est. Wait Time</Text>
-                <Text style={styles.modalVal}>~{selectedTicket.estimatedWaitMins || 5} mins</Text>
+              <View style={agentsStyles.modalRow}>
+                <Text style={agentsStyles.modalLabel}>Est. Wait Time</Text>
+                <Text style={agentsStyles.modalVal}>~{selectedTicket.estimatedWaitMins || 5} mins</Text>
               </View>
 
-              <View style={styles.modalRow}>
-                <Text style={styles.modalLabel}>Branch</Text>
-                <Text style={styles.modalVal}>{branchName}</Text>
+              <View style={agentsStyles.modalRow}>
+                <Text style={agentsStyles.modalLabel}>Branch</Text>
+                <Text style={agentsStyles.modalVal}>{branchName}</Text>
               </View>
 
               {/* Action Buttons */}
-              <View style={styles.modalActions}>
+              <View style={agentsStyles.modalActions}>
                 {selectedTicket.status === 'WAITING' && (
                   <TouchableOpacity
-                    style={[styles.modalActionBtn, { backgroundColor: COLORS.primary }]}
+                    style={[agentsStyles.modalActionBtn, { backgroundColor: COLORS.primary }]}
                     onPress={() => handleServeTicket(selectedTicket)}
                   >
-                    <Text style={styles.modalActionBtnText}>Serve Now</Text>
+                    <Text style={agentsStyles.modalActionBtnText}>Serve Now</Text>
                   </TouchableOpacity>
                 )}
 
                 {selectedTicket.status === 'SERVING' && (
                   <TouchableOpacity
-                    style={[styles.modalActionBtn, { backgroundColor: '#10B981' }]}
+                    style={[agentsStyles.modalActionBtn, { backgroundColor: '#10B981' }]}
                     onPress={() => handleCompleteServing(selectedTicket.id)}
                   >
-                    <Text style={styles.modalActionBtnText}>Complete Service</Text>
+                    <Text style={agentsStyles.modalActionBtnText}>Complete Service</Text>
                   </TouchableOpacity>
                 )}
 
                 <TouchableOpacity
                   style={[
-                    styles.modalActionBtn,
+                    agentsStyles.modalActionBtn,
                     { backgroundColor: '#FEE2E2', borderWidth: 1, borderColor: '#EF4444' },
                   ]}
                   onPress={() => handleCancelTicket(selectedTicket.id)}
                 >
-                  <Text style={[styles.modalActionBtnText, { color: '#EF4444' }]}>
+                  <Text style={[agentsStyles.modalActionBtnText, { color: '#EF4444' }]}>
                     Cancel / No-Show
                   </Text>
                 </TouchableOpacity>
@@ -418,75 +418,5 @@ export default function EmployeeDashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 20,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  modalTokenBadge: {
-    backgroundColor: '#EEF2FF',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 10,
-  },
-  modalTokenBadgeText: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#1E293B',
-  },
-  modalServiceTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
-  modalStatusText: {
-    fontSize: 13,
-    color: '#64748B',
-    marginBottom: 14,
-    marginTop: 2,
-  },
-  modalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  modalLabel: {
-    fontSize: 13,
-    color: '#64748B',
-  },
-  modalVal: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#0F172A',
-  },
-  modalActions: {
-    marginTop: 20,
-    gap: 10,
-    marginBottom: 10,
-  },
-  modalActionBtn: {
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalActionBtnText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '700',
-  },
+ 
 });
