@@ -20,6 +20,7 @@ enum TicketStatus {
   SERVING
   COMPLETED
   CANCELLED
+  NO_SHOW
 }
 
 model User {
@@ -39,7 +40,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tickets       QueueTicket[]
+  tickets       QueueTicket[]  @relation("CustomerTickets")
+  servedTickets QueueTicket[]  @relation("ServedByEmployee")
   forexAlerts   ForexAlert[]
   notifications Notification[]
 }
@@ -80,7 +82,12 @@ model QueueTicket {
   estimatedWaitMins Int          @default(10)
 
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation("CustomerTickets", fields: [userId], references: [id], onDelete: Cascade)
+
+  servedByUserId String?
+  servedByUser   User?   @relation("ServedByEmployee", fields: [servedByUserId], references: [id], onDelete: SetNull)
+
+  isArchivedByEmployee Boolean @default(false)
 
   branchId  String
   branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)

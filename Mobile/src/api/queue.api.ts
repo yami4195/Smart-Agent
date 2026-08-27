@@ -1,9 +1,11 @@
 import api from './axiosInstance';
 
+export type TicketStatusType = 'WAITING' | 'SERVING' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
+
 export interface QueueTicketData {
   id: string;
   ticketNumber: string;
-  status: 'WAITING' | 'SERVING' | 'COMPLETED' | 'CANCELLED';
+  status: TicketStatusType;
   peopleAhead: number;
   estimatedWaitTime: string;
   nowServingTicket: string;
@@ -22,6 +24,7 @@ export interface QueueTicketData {
     description?: string;
   };
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface JoinQueuePayload {
@@ -38,7 +41,17 @@ export interface GetActiveTicketResponse {
   ticket: QueueTicketData | null;
 }
 
-// In-memory cache for active ticket in current session (starts as NULL - no demo queue)
+export interface QueueHistoryItem {
+  id: string;
+  ticketNumber: string;
+  status: TicketStatusType;
+  branchName: string;
+  serviceName: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// In-memory cache for active ticket in current session
 let localActiveTicket: QueueTicketData | null = null;
 
 export const formatEstimatedWait = (mins?: number): string => {
@@ -54,84 +67,92 @@ export const queueApi = {
    */
   getActiveTicket: async (): Promise<QueueTicketData | null> => {
     try {
-      const response = await api.get<GetActiveTicketResponse>('/queues/active');
+      const response = await api.get<GetActiveTicketResponse>('/queues/active', {
+        timeout: 4000,
+      });
       if (response.data?.success && response.data?.hasActiveTicket && response.data?.ticket) {
         const t = response.data.ticket;
         localActiveTicket = {
           id: t.id,
           ticketNumber: t.ticketNumber,
           status: t.status,
-          peopleAhead: t.peopleAhead ?? 2,
+          peopleAhead: t.peopleAhead ?? 0,
           estimatedWaitTime:
             t.estimatedWaitTime ||
             formatEstimatedWait((t as any).estimatedWaitMins),
           nowServingTicket: t.nowServingTicket || 'T-101',
-          counterNumber: t.counterNumber || '02',
+          counterNumber: t.counterNumber || '01',
           branch: t.branch,
           service: t.service,
           createdAt: t.createdAt,
+          updatedAt: t.updatedAt,
         };
         return localActiveTicket;
       }
 
-      if (response.data?.hasActiveTicket === false) {
+      if (response.data?.hasActiveTicket === false || !response.data?.ticket) {
         localActiveTicket = null;
         return null;
       }
 
       return localActiveTicket;
     } catch {
-      // If offline / unauthorized / server unreachable, return current localActiveTicket (which is null unless explicitly joined)
       return localActiveTicket;
     }
   },
 
   /**
-   * Explicitly joins queue when user taps "Join Queue" on the branch details page
+   * Explicitly joins queue with exact service name
    */
   joinQueue: async (payload: JoinQueuePayload): Promise<QueueTicketData> => {
+    const serviceName = payload.serviceName || 'Account Opening';
+    const branchName = payload.branchName || 'Bole Branch';
+
     try {
       const response = await api.post<{ success: boolean; ticket: any }>(
         '/queues/join',
-        payload
+        {
+          branchId: payload.branchId,
+          serviceId: payload.serviceId,
+          serviceName: serviceName,
+        }
       );
       if (response.data?.success && response.data?.ticket) {
         const t = response.data.ticket;
         localActiveTicket = {
           id: t.id,
-          ticketNumber: t.ticketNumber || 'T-104',
+          ticketNumber: t.ticketNumber || 'A-101',
           status: t.status || 'WAITING',
           peopleAhead: t.peopleAhead ?? 2,
           estimatedWaitTime: formatEstimatedWait(t.estimatedWaitMins || payload.estimatedWaitMins || 4),
-          nowServingTicket: t.nowServingTicket || 'T-101',
-          counterNumber: t.counterNumber || '02',
+          nowServingTicket: t.nowServingTicket || 'A-100',
+          counterNumber: t.counterNumber || '01',
           branch: {
             id: t.branch?.id || payload.branchId,
-            name: t.branch?.name || payload.branchName || 'Bole Branch',
+            name: t.branch?.name || branchName,
           },
           service: {
             id: t.service?.id || payload.serviceId || 'srv-selected',
-            name: t.service?.name || payload.serviceName || 'Cash Services',
+            name: t.service?.name || serviceName,
           },
           createdAt: t.createdAt || new Date().toISOString(),
+          updatedAt: t.updatedAt,
         };
         return localActiveTicket;
       }
-    } catch {
-      // Local fallback creation when offline/server down
+    } catch (err) {
+      console.warn('Backend join queue error:', err);
     }
 
-    const branchName = payload.branchName || 'Bole Branch';
-    const serviceName = payload.serviceName || 'Cash Services';
-
+    // Fallback local representation
     localActiveTicket = {
       id: `ticket-${Date.now()}`,
-      ticketNumber: 'T-104',
+      ticketNumber: 'A-101',
       status: 'WAITING',
       peopleAhead: 2,
       estimatedWaitTime: formatEstimatedWait(payload.estimatedWaitMins || 4),
-      nowServingTicket: 'T-101',
-      counterNumber: '02',
+      nowServingTicket: 'A-100',
+      counterNumber: '01',
       branch: {
         id: payload.branchId || 'branch-selected',
         name: branchName,
@@ -147,7 +168,21 @@ export const queueApi = {
   },
 
   /**
-   * Cancel an active ticket and reset to null
+   * Fetch customer past queue history (COMPLETED, CANCELLED, NO_SHOW)
+   */
+  getHistory: async (): Promise<QueueHistoryItem[]> => {
+    try {
+      const response = await api.get<{ success: boolean; tickets: QueueHistoryItem[] }>(
+        '/queues/history'
+      );
+      return response.data?.tickets || [];
+    } catch {
+      return [];
+    }
+  },
+
+  /**
+   * Cancel an active ticket
    */
   cancelTicket: async (ticketId: string): Promise<boolean> => {
     try {
@@ -160,7 +195,7 @@ export const queueApi = {
   },
 
   /**
-   * Clear active ticket
+   * Clear active ticket from local cache
    */
   clearTicket: () => {
     localActiveTicket = null;

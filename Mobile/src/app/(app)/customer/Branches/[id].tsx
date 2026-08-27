@@ -39,9 +39,11 @@ const FALLBACK_BRANCH: BranchData = {
   waitingCount: 8,
   estimatedWaitMins: 12,
   services: [
+    'Account Opening',
+    'ATM Card Request',
     'Cash Services',
-    'Account Services',
-    'Loan & Credit',
+    'Loan Consultation',
+    'Forex Exchange',
     'Digital Banking',
   ],
 };
@@ -57,7 +59,7 @@ export default function BranchDetailsScreen() {
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedService, setSelectedService] = useState<string>('Cash Services');
+  const [selectedService, setSelectedService] = useState<string>('Account Opening');
 
   const fetchBranchDetails = useCallback(async (isRefresh: boolean = false) => {
     if (!id) return;

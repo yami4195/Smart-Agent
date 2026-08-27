@@ -1,9 +1,11 @@
 import api from './axiosInstance';
 
+export type EmployeeTicketStatus = 'WAITING' | 'SERVING' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
+
 export interface EmployeeTicket {
   id: string;
   ticketNumber: string;
-  status: 'WAITING' | 'SERVING' | 'COMPLETED' | 'CANCELLED';
+  status: EmployeeTicketStatus;
   estimatedWaitMins: number;
   customerName: string;
   customerPhone: string;
@@ -21,21 +23,35 @@ export interface EmployeeStats {
   totalServing: number;
   totalCompleted: number;
   totalCancelled: number;
+  totalNoShow?: number;
   totalServedToday: number;
   avgWaitMins: number;
   avgServiceMins: number;
 }
 
+export interface EmployeeHistoryItem {
+  id: string;
+  ticketNumber: string;
+  status: EmployeeTicketStatus;
+  customerName: string;
+  customerPhone: string;
+  serviceName: string;
+  branchName: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface CreateWalkInPayload {
   branchId: string;
   serviceId?: string;
+  serviceName?: string;
   customerName?: string;
   phone?: string;
 }
 
 export const employeeApi = {
   /**
-   * Fetch all tickets for a branch
+   * Fetch all tickets for a branch with optional status/service filters
    */
   getBranchTickets: async (
     branchId: string,
@@ -89,11 +105,11 @@ export const employeeApi = {
   },
 
   /**
-   * Update ticket status (SERVING, COMPLETED, CANCELLED)
+   * Update ticket status (SERVING, COMPLETED, CANCELLED, NO_SHOW)
    */
   updateTicketStatus: async (
     ticketId: string,
-    status: 'WAITING' | 'SERVING' | 'COMPLETED' | 'CANCELLED'
+    status: EmployeeTicketStatus
   ): Promise<EmployeeTicket | null> => {
     try {
       const response = await api.patch<{ success: boolean; ticket: EmployeeTicket }>(
@@ -118,32 +134,65 @@ export const employeeApi = {
   },
 
   /**
-   * Fetch daily shift/branch statistics
+   * Fetch daily shift / teller statistics
    */
   getEmployeeStats: async (branchId: string): Promise<EmployeeStats> => {
     try {
       const response = await api.get<{ success: boolean; stats: EmployeeStats }>(
         `/queues/employee/stats/${branchId}`
       );
-      return response.data?.stats || {
-        totalWaiting: 0,
-        totalServing: 0,
-        totalCompleted: 0,
-        totalCancelled: 0,
-        totalServedToday: 0,
-        avgWaitMins: 0,
-        avgServiceMins: 3.5,
-      };
+      return (
+        response.data?.stats || {
+          totalWaiting: 0,
+          totalServing: 0,
+          totalCompleted: 0,
+          totalCancelled: 0,
+          totalNoShow: 0,
+          totalServedToday: 0,
+          avgWaitMins: 0,
+          avgServiceMins: 3.5,
+        }
+      );
     } catch {
       return {
         totalWaiting: 0,
         totalServing: 0,
         totalCompleted: 0,
         totalCancelled: 0,
+        totalNoShow: 0,
         totalServedToday: 0,
         avgWaitMins: 0,
         avgServiceMins: 3.5,
       };
+    }
+  },
+
+  /**
+   * Fetch employee handled queue history
+   */
+  getEmployeeHistory: async (branchId?: string): Promise<EmployeeHistoryItem[]> => {
+    try {
+      const response = await api.get<{ success: boolean; history: EmployeeHistoryItem[] }>(
+        '/queues/employee/history',
+        { params: { branchId } }
+      );
+      return response.data?.history || [];
+    } catch {
+      return [];
+    }
+  },
+
+  /**
+   * Delete / archive a completed or cancelled ticket from personal employee history view
+   */
+  archiveHistoryTicket: async (ticketId: string): Promise<boolean> => {
+    try {
+      const response = await api.delete<{ success: boolean }>(
+        `/queues/employee/history/${ticketId}`
+      );
+      return response.data?.success ?? true;
+    } catch {
+      return false;
     }
   },
 

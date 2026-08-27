@@ -9,6 +9,7 @@ import {
   Alert,
   Modal,
   StyleSheet,
+  Animated,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
@@ -23,6 +24,8 @@ import { COLORS } from '../../../../../constants/colors';
 import { employeeApi, EmployeeTicket, EmployeeStats } from '../../../../api/employee.api';
 import { branchApi } from '../../../../api/branch.api';
 import { agentsStyles } from '../../../../../assets/styles/agents.styles';
+import { socketService } from '../../../../services/socket.service';
+
 export default function EmployeeDashboardScreen() {
   const router = useRouter();
 
@@ -50,6 +53,10 @@ export default function EmployeeDashboardScreen() {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [callingNext, setCallingNext] = useState<boolean>(false);
   const [selectedTicket, setSelectedTicket] = useState<EmployeeTicket | null>(null);
+
+  // Live Toast Notification Banner
+  const [toastNotif, setToastNotif] = useState<{ title: string; message: string } | null>(null);
+  const [unreadNotifCount, setUnreadNotifCount] = useState<number>(0);
 
   // Initialize branch
   useEffect(() => {
@@ -111,6 +118,54 @@ export default function EmployeeDashboardScreen() {
     }, [branchId, fetchDeskData])
   );
 
+  // Socket.IO Real-Time Queue & Notification Integration
+  useEffect(() => {
+    if (!branchId) return;
+
+    socketService.connect();
+    socketService.joinBranch(branchId);
+
+    // 1. Live new queue request from customer
+    const unsubNewTicket = socketService.onNewTicket((newTicket: EmployeeTicket) => {
+      if (newTicket.branchId === branchId || !newTicket.branchId) {
+        setWaitingTickets((prev) => {
+          if (prev.some((t) => t.id === newTicket.id)) return prev;
+          return [...prev, newTicket];
+        });
+        setStats((prev) => ({
+          ...prev,
+          totalWaiting: prev.totalWaiting + 1,
+        }));
+      }
+    });
+
+    // 2. Live ticket updates (serving, completed, cancelled, no-show)
+    const unsubTicketUpdated = socketService.onTicketUpdated((updatedTicket: EmployeeTicket) => {
+      setWaitingTickets((prev) => prev.filter((t) => t.id !== updatedTicket.id));
+      if (updatedTicket.status === 'SERVING') {
+        setCurrentlyServing(updatedTicket);
+        setCounterStatus('Serving');
+      } else if (currentlyServing?.id === updatedTicket.id) {
+        setCurrentlyServing(null);
+        setCounterStatus('Available');
+      }
+      fetchDeskData(true);
+    });
+
+    // 3. Live Employee Notification Bar Event
+    const unsubEmpNotif = socketService.onEmployeeNotification((notif) => {
+      setUnreadNotifCount((prev) => prev + 1);
+      setToastNotif({ title: notif.title, message: notif.message });
+      setTimeout(() => setToastNotif(null), 5000);
+    });
+
+    return () => {
+      unsubNewTicket();
+      unsubTicketUpdated();
+      unsubEmpNotif();
+    };
+  }, [branchId, currentlyServing?.id, fetchDeskData]);
+
   // Call Next Customer
   const handleCallNext = async () => {
     if (!branchId) return;
@@ -130,7 +185,7 @@ export default function EmployeeDashboardScreen() {
         fetchDeskData(true);
         Alert.alert(
           'Customer Called 📢',
-          `Ticket ${result.ticket.ticketNumber} called to Counter ${counterNumber}.`
+          `Ticket ${result.ticket.ticketNumber} for ${result.ticket.serviceName} called to Counter ${counterNumber}.`
         );
       } else {
         Alert.alert('Queue Empty', 'There are no waiting customers in the queue.');
@@ -150,13 +205,29 @@ export default function EmployeeDashboardScreen() {
       setSelectedTicket(null);
       setCounterStatus('Available');
       fetchDeskData(true);
-      Alert.alert('Service Completed', 'Customer ticket has been completed successfully.');
+      Alert.alert('Service Completed ✅', 'Customer service marked completed.');
     } catch {
       Alert.alert('Error', 'Could not complete ticket.');
     }
   };
 
-  // Cancel / No-Show
+  // Mark as Late / No-Show
+  const handleMarkNoShow = async (ticketId: string) => {
+    try {
+      await employeeApi.updateTicketStatus(ticketId, 'NO_SHOW');
+      if (currentlyServing?.id === ticketId) {
+        setCurrentlyServing(null);
+        setCounterStatus('Available');
+      }
+      setSelectedTicket(null);
+      fetchDeskData(true);
+      Alert.alert('Marked as No-Show ⏰', 'Customer was marked as late / no-show and notified.');
+    } catch {
+      Alert.alert('Error', 'Could not update ticket status.');
+    }
+  };
+
+  // Cancel Ticket
   const handleCancelTicket = async (ticketId: string) => {
     try {
       await employeeApi.updateTicketStatus(ticketId, 'CANCELLED');
@@ -166,7 +237,7 @@ export default function EmployeeDashboardScreen() {
       }
       setSelectedTicket(null);
       fetchDeskData(true);
-      Alert.alert('Ticket Cancelled', 'Marked customer ticket as cancelled / no-show.');
+      Alert.alert('Ticket Cancelled', 'Ticket has been cancelled.');
     } catch {
       Alert.alert('Error', 'Could not cancel ticket.');
     }
@@ -187,7 +258,7 @@ export default function EmployeeDashboardScreen() {
     }
   };
 
-  // Format today's date (e.g. "Oct 24, 2023")
+  // Format today's date
   const todayFormatted = new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
@@ -196,13 +267,37 @@ export default function EmployeeDashboardScreen() {
 
   return (
     <View style={commonStyles.safeArea}>
-      {/* 1. Top Header with Bank Icon, Assigned Branch, Status Pill & Notifications */}
+      {/* Real-time notification banner toast */}
+      {toastNotif && (
+        <TouchableOpacity
+          style={styles.toastBanner}
+          onPress={() => setToastNotif(null)}
+          activeOpacity={0.9}
+        >
+          <Ionicons name="notifications" size={18} color="#0A2540" style={{ marginRight: 8 }} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.toastTitle}>{toastNotif.title}</Text>
+            <Text style={styles.toastMessage} numberOfLines={1}>
+              {toastNotif.message}
+            </Text>
+          </View>
+          <Ionicons name="close" size={16} color="#64748B" />
+        </TouchableOpacity>
+      )}
+
+      {/* 1. Top Header */}
       <EmployeeHeader
         branchName={branchName}
         counterNumber={counterNumber}
         status={counterStatus}
         onStatusChange={(newStatus) => setCounterStatus(newStatus)}
-        onNotificationPress={() => Alert.alert('Notifications', 'No new branch notifications.')}
+        onNotificationPress={() => {
+          setUnreadNotifCount(0);
+          Alert.alert(
+            'Employee Notifications',
+            `You are monitoring live queue requests at ${branchName}.`
+          );
+        }}
       />
 
       <ScrollView
@@ -253,7 +348,7 @@ export default function EmployeeDashboardScreen() {
             value={waitingTickets.length}
             subtext={
               waitingTickets.length > 0
-                ? `Avg ${stats.avgWaitMins || 12}m wait`
+                ? `Avg ${stats.avgWaitMins || 10}m wait`
                 : 'Avg 0m wait'
             }
           />
@@ -276,7 +371,7 @@ export default function EmployeeDashboardScreen() {
           <StatCard
             icon={<Feather name="clock" size={18} color="#334155" />}
             label="Avg Wait Time"
-            value={waitingTickets.length > 0 ? `${stats.avgWaitMins || 14}m` : '0m'}
+            value={waitingTickets.length > 0 ? `${stats.avgWaitMins || 10}m` : '0m'}
             subtext="Today"
           />
         </View>
@@ -335,7 +430,7 @@ export default function EmployeeDashboardScreen() {
               <MaterialCommunityIcons name="ticket-outline" size={32} color="#94A3B8" />
               <Text style={employeeStyles.cleanEmptyTitle}>No Customers in Queue</Text>
               <Text style={employeeStyles.cleanEmptySub}>
-                Waiting tickets will automatically appear here when customers check in.
+                Waiting tickets will automatically appear here in real time when customers request a token.
               </Text>
             </View>
           )}
@@ -368,6 +463,11 @@ export default function EmployeeDashboardScreen() {
               </View>
 
               <View style={agentsStyles.modalRow}>
+                <Text style={agentsStyles.modalLabel}>Phone</Text>
+                <Text style={agentsStyles.modalVal}>{selectedTicket.customerPhone || '—'}</Text>
+              </View>
+
+              <View style={agentsStyles.modalRow}>
                 <Text style={agentsStyles.modalLabel}>Est. Wait Time</Text>
                 <Text style={agentsStyles.modalVal}>~{selectedTicket.estimatedWaitMins || 5} mins</Text>
               </View>
@@ -397,6 +497,20 @@ export default function EmployeeDashboardScreen() {
                   </TouchableOpacity>
                 )}
 
+                {/* Late / No Show Action */}
+                <TouchableOpacity
+                  style={[
+                    agentsStyles.modalActionBtn,
+                    { backgroundColor: '#FFFBEB', borderWidth: 1, borderColor: '#D97706' },
+                  ]}
+                  onPress={() => handleMarkNoShow(selectedTicket.id)}
+                >
+                  <Text style={[agentsStyles.modalActionBtnText, { color: '#D97706' }]}>
+                    Mark as Late / No-Show
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Cancel Action */}
                 <TouchableOpacity
                   style={[
                     agentsStyles.modalActionBtn,
@@ -405,7 +519,7 @@ export default function EmployeeDashboardScreen() {
                   onPress={() => handleCancelTicket(selectedTicket.id)}
                 >
                   <Text style={[agentsStyles.modalActionBtnText, { color: '#EF4444' }]}>
-                    Cancel / No-Show
+                    Cancel Ticket
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -418,5 +532,33 @@ export default function EmployeeDashboardScreen() {
 }
 
 const styles = StyleSheet.create({
- 
+  toastBanner: {
+    position: 'absolute',
+    top: 50,
+    left: 16,
+    right: 16,
+    zIndex: 999,
+    backgroundColor: '#EBF3FF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#93C5FD',
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  toastTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0A2540',
+  },
+  toastMessage: {
+    fontSize: 12,
+    color: '#334155',
+    marginTop: 1,
+  },
 });

@@ -1,16 +1,19 @@
 import { useSignIn } from '@clerk/expo';
 import { Link, useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { authStyles } from '../../../assets/styles/auth.styles';
 import { COLORS } from '../../../constants/colors';
+import { biometricService } from '../../services/biometric.service';
 import {
   ActivityIndicator,
+  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   View,
@@ -25,9 +28,124 @@ export default function SignInScreen() {
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [biometricLoading, setBiometricLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
+  const [hasBiometrics, setHasBiometrics] = useState(false);
+  const [biometricsEnabled, setBiometricsEnabled] = useState(false);
+  const [biometricLabel, setBiometricLabel] = useState('Fingerprint');
+
+  // Check biometric support on mount
+  useEffect(() => {
+    const initBiometrics = async () => {
+      const available = await biometricService.isBiometricAvailable();
+      setHasBiometrics(available);
+
+      if (available) {
+        const label = await biometricService.getBiometricTypeLabel();
+        setBiometricLabel(label);
+
+        const enabled = await biometricService.isBiometricsEnabled();
+        setBiometricsEnabled(enabled);
+
+        // Pre-fill email if saved
+        if (enabled) {
+          const creds = await biometricService.getSavedCredentials();
+          if (creds?.email) {
+            setEmailAddress(creds.email);
+          }
+        }
+      }
+    };
+
+    initBiometrics();
+  }, []);
+
+  // Ask to enable biometrics after first manual login
+  const promptEnableBiometrics = (email: string, pass: string) => {
+    Alert.alert(
+      `Enable ${biometricLabel} Sign-In 🔐`,
+      `Would you like to use your ${biometricLabel.toLowerCase()} for faster and more secure sign-in next time?`,
+      [
+        {
+          text: 'Not Now',
+          style: 'cancel',
+          onPress: () => router.replace('/(app)'),
+        },
+        {
+          text: 'Enable',
+          onPress: async () => {
+            const authed = await biometricService.authenticateWithBiometrics(
+              `Confirm your ${biometricLabel.toLowerCase()} to enable quick sign-in`
+            );
+            if (authed) {
+              await biometricService.enableBiometrics(email, pass);
+            }
+            router.replace('/(app)');
+          },
+        },
+      ]
+    );
+  };
+
+  // Sign In using Fingerprint / Face ID
+  const handleBiometricSignIn = async () => {
+    if (!signIn) {
+      setErrorMsg('Sign-in service is initializing. Please try again.');
+      return;
+    }
+
+    const creds = await biometricService.getSavedCredentials();
+    if (!creds || !creds.email || !creds.password) {
+      setErrorMsg('No saved credentials found. Please sign in with your password.');
+      setBiometricsEnabled(false);
+      return;
+    }
+
+    setBiometricLoading(true);
+    setErrorMsg('');
+
+    try {
+      const authenticated = await biometricService.authenticateWithBiometrics(
+        `Scan ${biometricLabel.toLowerCase()} to log in`
+      );
+
+      if (!authenticated) {
+        setBiometricLoading(false);
+        return;
+      }
+
+      // Log in with stored credentials
+      const { error } = await signIn.password({
+        identifier: creds.email.trim(),
+        password: creds.password,
+      });
+
+      if (error) {
+        setErrorMsg(error.message || 'Biometric login failed. Please sign in with password.');
+        return;
+      }
+
+      if (signIn.status === 'complete') {
+        const { error: finalizeError } = await signIn.finalize();
+        if (finalizeError) {
+          setErrorMsg(finalizeError.message || 'Could not finalize session.');
+          return;
+        }
+        router.replace('/(app)');
+      } else {
+        setErrorMsg(`Sign-in status: ${signIn.status}. Please check your account.`);
+      }
+    } catch (err: any) {
+      console.error('Biometric sign-in error:', err);
+      setErrorMsg('Biometric authentication failed. Please enter your password.');
+    } finally {
+      setBiometricLoading(false);
+    }
+  };
+
+  // Standard Email & Password Sign In
   const handleSignIn = async () => {
     if (!emailAddress.trim()) {
       setErrorMsg('Email address required');
@@ -60,8 +178,6 @@ export default function SignInScreen() {
         return;
       }
 
-      console.log('Sign-in current status:', signIn.status);
-
       // Check whether the sign-in is actually complete
       if (signIn.status === 'complete') {
         const { error: finalizeError } = await signIn.finalize();
@@ -70,9 +186,39 @@ export default function SignInScreen() {
           setErrorMsg(finalizeError.message || 'Could not finalize session.');
           return;
         }
-        router.replace('/(app)');
-      } else if (signIn.status === 'needs_first_factor' || signIn.status === 'needs_second_factor') {
-        setErrorMsg('Additional verification required. Please verify your email address.');
+
+        // If biometrics available on device and not yet enabled, prompt user
+        if (hasBiometrics && !biometricsEnabled) {
+          promptEnableBiometrics(emailAddress.trim(), password);
+        } else {
+          // If already enabled, update saved credentials silently
+          if (biometricsEnabled) {
+            await biometricService.enableBiometrics(emailAddress.trim(), password);
+          }
+          router.replace('/(app)');
+        }
+      } else if (signIn.status === 'needs_client_trust' || signIn.status === 'needs_first_factor') {
+        // Attempt to send email verification code for new/untrusted client
+        try {
+          const signInAny = signIn as any;
+          if (signInAny.verifications && typeof signInAny.verifications.sendEmailCode === 'function') {
+            const { error: sendErr } = await signInAny.verifications.sendEmailCode();
+            if (!sendErr) {
+              router.push({
+                pathname: '/(auth)/verify-email',
+                params: { email: emailAddress.trim() },
+              });
+              return;
+            }
+          }
+        } catch (vErr) {
+          console.warn('Verification dispatch error:', vErr);
+        }
+        setErrorMsg(
+          'Security check required for this device. Please check your email or disable "Bot Protection / Attack Protection" in your Clerk Dashboard (under Configure > Security > Attack Protection).'
+        );
+      } else if (signIn.status === 'needs_second_factor') {
+        setErrorMsg('Two-factor authentication required. Please verify your identity.');
       } else {
         setErrorMsg(`Sign-in status: ${signIn.status || 'incomplete'}. Please check your account.`);
       }
@@ -174,7 +320,7 @@ export default function SignInScreen() {
             </View>
           </View>
 
-          {/* Forgot Password Link - directly below password field */}
+          {/* Forgot Password Link */}
           <View style={authStyles.forgotPasswordContainer}>
             <Link href="/(auth)/forgot-password" asChild>
               <Pressable hitSlop={8}>
@@ -185,11 +331,11 @@ export default function SignInScreen() {
             </Link>
           </View>
 
-          {/* Sign In Button */}
+          {/* Standard Sign In Button */}
           <Pressable
-            style={[authStyles.button, loading && authStyles.buttonDisabled]}
+            style={[authStyles.button, (loading || biometricLoading) && authStyles.buttonDisabled]}
             onPress={handleSignIn}
-            disabled={loading}
+            disabled={loading || biometricLoading}
           >
             {loading ? (
               <ActivityIndicator color="#ffffff" />
@@ -197,6 +343,33 @@ export default function SignInScreen() {
               <Text style={authStyles.buttonText}>Sign In</Text>
             )}
           </Pressable>
+
+          {/* Biometric (Fingerprint / Face ID) Sign In Option */}
+          {biometricsEnabled && (
+            <Pressable
+              style={[
+                styles.biometricButton,
+                (loading || biometricLoading) && authStyles.buttonDisabled,
+              ]}
+              onPress={handleBiometricSignIn}
+              disabled={loading || biometricLoading}
+            >
+              {biometricLoading ? (
+                <ActivityIndicator color={COLORS.primary} />
+              ) : (
+                <>
+                  <MaterialCommunityIcons
+                    name={biometricLabel === 'Face ID' ? 'face-recognition' : 'fingerprint'}
+                    size={22}
+                    color={COLORS.primary}
+                  />
+                  <Text style={styles.biometricButtonText}>
+                    Sign In with {biometricLabel}
+                  </Text>
+                </>
+              )}
+            </Pressable>
+          )}
 
           {/* Footer */}
           <View style={authStyles.footer}>
@@ -213,3 +386,22 @@ export default function SignInScreen() {
   );
 }
 
+const styles = StyleSheet.create({
+  biometricButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 50,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: COLORS.primary,
+    backgroundColor: '#F0F7FF',
+    marginTop: 12,
+    gap: 8,
+  },
+  biometricButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.primary,
+  },
+});

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,13 @@ import {
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
+  StyleSheet,
+  Switch,
 } from 'react-native';
 import { useAuth, useUser } from '@clerk/expo';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { Feather, Ionicons } from '@expo/vector-icons';
-import axios from 'axios';
+import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { Header } from '../../../../components/common/Header';
 import { Button } from '../../../../components/common/Button';
@@ -24,6 +25,7 @@ import { profileStyles } from '../../../../../assets/styles/profile.styles';
 import { commonStyles } from '../../../../../assets/styles/common.styles';
 import { COLORS } from '../../../../../constants/colors';
 import { userApi, UserData } from '../../../../api/user.api';
+import { biometricService } from '../../../../services/biometric.service';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -35,6 +37,35 @@ export default function ProfileScreen() {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [isEditModalVisible, setIsEditModalVisible] = useState<boolean>(false);
+
+  const [hasBiometrics, setHasBiometrics] = useState<boolean>(false);
+  const [biometricsEnabled, setBiometricsEnabled] = useState<boolean>(false);
+  const [biometricLabel, setBiometricLabel] = useState<string>('Fingerprint');
+
+  const checkBiometrics = useCallback(async () => {
+    const available = await biometricService.isBiometricAvailable();
+    setHasBiometrics(available);
+    if (available) {
+      const label = await biometricService.getBiometricTypeLabel();
+      setBiometricLabel(label);
+      const enabled = await biometricService.isBiometricsEnabled();
+      setBiometricsEnabled(enabled);
+    }
+  }, []);
+
+  const handleToggleBiometrics = async (value: boolean) => {
+    if (!value) {
+      await biometricService.disableBiometrics();
+      setBiometricsEnabled(false);
+      Alert.alert('Disabled', `${biometricLabel} sign-in has been disabled.`);
+    } else {
+      Alert.alert(
+        `Enable ${biometricLabel} Sign-In`,
+        `To enable ${biometricLabel.toLowerCase()} sign-in, please sign out and sign in once with your password to register your credentials.`,
+        [{ text: 'OK' }]
+      );
+    }
+  };
 
   /**
    * Fetch user profile from DB.
@@ -78,14 +109,23 @@ export default function ProfileScreen() {
 
       setUserData(user);
     } catch (err: any) {
-      if (axios.isAxiosError(err)) {
-        const msg =
-          err.response?.data?.message ||
-          err.message ||
-          'Failed to load profile from database.';
-        setError(msg);
+      console.error('Error fetching user profile:', err);
+      // If backend is completely down, fallback to Clerk user data
+      if (clerkUser) {
+        setUserData({
+          id: clerkUser.id,
+          clerkUserId: clerkUser.id,
+          firstName: clerkUser.firstName || (clerkUser.unsafeMetadata?.firstName as string) || '',
+          lastName: clerkUser.lastName || (clerkUser.unsafeMetadata?.lastName as string) || '',
+          email: clerkUser.primaryEmailAddress?.emailAddress || '',
+          phone: clerkUser.primaryPhoneNumber?.phoneNumber || (clerkUser.unsafeMetadata?.phone as string) || '',
+          role: 'customer',
+          isActive: true,
+          createdAt: clerkUser.createdAt ? new Date(clerkUser.createdAt).toISOString() : new Date().toISOString(),
+          updatedAt: clerkUser.updatedAt ? new Date(clerkUser.updatedAt).toISOString() : new Date().toISOString(),
+        });
       } else {
-        setError('An unexpected error occurred while loading profile.');
+        setError(err.response?.data?.message || err.message || 'Could not load profile.');
       }
     } finally {
       setLoading(false);
@@ -93,108 +133,91 @@ export default function ProfileScreen() {
     }
   }, [clerkUser]);
 
-  // Reload every time the profile tab comes into focus so switching accounts re-fetches immediately
   useFocusEffect(
     useCallback(() => {
       fetchUserProfile();
-    }, [fetchUserProfile])
+      checkBiometrics();
+    }, [fetchUserProfile, checkBiometrics])
   );
 
-  // ── Derived display values ──────────────────────────────────────────────
-  const fullName = (() => {
-    if (userData?.firstName || userData?.lastName) {
-      return `${userData.firstName || ''} ${userData.lastName || ''}`.trim();
+  const handleSaveProfile = async (data: { firstName: string; lastName: string; phone: string }) => {
+    try {
+      const updated = await userApi.updateMe(data);
+      if (updated) {
+        setUserData(updated);
+      }
+      try {
+        await clerkUser?.update({
+          firstName: data.firstName,
+          lastName: data.lastName,
+          unsafeMetadata: {
+            ...clerkUser.unsafeMetadata,
+            phone: data.phone,
+          },
+        });
+      } catch (clerkErr) {
+        console.warn('Clerk metadata update warning:', clerkErr);
+      }
+
+      Alert.alert('Profile Updated', 'Your profile details have been saved successfully.');
+    } catch (err: any) {
+      Alert.alert('Update Failed', err.response?.data?.message || 'Could not update profile.');
     }
-    if (clerkUser?.firstName || clerkUser?.lastName) {
-      return `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim();
-    }
-    return '—';
-  })();
+  };
+
+  const handleSignOut = () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            await signOut();
+            router.replace('/(auth)/sign-in');
+          },
+        },
+      ]
+    );
+  };
+
+  const fullName =
+    userData?.firstName || userData?.lastName
+      ? `${userData.firstName || ''} ${userData.lastName || ''}`.trim()
+      : clerkUser?.fullName || 'Wegagen Customer';
 
   const phoneNumber =
     userData?.phone ||
     clerkUser?.primaryPhoneNumber?.phoneNumber ||
     (clerkUser?.unsafeMetadata?.phone as string) ||
-    '—';
+    'Not provided';
 
   const email =
     userData?.email ||
     clerkUser?.primaryEmailAddress?.emailAddress ||
-    '—';
+    'Not provided';
 
   const memberSince = (() => {
     const rawDate = userData?.createdAt || clerkUser?.createdAt;
-    if (!rawDate) return '—';
+    if (!rawDate) return 'August 2025';
     try {
-      return new Date(rawDate).toLocaleDateString('en-US', {
-        month: 'long',
-        year: 'numeric',
-      });
+      const d = new Date(rawDate);
+      return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     } catch {
-      return '—';
+      return 'August 2025';
     }
   })();
 
-  const accountStatus = userData?.isActive === false ? 'Inactive' : 'Active';
-  const isVerified = Boolean(email !== '—' || phoneNumber !== '—');
-
-  // ── Handlers ────────────────────────────────────────────────────────────
-  const handleSignOut = () => {
-    Alert.alert('Sign out?', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign Out',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await signOut();
-          } catch (err) {
-            console.error('Sign Out error:', err);
-            Alert.alert('Error', 'Could not sign out. Please try again.');
-          }
-        },
-      },
-    ]);
-  };
-
-  const handleSaveProfile = async ({
-    firstName,
-    lastName,
-    phone,
-  }: {
-    firstName: string;
-    lastName: string;
-    phone: string;
-  }) => {
-    // 1. Update in PostgreSQL Database
-    const updatedUser = await userApi.updateMe({
-      firstName,
-      lastName,
-      phone,
-    });
-    setUserData(updatedUser);
-
-    // 2. We Also sync to Clerk account
-    try {
-      if (clerkUser) {
-        await clerkUser.update({
-          firstName,
-          lastName,
-          unsafeMetadata: {
-            ...clerkUser.unsafeMetadata,
-            phone,
-          },
-        });
-      }
-    } catch (clerkErr) {
-      console.warn('Could not sync update to Clerk:', clerkErr);
-    }
-
-    Alert.alert('Success', 'Profile updated successfully.');
-  };
+  const accountStatus = 'Active';
+  const isVerified = Boolean(
+    clerkUser?.primaryEmailAddress?.verification?.status === 'verified'
+  );
 
   return (
     <View style={commonStyles.safeArea}>
+      {/* Header */}
       <Header
         title="Profile"
         onAiAgentPress={() => {}}
@@ -283,8 +306,48 @@ export default function ProfileScreen() {
               />
             </View>
 
-            {/* 3. Action Buttons */}
+            {/* 3. Security & Biometrics Section */}
+            {hasBiometrics && (
+              <>
+                <Text style={profileStyles.sectionTitle}>Security & Biometrics</Text>
+                <View style={styles.securityCard}>
+                  <View style={styles.securityLeft}>
+                    <View style={styles.securityIconBox}>
+                      <MaterialCommunityIcons
+                        name={biometricLabel === 'Face ID' ? 'face-recognition' : 'fingerprint'}
+                        size={22}
+                        color={COLORS.primary}
+                      />
+                    </View>
+                    <View>
+                      <Text style={styles.securityTitle}>{biometricLabel} Sign-In</Text>
+                      <Text style={styles.securitySub}>
+                        {biometricsEnabled
+                          ? `Enabled for quick login`
+                          : `Disabled on this device`}
+                      </Text>
+                    </View>
+                  </View>
+                  <Switch
+                    value={biometricsEnabled}
+                    onValueChange={handleToggleBiometrics}
+                    trackColor={{ false: '#CBD5E1', true: '#93C5FD' }}
+                    thumbColor={biometricsEnabled ? COLORS.primary : '#F1F5F9'}
+                  />
+                </View>
+              </>
+            )}
+
+            {/* 4. Action Buttons */}
             <View style={profileStyles.actionsContainer}>
+              <Button
+                title="Queue History"
+                onPress={() => router.push('/(app)/customer/Queue/history')}
+                variant="outlineNavy"
+                icon={<MaterialCommunityIcons name="history" size={18} color={COLORS.primary} />}
+                style={StyleSheet.flatten([profileStyles.editButton, { marginBottom: 10, borderColor: COLORS.primary }])}
+              />
+
               <Button
                 title="Edit Profile"
                 onPress={() => setIsEditModalVisible(true)}
@@ -322,3 +385,40 @@ export default function ProfileScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  securityCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  securityLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  securityIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  securityTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  securitySub: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2,
+  },
+});

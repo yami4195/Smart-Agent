@@ -18,44 +18,44 @@ interface BranchServicesGridProps {
 }
 
 /**
- * Maps raw service strings from the database to styled service cards with icons and descriptions
+ * Maps raw service strings from the database or defaults to styled service cards
  */
 const mapDbServiceToCard = (serviceName: string, index: number): ServiceItem => {
   const lower = serviceName.toLowerCase();
 
-  if (lower.includes('cash') || lower.includes('deposit') || lower.includes('withdrawal')) {
+  if (lower.includes('atm') || lower.includes('card')) {
     return {
       id: `service-${index}`,
-      title: 'Cash Services',
-      description: 'Deposit, Withdrawal, Currency Exchange',
-      icon: <MaterialCommunityIcons name="cash-multiple" size={18} color="#0284C7" />,
+      title: 'ATM Card Request',
+      description: 'New ATM Card, PIN Reset & Replacement',
+      icon: <MaterialCommunityIcons name="credit-card-plus-outline" size={20} color="#0284C7" />,
     };
   }
 
   if (lower.includes('account') || lower.includes('opening')) {
     return {
       id: `service-${index}`,
-      title: 'Account Services',
-      description: 'New Account, Card Replacement',
-      icon: <FontAwesome5 name="university" size={16} color="#0284C7" />,
+      title: 'Account Opening',
+      description: 'New Savings, Current Account & KYC',
+      icon: <FontAwesome5 name="university" size={17} color="#0284C7" />,
+    };
+  }
+
+  if (lower.includes('cash') || lower.includes('deposit') || lower.includes('withdrawal')) {
+    return {
+      id: `service-${index}`,
+      title: 'Cash Services',
+      description: 'Cash Deposit, Withdrawal & Cashier Desk',
+      icon: <MaterialCommunityIcons name="cash-multiple" size={20} color="#0284C7" />,
     };
   }
 
   if (lower.includes('loan') || lower.includes('credit') || lower.includes('finance')) {
     return {
       id: `service-${index}`,
-      title: 'Loan & Credit',
-      description: 'Personal Loan, SME Finance',
-      icon: <MaterialCommunityIcons name="credit-card-outline" size={18} color="#0284C7" />,
-    };
-  }
-
-  if (lower.includes('digital') || lower.includes('mobile') || lower.includes('app') || lower.includes('internet')) {
-    return {
-      id: `service-${index}`,
-      title: 'Digital Banking',
-      description: 'App Setup, Password Reset',
-      icon: <MaterialCommunityIcons name="cellphone-cog" size={18} color="#0284C7" />,
+      title: 'Loan Consultation',
+      description: 'Personal Loan, Business & SME Credit',
+      icon: <MaterialCommunityIcons name="handshake-outline" size={20} color="#0284C7" />,
     };
   }
 
@@ -63,17 +63,17 @@ const mapDbServiceToCard = (serviceName: string, index: number): ServiceItem => 
     return {
       id: `service-${index}`,
       title: 'Forex Exchange',
-      description: 'Foreign Currency, Remittance',
-      icon: <MaterialCommunityIcons name="currency-usd" size={18} color="#0284C7" />,
+      description: 'Foreign Currency Buy/Sell & Remittance',
+      icon: <MaterialCommunityIcons name="currency-usd" size={20} color="#0284C7" />,
     };
   }
 
-  if (lower.includes('atm')) {
+  if (lower.includes('digital') || lower.includes('mobile') || lower.includes('app') || lower.includes('internet')) {
     return {
       id: `service-${index}`,
-      title: 'ATM Services',
-      description: '24/7 Cash & Balance Inquiry',
-      icon: <MaterialCommunityIcons name="atm" size={18} color="#0284C7" />,
+      title: 'Digital Banking',
+      description: 'App Activation, Telebirr & Internet Banking',
+      icon: <MaterialCommunityIcons name="cellphone-cog" size={20} color="#0284C7" />,
     };
   }
 
@@ -81,35 +81,47 @@ const mapDbServiceToCard = (serviceName: string, index: number): ServiceItem => 
   return {
     id: `service-${index}`,
     title: serviceName,
-    description: 'Available at counter & customer desk',
-    icon: <Ionicons name="checkmark-circle-outline" size={18} color="#0284C7" />,
+    description: 'Available at branch counter & customer desk',
+    icon: <Ionicons name="checkmark-circle-outline" size={20} color="#0284C7" />,
   };
 };
 
 const DEFAULT_SERVICES: ServiceItem[] = [
   {
     id: 'default-1',
-    title: 'Cash Services',
-    description: 'Deposit, Withdrawal, Currency Exchange',
-    icon: <MaterialCommunityIcons name="cash-multiple" size={18} color="#0284C7" />,
+    title: 'Account Opening',
+    description: 'New Savings, Current Account & KYC',
+    icon: <FontAwesome5 name="university" size={17} color="#0284C7" />,
   },
   {
     id: 'default-2',
-    title: 'Account Services',
-    description: 'New Account, Card Replacement',
-    icon: <FontAwesome5 name="university" size={16} color="#0284C7" />,
+    title: 'ATM Card Request',
+    description: 'New ATM Card, PIN Reset & Replacement',
+    icon: <MaterialCommunityIcons name="credit-card-plus-outline" size={20} color="#0284C7" />,
   },
   {
     id: 'default-3',
-    title: 'Loan & Credit',
-    description: 'Personal Loan, SME Finance',
-    icon: <MaterialCommunityIcons name="credit-card-outline" size={18} color="#0284C7" />,
+    title: 'Cash Services',
+    description: 'Cash Deposit, Withdrawal & Cashier Desk',
+    icon: <MaterialCommunityIcons name="cash-multiple" size={20} color="#0284C7" />,
   },
   {
     id: 'default-4',
+    title: 'Loan Consultation',
+    description: 'Personal Loan, Business & SME Credit',
+    icon: <MaterialCommunityIcons name="handshake-outline" size={20} color="#0284C7" />,
+  },
+  {
+    id: 'default-5',
+    title: 'Forex Exchange',
+    description: 'Foreign Currency Buy/Sell & Remittance',
+    icon: <MaterialCommunityIcons name="currency-usd" size={20} color="#0284C7" />,
+  },
+  {
+    id: 'default-6',
     title: 'Digital Banking',
-    description: 'App Setup, Password Reset',
-    icon: <MaterialCommunityIcons name="cellphone-cog" size={18} color="#0284C7" />,
+    description: 'App Activation, Telebirr & Internet Banking',
+    icon: <MaterialCommunityIcons name="cellphone-cog" size={20} color="#0284C7" />,
   },
 ];
 

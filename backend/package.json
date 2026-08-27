@@ -27,13 +27,15 @@
     "express": "^5.2.1",
     "helmet": "^8.3.0",
     "morgan": "^1.11.0",
-    "pg": "^8.23.0"
+    "pg": "^8.23.0",
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/morgan": "^1.9.10",
     "@types/node": "^26.2.0",
+    "@types/socket.io": "^3.0.1",
     "prisma": "^7.9.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.3"

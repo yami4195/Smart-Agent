@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { headerStyles } from '../../../assets/styles/header.styles';
 import { COLORS } from '../../../constants/colors';
@@ -12,19 +12,21 @@ interface HeaderProps {
   showBankIcon?: boolean;
   showAiAgent?: boolean;
   showNotification?: boolean;
+  unreadCount?: number;
   onBankPress?: () => void;
   onAiAgentPress?: () => void;
   onNotificationPress?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  title = "Tera Mobile Banking",
+  title = "ተራ Mobile Services",
   subtitle,
   showBack = false,
   onBackPress,
   showBankIcon = true,
   showAiAgent = true,
   showNotification = true,
+  unreadCount = 0,
   onBankPress,
   onAiAgentPress,
   onNotificationPress,
@@ -64,10 +66,40 @@ export const Header: React.FC<HeaderProps> = ({
         {showNotification && (
           <Pressable style={headerStyles.iconButton} onPress={onNotificationPress}>
             <Ionicons name="notifications-outline" size={20} color={COLORS.navy} />
-            <View style={headerStyles.notificationBadgeDot} />
+            {unreadCount > 0 ? (
+              <View style={styles.unreadBadge}>
+                <Text style={styles.unreadBadgeText}>
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </Text>
+              </View>
+            ) : (
+              <View style={headerStyles.notificationBadgeDot} />
+            )}
           </Pressable>
         )}
       </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  unreadBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#EF4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+  },
+  unreadBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+});

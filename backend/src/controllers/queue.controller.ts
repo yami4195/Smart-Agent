@@ -1,364 +1,378 @@
 import { Request, Response } from "express";
-import { getAuth } from "@clerk/express";
 import {
-    joinQueueService,
-    getActiveTicketService,
-    getUserQueueHistoryService,
-    cancelTicketService,
-    getBranchQueueSummaryService,
-    getBranchTicketsService,
-    callNextTicketService,
-    updateTicketStatusService,
-    createWalkInTicketService,
-    getEmployeeStatsService,
+  joinQueueService,
+  getActiveTicketService,
+  getUserQueueHistoryService,
+  cancelTicketService,
+  getBranchQueueSummaryService,
+  getBranchTicketsService,
+  callNextTicketService,
+  updateTicketStatusService,
+  createWalkInTicketService,
+  getEmployeeStatsService,
+  getEmployeeQueueHistoryService,
+  archiveEmployeeTicketService,
 } from "../services/queue.service";
 
 /**
  * POST /api/queues/join
- * Body: { branchId: string, serviceId?: string, serviceName?: string }
  */
 export const joinQueue = async (req: Request, res: Response) => {
-    try {
-        const clerkUserId = req.clerkUserId;
+  try {
+    const clerkUserId = req.clerkUserId;
 
-        if (!clerkUserId) {
-            return res.status(401).json({
-                success: false,
-                message: "Unauthorized - User is not authenticated",
-            });
-        }
+    if (!clerkUserId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized - User is not authenticated",
+      });
+    }
 
-        const { branchId, serviceId, serviceName } = req.body;
+    const { branchId, serviceId, serviceName } = req.body;
 
-        if (!branchId) {
-        return res.status(400).json({
-            success: false,
-            message: "Field 'branchId' is required.",
-        });
-        }
+    if (!branchId) {
+      return res.status(400).json({
+        success: false,
+        message: "Field 'branchId' is required.",
+      });
+    }
 
-        const ticket = await joinQueueService({
-        clerkUserId,
-        branchId,
-        serviceId,
-        serviceName,
+    const ticket = await joinQueueService({
+      clerkUserId,
+      branchId,
+      serviceId,
+      serviceName,
     });
 
     return res.status(201).json({
-        success: true,
-        message: "Successfully joined the queue",
-        ticket,
-        });
-    } catch (error: any) {
-        console.error("Error in joinQueue controller:", error);
+      success: true,
+      message: "Successfully joined the queue",
+      ticket,
+    });
+  } catch (error: any) {
+    console.error("Error in joinQueue controller:", error);
 
-        if (error.statusCode === 409) {
-        return res.status(409).json({
-            success: false,
-            message: error.message,
-            activeTicketId: error.activeTicketId,
-            ticketNumber: error.ticketNumber,
-        });
-        }
-
-        return res.status(400).json({
+    if (error.statusCode === 409) {
+      return res.status(409).json({
         success: false,
-        message: error.message || "Failed to join queue",
-        });
+        message: error.message,
+        activeTicketId: error.activeTicketId,
+        ticketNumber: error.ticketNumber,
+      });
     }
+
+    return res.status(400).json({
+      success: false,
+      message: error.message || "Failed to join queue",
+    });
+  }
 };
 
 /**
  * GET /api/queues/active
  */
 export const getActiveTicket = async (req: Request, res: Response) => {
-    try {
-        const clerkUserId = req.clerkUserId!;
+  try {
+    const clerkUserId = req.clerkUserId!;
+    const result = await getActiveTicketService(clerkUserId);
 
-        const result = await getActiveTicketService(clerkUserId);
-
-        return res.status(200).json({
-        success: true,
-        ...result,
-        });
-    } catch (error) {
+    return res.status(200).json({
+      success: true,
+      ...result,
+    });
+  } catch (error) {
     console.error("Error in getActiveTicket controller:", error);
     return res.status(500).json({
-        success: false,
-        message: "Internal server error while fetching active ticket",
-        });
-    }
+      success: false,
+      message: "Internal server error while fetching active ticket",
+    });
+  }
 };
 
 /**
- * GET /api/queues/history
+ * GET /api/queues/history (Customer Queue History)
  */
 export const getQueueHistory = async (req: Request, res: Response) => {
-    try {
-        const clerkUserId = req.clerkUserId!;
-        const tickets = await getUserQueueHistoryService(clerkUserId);
+  try {
+    const clerkUserId = req.clerkUserId!;
+    const tickets = await getUserQueueHistoryService(clerkUserId);
 
-        return res.status(200).json({
-        success: true,
-        count: tickets.length,
-        tickets,
-        });
-    } catch (error) {
-        console.error("Error in getQueueHistory controller:", error);
-        return res.status(500).json({
-        success: false,
-        message: "Internal server error while fetching queue history",
-        });
-    }
+    return res.status(200).json({
+      success: true,
+      tickets,
+    });
+  } catch (error) {
+    console.error("Error in getQueueHistory controller:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch user queue history",
+    });
+  }
 };
 
 /**
  * PATCH /api/queues/:id/cancel
  */
 export const cancelTicket = async (req: Request, res: Response) => {
-    try {
-        const clerkUserId = req.clerkUserId!;
-        const ticketId = req.params.id as string;
+  try {
+    const clerkUserId = req.clerkUserId!;
+    const ticketId = req.params.id as string;
 
-        if (!ticketId) {
-        return res.status(400).json({
-            success: false,
-            message: "Ticket ID is required in URL parameter",
-        });
-        }
+    const result = await cancelTicketService(clerkUserId, ticketId);
 
-        const cancelled = await cancelTicketService(clerkUserId, ticketId);
+    if (!result) {
+      return res.status(404).json({
+        success: false,
+        message: "Active ticket not found or does not belong to you.",
+      });
+    }
 
-        if (!cancelled) {
-        return res.status(404).json({
-            success: false,
-            message: "Ticket not found or you do not have permission to cancel it.",
-        });
-        }
-
-        return res.status(200).json({
-        success: true,
-        message: "Ticket cancelled successfully",
-        });
-    } catch (error: any) {
+    return res.status(200).json({
+      success: true,
+      message: "Queue ticket cancelled successfully.",
+    });
+  } catch (error: any) {
     console.error("Error in cancelTicket controller:", error);
     return res.status(400).json({
-        success: false,
-        message: error.message || "Failed to cancel ticket",
-        });
-    }
+      success: false,
+      message: error.message || "Failed to cancel ticket",
+    });
+  }
 };
 
 /**
  * GET /api/queues/branch/:branchId
  */
 export const getBranchQueueSummary = async (req: Request, res: Response) => {
-    try {
-        const branchId = req.params.branchId as string;
+  try {
+    const branchId = req.params.branchId as string;
+    const summary = await getBranchQueueSummaryService(branchId);
 
-        if (!branchId) {
-        return res.status(400).json({
-            success: false,
-            message: "Branch ID is required",
-        });
-        }
+    if (!summary) {
+      return res.status(404).json({
+        success: false,
+        message: "Branch not found",
+      });
+    }
 
-        const summary = await getBranchQueueSummaryService(branchId);
-
-        if (!summary) {
-        return res.status(404).json({
-            success: false,
-            message: "Branch not found",
-        });
-        }
-
-        return res.status(200).json({
-        success: true,
-        ...summary,
-        });
-    } catch (error) {
+    return res.status(200).json({
+      success: true,
+      summary,
+    });
+  } catch (error) {
     console.error("Error in getBranchQueueSummary controller:", error);
     return res.status(500).json({
-        success: false,
-        message: "Internal server error while fetching branch queue summary",
-        });
-    }
+      success: false,
+      message: "Failed to fetch branch queue summary",
+    });
+  }
 };
 
 /**
- * GET /api/queues/branch/:branchId/tickets
- * Query: { status?: string, serviceId?: string }
+ * GET /api/queues/branch/:branchId/tickets (Employee Live Queue)
  */
 export const getBranchTickets = async (req: Request, res: Response) => {
-    try {
-        const branchId = req.params.branchId as string;
-        const status = req.query.status as string | undefined;
-        const serviceId = req.query.serviceId as string | undefined;
+  try {
+    const branchId = req.params.branchId as string;
+    const { status, serviceId } = req.query;
 
-        if (!branchId) {
-            return res.status(400).json({
-                success: false,
-                message: "Branch ID is required",
-            });
-        }
+    const tickets = await getBranchTicketsService(
+      branchId,
+      status as string | undefined,
+      serviceId as string | undefined
+    );
 
-        const tickets = await getBranchTicketsService(branchId, status, serviceId);
-
-        return res.status(200).json({
-            success: true,
-            count: tickets.length,
-            tickets,
-        });
-    } catch (error) {
-        console.error("Error in getBranchTickets controller:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Failed to fetch branch tickets",
-        });
-    }
+    return res.status(200).json({
+      success: true,
+      tickets,
+    });
+  } catch (error) {
+    console.error("Error in getBranchTickets controller:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch branch tickets",
+    });
+  }
 };
 
 /**
  * POST /api/queues/call-next
- * Body: { branchId: string, serviceId?: string, counterNumber?: string }
  */
 export const callNextTicket = async (req: Request, res: Response) => {
-    try {
-        const { branchId, serviceId, counterNumber } = req.body;
+  try {
+    const { branchId, serviceId, counterNumber } = req.body;
+    const employeeClerkUserId = req.clerkUserId;
 
-        if (!branchId) {
-            return res.status(400).json({
-                success: false,
-                message: "Branch ID is required",
-            });
-        }
-
-        const ticket = await callNextTicketService(branchId, serviceId, counterNumber);
-
-        if (!ticket) {
-            return res.status(200).json({
-                success: true,
-                hasTicket: false,
-                message: "No waiting tickets in queue",
-                ticket: null,
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            hasTicket: true,
-            message: `Now serving ticket ${ticket.ticketNumber}`,
-            ticket,
-        });
-    } catch (error) {
-        console.error("Error in callNextTicket controller:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Failed to call next ticket",
-        });
+    if (!branchId) {
+      return res.status(400).json({
+        success: false,
+        message: "Field 'branchId' is required.",
+      });
     }
+
+    const ticket = await callNextTicketService(
+      branchId,
+      serviceId,
+      counterNumber,
+      employeeClerkUserId
+    );
+
+    if (!ticket) {
+      return res.status(200).json({
+        success: true,
+        hasTicket: false,
+        ticket: null,
+        message: "No waiting customers in the queue.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      hasTicket: true,
+      ticket,
+      message: `Now serving ticket ${ticket.ticketNumber}`,
+    });
+  } catch (error: any) {
+    console.error("Error in callNextTicket controller:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to call next customer",
+    });
+  }
 };
 
 /**
  * PATCH /api/queues/:id/status
- * Body: { status: 'WAITING' | 'SERVING' | 'COMPLETED' | 'CANCELLED' }
  */
 export const updateTicketStatus = async (req: Request, res: Response) => {
-    try {
-        const ticketId = req.params.id as string;
-        const { status } = req.body;
+  try {
+    const ticketId = req.params.id as string;
+    const { status } = req.body;
+    const employeeClerkUserId = req.clerkUserId;
 
-        if (!ticketId) {
-            return res.status(400).json({
-                success: false,
-                message: "Ticket ID is required",
-            });
-        }
-
-        if (!["WAITING", "SERVING", "COMPLETED", "CANCELLED"].includes(status)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid status value",
-            });
-        }
-
-        const ticket = await updateTicketStatusService(ticketId, status);
-
-        return res.status(200).json({
-            success: true,
-            message: `Ticket status updated to ${status}`,
-            ticket,
-        });
-    } catch (error) {
-        console.error("Error in updateTicketStatus controller:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Failed to update ticket status",
-        });
+    if (!status || !["WAITING", "SERVING", "COMPLETED", "CANCELLED", "NO_SHOW"].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Valid status ('WAITING', 'SERVING', 'COMPLETED', 'CANCELLED', 'NO_SHOW') is required.",
+      });
     }
+
+    const ticket = await updateTicketStatusService(ticketId, status, employeeClerkUserId);
+
+    return res.status(200).json({
+      success: true,
+      ticket,
+      message: `Ticket status updated to ${status}`,
+    });
+  } catch (error: any) {
+    console.error("Error in updateTicketStatus controller:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to update ticket status",
+    });
+  }
 };
 
 /**
  * POST /api/queues/walk-in
- * Body: { branchId: string, serviceId?: string, customerName?: string, phone?: string }
  */
 export const createWalkInTicket = async (req: Request, res: Response) => {
-    try {
-        const { branchId, serviceId, customerName, phone } = req.body;
+  try {
+    const { branchId, serviceId, serviceName, customerName, phone } = req.body;
 
-        if (!branchId) {
-            return res.status(400).json({
-                success: false,
-                message: "Branch ID is required",
-            });
-        }
-
-        const ticket = await createWalkInTicketService({
-            branchId,
-            serviceId,
-            customerName,
-            phone,
-        });
-
-        return res.status(201).json({
-            success: true,
-            message: "Walk-in ticket created successfully",
-            ticket,
-        });
-    } catch (error: any) {
-        console.error("Error in createWalkInTicket controller:", error);
-        return res.status(400).json({
-            success: false,
-            message: error.message || "Failed to create walk-in ticket",
-        });
+    if (!branchId) {
+      return res.status(400).json({
+        success: false,
+        message: "Field 'branchId' is required.",
+      });
     }
+
+    const ticket = await createWalkInTicketService({
+      branchId,
+      serviceId,
+      serviceName,
+      customerName,
+      phone,
+    });
+
+    return res.status(201).json({
+      success: true,
+      ticket,
+      message: "Walk-in ticket generated successfully.",
+    });
+  } catch (error: any) {
+    console.error("Error in createWalkInTicket controller:", error);
+    return res.status(400).json({
+      success: false,
+      message: error.message || "Failed to issue walk-in ticket",
+    });
+  }
 };
 
 /**
  * GET /api/queues/employee/stats/:branchId
  */
 export const getEmployeeStats = async (req: Request, res: Response) => {
-    try {
-        const branchId = req.params.branchId as string;
+  try {
+    const branchId = req.params.branchId as string;
+    const employeeClerkUserId = req.clerkUserId;
 
-        if (!branchId) {
-            return res.status(400).json({
-                success: false,
-                message: "Branch ID is required",
-            });
-        }
+    const stats = await getEmployeeStatsService(branchId, employeeClerkUserId);
 
-        const stats = await getEmployeeStatsService(branchId);
+    return res.status(200).json({
+      success: true,
+      stats,
+    });
+  } catch (error) {
+    console.error("Error in getEmployeeStats controller:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch employee shift stats",
+    });
+  }
+};
 
-        return res.status(200).json({
-            success: true,
-            stats,
-        });
-    } catch (error) {
-        console.error("Error in getEmployeeStats controller:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Failed to fetch employee stats",
-        });
-    }
+/**
+ * GET /api/queues/employee/history
+ */
+export const getEmployeeQueueHistory = async (req: Request, res: Response) => {
+  try {
+    const branchId = req.query.branchId as string | undefined;
+    const employeeClerkUserId = req.clerkUserId;
+
+    const history = await getEmployeeQueueHistoryService(branchId, employeeClerkUserId);
+
+    return res.status(200).json({
+      success: true,
+      history,
+    });
+  } catch (error) {
+    console.error("Error in getEmployeeQueueHistory controller:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch employee queue history",
+    });
+  }
+};
+
+/**
+ * DELETE /api/queues/employee/history/:id
+ * Soft-archives from personal employee history without deleting global record
+ */
+export const archiveEmployeeTicket = async (req: Request, res: Response) => {
+  try {
+    const ticketId = req.params.id as string;
+    await archiveEmployeeTicketService(ticketId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Record removed from personal history view.",
+    });
+  } catch (error) {
+    console.error("Error in archiveEmployeeTicket controller:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to remove record from history view",
+    });
+  }
 };

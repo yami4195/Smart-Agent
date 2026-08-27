@@ -11,28 +11,30 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
-  console.log("🌱 Seeding database...");
+  console.log("🌱 Seeding database with clean banking services...");
 
-  // 1. Seed Services
+  // 1. Seed Real-World Banking Services
   const servicesData = [
-    { name: "Teller Services", description: "Cash deposits, withdrawals, and utility payments" },
-    { name: "Forex / FX", description: "Foreign currency exchange and telegraphic transfers" },
-    { name: "Account Opening", description: "Open new savings, current, or interest-free accounts" },
-    { name: "ATM / CDM", description: "Card issuance, PIN reset, and cash deposit machine support" },
-    { name: "VIP Banking", description: "Priority customer banking and private wealth services" },
-    { name: "Loan / Credit", description: "Personal, business, and mortgage loan consultations" },
+    { name: "Account Opening", description: "Open new savings, current, salary, or interest-free accounts" },
+    { name: "ATM Card Request", description: "New debit card request, PIN reset, card replacement, and activation" },
+    { name: "Cash Services", description: "Cash deposits, withdrawals, and utility/bill payments" },
+    { name: "Loan Consultation", description: "Personal loan, auto loan, mortgage, and SME business credit consultations" },
+    { name: "Forex Exchange", description: "Foreign currency buy/sell, remittance, and swift telegraphic transfers" },
+    { name: "Digital Banking", description: "Mobile banking app setup, password reset, and internet banking" },
+    { name: "VIP Banking", description: "Priority customer banking and private wealth advisory" },
+    { name: "Customer Support", description: "General inquiries, complaints, and account statement requests" },
   ];
 
   const createdServices: Record<string, string> = {};
   for (const s of servicesData) {
     const service = await prisma.service.upsert({
       where: { name: s.name },
-      update: {},
+      update: { description: s.description },
       create: s,
     });
     createdServices[s.name] = service.id;
   }
-  console.log(`✅ Seeded ${Object.keys(createdServices).length} services.`);
+  console.log(`✅ Seeded ${Object.keys(createdServices).length} distinct services.`);
 
   // 2. Seed Branches (matching Wegagen Bank locations in Addis Ababa)
   const branchesData = [
@@ -44,7 +46,7 @@ async function main() {
       openingHours: "8:00 AM - 5:00 PM",
       isOpen: true,
       phone: "+251 11 661 2345",
-      serviceNames: ["Teller Services", "Forex / FX", "Account Opening", "ATM / CDM"],
+      serviceNames: ["Account Opening", "ATM Card Request", "Cash Services", "Loan Consultation", "Forex Exchange", "Digital Banking"],
     },
     {
       name: "Wegagen - Kazanchis Branch",
@@ -54,7 +56,7 @@ async function main() {
       openingHours: "8:00 AM - 5:00 PM",
       isOpen: true,
       phone: "+251 11 551 6789",
-      serviceNames: ["Teller Services", "Forex / FX", "VIP Banking", "Loan / Credit"],
+      serviceNames: ["Account Opening", "ATM Card Request", "Cash Services", "VIP Banking", "Loan Consultation", "Forex Exchange"],
     },
     {
       name: "Wegagen - Piassa Branch",
@@ -64,7 +66,7 @@ async function main() {
       openingHours: "8:00 AM - 5:00 PM",
       isOpen: true,
       phone: "+251 11 155 4321",
-      serviceNames: ["Teller Services", "Forex / FX", "Account Opening", "ATM / CDM"],
+      serviceNames: ["Account Opening", "ATM Card Request", "Cash Services", "Forex Exchange", "Customer Support"],
     },
     {
       name: "Wegagen - Mexico Branch",
@@ -74,7 +76,7 @@ async function main() {
       openingHours: "8:00 AM - 5:00 PM",
       isOpen: true,
       phone: "+251 11 553 9876",
-      serviceNames: ["Teller Services", "Account Opening", "ATM / CDM"],
+      serviceNames: ["Account Opening", "ATM Card Request", "Cash Services", "Digital Banking"],
     },
     {
       name: "Wegagen - Sarbet Branch",
@@ -84,7 +86,7 @@ async function main() {
       openingHours: "8:00 AM - 5:00 PM",
       isOpen: false,
       phone: "+251 11 372 1122",
-      serviceNames: ["Teller Services", "Forex / FX", "Account Opening"],
+      serviceNames: ["Account Opening", "ATM Card Request", "Cash Services", "Forex Exchange"],
     },
   ];
 
@@ -103,11 +105,21 @@ async function main() {
           },
         },
       });
+    } else {
+      await prisma.branch.update({
+        where: { id: existing.id },
+        data: {
+          ...branchInfo,
+          services: {
+            connect: serviceNames.map((name) => ({ id: createdServices[name] })),
+          },
+        },
+      });
     }
   }
-  console.log(` Seeded ${branchesData.length} branches with linked services.`);
+  console.log(`✅ Seeded ${branchesData.length} branches with linked services.`);
 
-  // 3. Seed Forex Rates (Official Wegagen Live Rates)
+  // 3. Seed Forex Rates
   const forexRatesData = [
     { currencyCode: "USD", currencyName: "US Dollar", flagEmoji: "🇺🇸", cashBuy: 125.40, cashSell: 127.90, ttBuy: 126.15, ttSell: 128.67, change24h: "+0.35%", isPositive: true, isMajor: true },
     { currencyCode: "EUR", currencyName: "Euro", flagEmoji: "🇪🇺", cashBuy: 136.10, cashSell: 138.80, ttBuy: 137.05, ttSell: 139.75, change24h: "-0.12%", isPositive: false, isMajor: true },
@@ -126,14 +138,13 @@ async function main() {
       create: rate,
     });
   }
-  console.log(` Seeded ${forexRatesData.length} forex exchange rates.`);
-
-  console.log(" Seeding completed successfully!");
+  console.log(`✅ Seeded ${forexRatesData.length} forex exchange rates.`);
+  console.log("🚀 Database seeding completed successfully!");
 }
 
 main()
   .catch((e) => {
-    console.error(" Seeding error:", e);
+    console.error("❌ Seeding error:", e);
     process.exit(1);
   })
   .finally(async () => {
