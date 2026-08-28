@@ -129,6 +129,42 @@ export const profileStyles = StyleSheet.create({
     marginBottom: 10,
   },
 
+  // Security & Biometrics Section
+  securityCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  securityLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  securityIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  securityTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+  },
+  securitySub: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginTop: 2,
+  },
+
   // Actions Section
   actionsContainer: {
     gap: 12,
@@ -146,6 +182,13 @@ export const profileStyles = StyleSheet.create({
     borderColor: COLORS.border,
     borderWidth: 1.5,
     height: 53,
+  },
+  queueHistory:{
+    backgroundColor: COLORS.white,
+    borderColor: COLORS.border,
+    borderRadius: 12,
+        borderWidth: 1.5,
+
   },
 
   // Modal Styles

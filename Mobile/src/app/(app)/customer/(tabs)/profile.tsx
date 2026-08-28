@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
-  StyleSheet,
   Switch,
 } from 'react-native';
 import { useAuth, useUser } from '@clerk/expo';
@@ -310,9 +309,9 @@ export default function ProfileScreen() {
             {hasBiometrics && (
               <>
                 <Text style={profileStyles.sectionTitle}>Security & Biometrics</Text>
-                <View style={styles.securityCard}>
-                  <View style={styles.securityLeft}>
-                    <View style={styles.securityIconBox}>
+                <View style={profileStyles.securityCard}>
+                  <View style={profileStyles.securityLeft}>
+                    <View style={profileStyles.securityIconBox}>
                       <MaterialCommunityIcons
                         name={biometricLabel === 'Face ID' ? 'face-recognition' : 'fingerprint'}
                         size={22}
@@ -320,8 +319,8 @@ export default function ProfileScreen() {
                       />
                     </View>
                     <View>
-                      <Text style={styles.securityTitle}>{biometricLabel} Sign-In</Text>
-                      <Text style={styles.securitySub}>
+                      <Text style={profileStyles.securityTitle}>{biometricLabel} Sign-In</Text>
+                      <Text style={profileStyles.securitySub}>
                         {biometricsEnabled
                           ? `Enabled for quick login`
                           : `Disabled on this device`}
@@ -340,21 +339,15 @@ export default function ProfileScreen() {
 
             {/* 4. Action Buttons */}
             <View style={profileStyles.actionsContainer}>
-              <Button
-                title="Queue History"
-                onPress={() => router.push('/(app)/customer/Queue/history')}
-                variant="primary"
-                icon={<MaterialCommunityIcons name="history" size={18} color={COLORS.white} />}
-                style={StyleSheet.flatten([profileStyles.editButton, { marginBottom: 10, borderColor: COLORS.primary }])}
-              />
 
-              <Button
+                <Button
                 title="Edit Profile"
                 onPress={() => setIsEditModalVisible(true)}
                 variant="navy"
                 icon={<Feather name="edit-3" size={18} color={COLORS.white} />}
                 style={profileStyles.editButton}
               />
+              
 
               <Button
                 title="Logout"
@@ -385,40 +378,3 @@ export default function ProfileScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  securityCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  securityLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  securityIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#EFF6FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  securityTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
-  securitySub: {
-    fontSize: 12,
-    color: '#64748B',
-    marginTop: 2,
-  },
-});
