@@ -343,8 +343,8 @@ export default function ProfileScreen() {
               <Button
                 title="Queue History"
                 onPress={() => router.push('/(app)/customer/Queue/history')}
-                variant="outlineNavy"
-                icon={<MaterialCommunityIcons name="history" size={18} color={COLORS.primary} />}
+                variant="primary"
+                icon={<MaterialCommunityIcons name="history" size={18} color={COLORS.white} />}
                 style={StyleSheet.flatten([profileStyles.editButton, { marginBottom: 10, borderColor: COLORS.primary }])}
               />
 
