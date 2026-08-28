@@ -240,7 +240,7 @@ export default function ProfileScreen() {
           <View style={{ paddingVertical: 60, alignItems: 'center', justifyContent: 'center' }}>
             <ActivityIndicator size="large" color={COLORS.primary} />
             <Text style={{ marginTop: 12, color: COLORS.textSecondary, fontSize: 14, fontWeight: '600' }}>
-              Loading profile from database...
+              Loading 
             </Text>
           </View>
         ) : error && !userData ? (
