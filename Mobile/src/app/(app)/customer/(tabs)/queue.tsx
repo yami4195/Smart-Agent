@@ -23,24 +23,22 @@ import {
   QueueActionButtons,
   QueueHeader,
 } from '../../../../components/queue';
-import { NotificationModal } from '../../../../components/common/NotificationModal';
 import { queueStyles } from '../../../../../assets/styles/queue.styles';
 import { commonStyles } from '../../../../../assets/styles/common.styles';
 import { COLORS } from '../../../../../constants/colors';
 import { queueApi, QueueTicketData } from '../../../../api/queue.api';
-import { notificationApi } from '../../../../api/notification.api';
 import { socketService } from '../../../../services/socket.service';
+import { useNotification } from '../../../../contexts/NotificationContext';
 
 export default function MyQueueScreen() {
   const router = useRouter();
   const { user: clerkUser } = useUser();
+  const { openNotificationModal } = useNotification();
 
   const [ticket, setTicket] = useState<QueueTicketData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [isCanceling, setIsCanceling] = useState<boolean>(false);
-  const [isNotifModalVisible, setIsNotifModalVisible] = useState<boolean>(false);
-  const [toastNotif, setToastNotif] = useState<{ title: string; message: string } | null>(null);
 
   // Sync active ticket on focus or pull-to-refresh
   const loadTicket = useCallback(async (isRefresh: boolean = false) => {
@@ -84,7 +82,8 @@ export default function MyQueueScreen() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Socket.IO Real-Time Listener for Status Changes & Notifications
+  // Socket.IO Real-Time Listener for Queue Status Changes
+  // (notification listener is now handled globally by NotificationContext)
   useEffect(() => {
     socketService.connect();
 
@@ -108,21 +107,9 @@ export default function MyQueueScreen() {
       }
     });
 
-    const unsubNotif = socketService.onCustomerNotification((notif) => {
-      notificationApi.addLocalNotification(
-        notif.title || 'Queue Update',
-        notif.message || '',
-        notif.id
-      );
-      setToastNotif({
-        title: notif.title || 'Queue Update',
-        message: notif.message || '',
-      });
+    // Also reload ticket when a notification comes in (queue update)
+    const unsubNotif = socketService.onCustomerNotification(() => {
       loadTicket();
-
-      setTimeout(() => {
-        setToastNotif(null);
-      }, 6000);
     });
 
     return () => {
@@ -138,11 +125,6 @@ export default function MyQueueScreen() {
     } else {
       router.push('/(app)/customer/(tabs)');
     }
-  };
-
-  // Notification action
-  const handleNotification = () => {
-    setIsNotifModalVisible(true);
   };
 
   // Cancel Ticket action
@@ -185,34 +167,11 @@ export default function MyQueueScreen() {
     <View style={commonStyles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      {/* Real-time Notification Banner Toast */}
-      {toastNotif && (
-        <TouchableOpacity
-          style={styles.toastBanner}
-          onPress={() => {
-            setToastNotif(null);
-            setIsNotifModalVisible(true);
-          }}
-          activeOpacity={0.9}
-        >
-          <View style={styles.toastIconBox}>
-            <Ionicons name="notifications" size={18} color="#FFFFFF" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.toastTitle}>{toastNotif.title}</Text>
-            <Text style={styles.toastMessage} numberOfLines={2}>
-              {toastNotif.message}
-            </Text>
-          </View>
-          <Ionicons name="close" size={16} color="#64748B" />
-        </TouchableOpacity>
-      )}
-
       {/* Header */}
       <QueueHeader
         title="My Queue"
         onBackPress={handleBack}
-        onNotificationPress={handleNotification}
+        onNotificationPress={openNotificationModal}
         showBack={true}
       />
 
@@ -312,62 +271,11 @@ export default function MyQueueScreen() {
           )}
         </ScrollView>
       )}
-
-      {/* Notification Center Modal */}
-      <NotificationModal
-        visible={isNotifModalVisible}
-        onClose={() => setIsNotifModalVisible(false)}
-      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  toastBanner: {
-    position: 'absolute',
-    top: 55,
-    left: 16,
-    right: 16,
-    zIndex: 999,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#93C5FD',
-    padding: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#0A2540',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.16,
-        shadowRadius: 10,
-      },
-      android: {
-        elevation: 8,
-      },
-    }),
-  },
-  toastIconBox: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: '#0A2540',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  toastTitle: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#0A2540',
-  },
-  toastMessage: {
-    fontSize: 12,
-    color: '#475569',
-    marginTop: 2,
-    lineHeight: 16,
-  },
   historyLinkBtn: {
     flexDirection: 'row',
     alignItems: 'center',

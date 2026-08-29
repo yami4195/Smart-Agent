@@ -25,11 +25,13 @@ import { commonStyles } from '../../../../../assets/styles/common.styles';
 import { COLORS } from '../../../../../constants/colors';
 import { userApi, UserData } from '../../../../api/user.api';
 import { biometricService } from '../../../../services/biometric.service';
+import { useNotification } from '../../../../contexts/NotificationContext';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { signOut } = useAuth();
   const { user: clerkUser } = useUser();
+  const { unreadCount, openNotificationModal } = useNotification();
 
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -219,8 +221,9 @@ export default function ProfileScreen() {
       {/* Header */}
       <Header
         title="Profile"
+        unreadCount={unreadCount}
         onAiAgentPress={() => {}}
-        onNotificationPress={() => {}}
+        onNotificationPress={openNotificationModal}
       />
 
       <ScrollView

@@ -20,11 +20,13 @@ import { branchesStyles } from '../../../../../assets/styles/branches.styles';
 import { commonStyles } from '../../../../../assets/styles/common.styles';
 import { COLORS } from '../../../../../constants/colors';
 import { branchApi } from '../../../../api/branch.api';
+import { useNotification } from '../../../../contexts/NotificationContext';
 
 const PAGE_SIZE = 10;
 
 export default function BranchesScreen() {
   const router = useRouter();
+  const { unreadCount, openNotificationModal } = useNotification();
   const [viewMode, setViewMode] = useState<'LIST' | 'MAP'>('LIST');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterCategory>('ALL');
@@ -149,6 +151,8 @@ export default function BranchesScreen() {
         showBankIcon={true}
         showAiAgent={false}
         showNotification={true}
+        unreadCount={unreadCount}
+        onNotificationPress={openNotificationModal}
       />
 
       <ScrollView

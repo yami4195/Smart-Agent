@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   StatusBar,
   Animated,
+  Linking,
+  Platform,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -27,12 +29,15 @@ import { commonStyles } from '../../../../../assets/styles/common.styles';
 import { COLORS } from '../../../../../constants/colors';
 import { branchApi } from '../../../../api/branch.api';
 import { queueApi } from '../../../../api/queue.api';
+import { useNotification } from '../../../../contexts/NotificationContext';
 
 const FALLBACK_BRANCH: BranchData = {
   id: 'default-branch',
   name: 'Bole Branch',
   address: 'Bole Road, Near Edna Mall, Addis Ababa',
   distance: '1.2 km away',
+  latitude: 8.9984,
+  longitude: 38.7854,
   isOpen: true,
   hours: 'Mon-Fri: 8:00 AM - 5:00 PM\nSat: 8:00 AM - 12:00 PM',
   phone: '+251 11 661 2345',
@@ -52,6 +57,7 @@ export default function BranchDetailsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { unreadCount, openNotificationModal } = useNotification();
 
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -132,7 +138,18 @@ export default function BranchDetailsScreen() {
   };
 
   const handleGetDirections = () => {
-    console.log(`Getting directions to ${branch?.name}`);
+    const active = branch || FALLBACK_BRANCH;
+    const lat = active.latitude;
+    const lng = active.longitude;
+    const query = lat && lng ? `${lat},${lng}` : encodeURIComponent(active.address || active.name);
+    const url = Platform.select({
+      ios: `maps:0,0?q=${query}`,
+      android: `geo:0,0?q=${query}`,
+      default: `https://www.google.com/maps/search/?api=1&query=${query}`,
+    });
+    Linking.openURL(url).catch(() => {
+      Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${query}`);
+    });
   };
 
   const activeBranch = branch || FALLBACK_BRANCH;
@@ -150,6 +167,36 @@ export default function BranchDetailsScreen() {
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
         <Ionicons name="arrow-back" size={20} color={COLORS.navy} />
+      </TouchableOpacity>
+
+      {/* Persistent Floating Notification Bell (Fixed on scroll) */}
+      <TouchableOpacity
+        style={[branchDetailsStyles.backButton, { top: backButtonTop, left: undefined, right: 16 }]}
+        onPress={openNotificationModal}
+        activeOpacity={0.85}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
+        <Ionicons name="notifications-outline" size={20} color={COLORS.navy} />
+        {unreadCount > 0 && (
+          <View style={{
+            position: 'absolute',
+            top: 4,
+            right: 4,
+            minWidth: 16,
+            height: 16,
+            borderRadius: 8,
+            backgroundColor: '#EF4444',
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingHorizontal: 3,
+            borderWidth: 1.5,
+            borderColor: '#FFFFFF',
+          }}>
+            <Text style={{ fontSize: 9, fontWeight: '800', color: '#FFFFFF' }}>
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </Text>
+          </View>
+        )}
       </TouchableOpacity>
 
       {loading && !branch ? (

@@ -11,10 +11,12 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons, Feather, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import axios from 'axios';
 
 import { commonStyles } from '../../../../../assets/styles/common.styles';
 import { COLORS } from '../../../../../constants/colors';
 import { queueApi, QueueHistoryItem, TicketStatusType } from '../../../../api/queue.api';
+import { useNotification } from '../../../../contexts/NotificationContext';
 
 const FILTER_TABS: { id: string; label: string; status?: TicketStatusType }[] = [
   { id: 'ALL', label: 'All' },
@@ -25,11 +27,13 @@ const FILTER_TABS: { id: string; label: string; status?: TicketStatusType }[] = 
 
 export default function CustomerQueueHistoryScreen() {
   const router = useRouter();
+  const { unreadCount, openNotificationModal } = useNotification();
 
   const [history, setHistory] = useState<QueueHistoryItem[]>([]);
   const [activeFilter, setActiveFilter] = useState<string>('ALL');
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchHistory = useCallback(async (isRefresh = false) => {
     try {
@@ -38,10 +42,19 @@ export default function CustomerQueueHistoryScreen() {
       } else {
         setLoading(true);
       }
+      setError(null);
       const data = await queueApi.getHistory();
-      setHistory(data);
-    } catch {
-      setHistory([]);
+      setHistory(data || []);
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        const msg =
+          err.response?.data?.message ||
+          err.message ||
+          'Failed to connect to the server. Please check your connection.';
+        setError(msg);
+      } else {
+        setError('An unexpected error occurred while loading your queue history.');
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -111,16 +124,25 @@ export default function CustomerQueueHistoryScreen() {
           style={styles.backBtn}
           onPress={() => router.back()}
           activeOpacity={0.7}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
           <Ionicons name="arrow-back" size={20} color="#0F172A" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Queue History</Text>
         <TouchableOpacity
-          style={styles.refreshBtn}
-          onPress={() => fetchHistory(true)}
+          style={styles.notifBtn}
+          onPress={openNotificationModal}
           activeOpacity={0.7}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <Ionicons name="refresh" size={19} color={COLORS.primary} />
+          <Ionicons name="notifications-outline" size={20} color="#0F172A" />
+          {unreadCount > 0 && (
+            <View style={styles.unreadBadge}>
+              <Text style={styles.unreadBadgeText}>
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -154,7 +176,7 @@ export default function CustomerQueueHistoryScreen() {
         </ScrollView>
       </View>
 
-      {/* History List or Clean Empty State */}
+      {/* History List or Error or Clean Empty State */}
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
@@ -171,6 +193,24 @@ export default function CustomerQueueHistoryScreen() {
         {loading && !refreshing ? (
           <View style={styles.centerContainer}>
             <ActivityIndicator size="small" color={COLORS.primary} />
+            <Text style={{ marginTop: 10, color: COLORS.textSecondary, fontSize: 13, fontWeight: '600' }}>
+              Loading queue history...
+            </Text>
+          </View>
+        ) : error ? (
+          /* Error State Banner with Retry */
+          <View style={styles.errorContainer}>
+            <Ionicons name="alert-circle" size={40} color={COLORS.danger} />
+            <Text style={styles.errorTitle}>Failed to Load History</Text>
+            <Text style={styles.errorMessage}>{error}</Text>
+            <TouchableOpacity
+              onPress={() => fetchHistory(false)}
+              style={styles.retryButton}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="refresh" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+              <Text style={styles.retryButtonText}>Try Again</Text>
+            </TouchableOpacity>
           </View>
         ) : filteredHistory.length > 0 ? (
           filteredHistory.map((item) => {
@@ -257,13 +297,34 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
-  refreshBtn: {
+  notifBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#FFF3E0',
+    backgroundColor: '#F8FAFC',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  unreadBadge: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#EF4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+  },
+  unreadBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
   headerTitle: {
     fontSize: 17,
@@ -312,6 +373,43 @@ const styles = StyleSheet.create({
   centerContainer: {
     paddingVertical: 60,
     alignItems: 'center',
+  },
+  errorContainer: {
+    backgroundColor: '#FEF2F2',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    marginVertical: 20,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  errorTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.danger,
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  errorMessage: {
+    fontSize: 13,
+    color: '#475569',
+    marginTop: 6,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 16,
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 13,
   },
   historyCard: {
     backgroundColor: '#FFFFFF',

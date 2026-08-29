@@ -69,14 +69,12 @@ export const Header: React.FC<HeaderProps> = ({
         {showNotification && (
           <Pressable style={headerStyles.iconButton} onPress={onNotificationPress}>
             <Ionicons name="notifications-outline" size={20} color={COLORS.navy} />
-            {unreadCount > 0 ? (
+            {unreadCount > 0 && (
               <View style={styles.unreadBadge}>
                 <Text style={styles.unreadBadgeText}>
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </Text>
               </View>
-            ) : (
-              <View style={headerStyles.notificationBadgeDot} />
             )}
           </Pressable>
         )}
