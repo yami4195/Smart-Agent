@@ -4,6 +4,7 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { branchesStyles } from '../../../assets/styles/branches.styles';
 import { BranchData } from './BranchCard';
 import { COLORS } from '../../../constants/colors';
+import { isBranchOpenNow } from '../../utils/openingHours';
 
 interface BranchMapPreviewProps {
   branches: BranchData[];
@@ -80,26 +81,31 @@ export const BranchMapPreview: React.FC<BranchMapPreviewProps> = ({
           </View>
 
           {/* Status & Distance Row */}
-          <View style={branchesStyles.mapCardStatusRow}>
-            <View
-              style={[
-                branchesStyles.mapCardStatusDot,
-                { backgroundColor: activeBranch.isOpen ? COLORS.success : COLORS.danger },
-              ]}
-            />
-            <Text
-              style={[
-                branchesStyles.mapCardStatusText,
-                { color: activeBranch.isOpen ? COLORS.success : COLORS.danger },
-              ]}
-            >
-              {activeBranch.isOpen ? 'Open' : 'Closed'}
-            </Text>
-            <Text style={branchesStyles.mapCardDotSeparator}>•</Text>
-            <Text style={branchesStyles.mapCardDistanceText}>
-              {activeBranch.distance || '0.8km away'}
-            </Text>
-          </View>
+          {(() => {
+            const isOpen = isBranchOpenNow(activeBranch.isOpen, activeBranch.hours);
+            return (
+              <View style={branchesStyles.mapCardStatusRow}>
+                <View
+                  style={[
+                    branchesStyles.mapCardStatusDot,
+                    { backgroundColor: isOpen ? COLORS.success : COLORS.danger },
+                  ]}
+                />
+                <Text
+                  style={[
+                    branchesStyles.mapCardStatusText,
+                    { color: isOpen ? COLORS.success : COLORS.danger },
+                  ]}
+                >
+                  {isOpen ? 'Open' : 'Closed'}
+                </Text>
+                <Text style={branchesStyles.mapCardDotSeparator}>•</Text>
+                <Text style={branchesStyles.mapCardDistanceText}>
+                  {activeBranch.distance || '0.8km away'}
+                </Text>
+              </View>
+            );
+          })()}
 
           {/* Queue and Wait Time Metrics */}
           <View style={branchesStyles.mapCardStatsBox}>

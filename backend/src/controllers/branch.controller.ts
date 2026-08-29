@@ -55,22 +55,15 @@ export const getNearestBranch = async (req: Request, res: Response) => {
     try {
         const { lat, lng } = req.query;
 
-        if (!lat || !lng) {
-        return res.status(400).json({
-            success: false,
-            message: "Latitude (lat) and Longitude (lng) are required query parameters.",
-        });
-    }
+        // Default to Addis Ababa central coordinates if client has not provided GPS coordinates
+        const DEFAULT_LAT = 9.0112;
+        const DEFAULT_LNG = 38.7467;
 
-    const parsedLat = parseFloat(lat as string);
-    const parsedLng = parseFloat(lng as string);
+        let parsedLat = lat ? parseFloat(lat as string) : DEFAULT_LAT;
+        let parsedLng = lng ? parseFloat(lng as string) : DEFAULT_LNG;
 
-    if (isNaN(parsedLat) || isNaN(parsedLng)) {
-        return res.status(400).json({
-            success: false,
-            message: "Latitude and Longitude must be valid numbers.",
-        });
-    }
+        if (isNaN(parsedLat)) parsedLat = DEFAULT_LAT;
+        if (isNaN(parsedLng)) parsedLng = DEFAULT_LNG;
 
     const nearestBranch = await getNearestBranchService(parsedLat, parsedLng);
 

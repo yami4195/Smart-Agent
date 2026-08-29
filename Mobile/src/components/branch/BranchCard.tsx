@@ -5,6 +5,7 @@ import { branchesStyles } from '../../../assets/styles/branches.styles';
 import { Badge } from '../common/Badge';
 import { COLORS } from '../../../constants/colors';
 import { Button } from '../common/Button';
+import { isBranchOpenNow } from '../../utils/openingHours';
 
 export interface BranchData {
   id: string;
@@ -45,12 +46,17 @@ export const BranchCard: React.FC<BranchCardProps> = ({
           {branch.distance ? (
             <Text style={branchesStyles.distanceTag}>{branch.distance}</Text>
           ) : null}
-          <Badge
-            label={branch.isOpen ? 'Open Now' : 'Closed'}
-            variant={branch.isOpen ? 'open' : 'danger'}
-            style={branch.isOpen ? branchesStyles.statusBadgeOpen : branchesStyles.statusBadgeClosed}
-            textStyle={branch.isOpen ? branchesStyles.statusBadgeOpenText : branchesStyles.statusBadgeClosedText}
-          />
+          {(() => {
+            const isOpen = isBranchOpenNow(branch.isOpen, branch.hours);
+            return (
+              <Badge
+                label={isOpen ? 'Open Now' : 'Closed'}
+                variant={isOpen ? 'open' : 'danger'}
+                style={isOpen ? branchesStyles.statusBadgeOpen : branchesStyles.statusBadgeClosed}
+                textStyle={isOpen ? branchesStyles.statusBadgeOpenText : branchesStyles.statusBadgeClosedText}
+              />
+            );
+          })()}
         </View>
       </View>
 

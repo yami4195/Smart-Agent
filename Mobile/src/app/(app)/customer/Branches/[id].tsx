@@ -30,6 +30,7 @@ import { COLORS } from '../../../../../constants/colors';
 import { branchApi } from '../../../../api/branch.api';
 import { queueApi } from '../../../../api/queue.api';
 import { useNotification } from '../../../../contexts/NotificationContext';
+import { isBranchOpenNow } from '../../../../utils/openingHours';
 
 const FALLBACK_BRANCH: BranchData = {
   id: 'default-branch',
@@ -240,7 +241,7 @@ export default function BranchDetailsScreen() {
             {/* Branch Header Card (Title, Status, Distance, Address, Directions) */}
             <BranchDetailsHeader
               name={activeBranch.name}
-              isOpen={activeBranch.isOpen}
+              isOpen={isBranchOpenNow(activeBranch.isOpen, activeBranch.hours)}
               distance={activeBranch.distance}
               address={activeBranch.address}
               onGetDirections={handleGetDirections}

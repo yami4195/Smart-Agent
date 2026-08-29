@@ -38,6 +38,45 @@ export interface FormattedBranch {
 }
 
 /**
+ * Determines whether the bank is open based on East Africa Time (EAT - UTC+3)
+ * Operating Hours:
+ * - Mon - Fri: 8:00 AM - 5:00 PM (08:00 - 17:00)
+ * - Saturday:  8:00 AM - 12:00 PM (08:00 - 12:00)
+ * - Sunday:    Closed
+ */
+export function isBranchOpenBySchedule(openingHours?: string | null): boolean {
+    const now = new Date();
+    // Convert to UTC+3 (East Africa Time)
+    const utcHours = now.getUTCHours();
+    const utcMinutes = now.getUTCMinutes();
+    const eatHours = (utcHours + 3) % 24;
+    const eatMinutes = eatHours * 60 + utcMinutes;
+
+    // Calculate day in UTC+3
+    let eatDay = now.getUTCDay();
+    if (utcHours + 3 >= 24) {
+        eatDay = (eatDay + 1) % 7;
+    }
+
+    // Sunday (0) is closed
+    if (eatDay === 0) {
+        return false;
+    }
+
+    const OPEN_MINUTES = 8 * 60; // 08:00 AM = 480
+    const CLOSE_WEEKDAY_MINUTES = 17 * 60; // 05:00 PM = 1020
+    const CLOSE_SATURDAY_MINUTES = 12 * 60; // 12:00 PM = 720
+
+    // Saturday (6)
+    if (eatDay === 6) {
+        return eatMinutes >= OPEN_MINUTES && eatMinutes < CLOSE_SATURDAY_MINUTES;
+    }
+
+    // Weekdays Monday - Friday (1 - 5)
+    return eatMinutes >= OPEN_MINUTES && eatMinutes < CLOSE_WEEKDAY_MINUTES;
+}
+
+/**
  * Transforms a Prisma branch record into a standardized mobile-friendly format
  */
 function formatBranchRecord(
@@ -46,7 +85,8 @@ function formatBranchRecord(
     userLng?: number
     ): FormattedBranch {
     const waitingCount = branch._count?.tickets ?? 0;
-    const isBranchOpen = branch.isOpen;
+    // Dynamic calculation: respect manual admin closure if false, otherwise evaluate schedule
+    const isBranchOpen = branch.isOpen ? isBranchOpenBySchedule(branch.openingHours) : false;
 
     // Calculate estimated wait time (e.g. 3 mins per waiting ticket, 0 if closed or empty)
     const estimatedWaitMins = !isBranchOpen
@@ -79,7 +119,7 @@ function formatBranchRecord(
     address: branch.address,
     latitude: branch.latitude,
     longitude: branch.longitude,
-    isOpen: branch.isOpen,
+    isOpen: isBranchOpen,
     hours: branch.openingHours,
     phone: branch.phone,
     waitingCount,
