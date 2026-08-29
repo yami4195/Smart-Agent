@@ -123,7 +123,7 @@ export default function CustomerHomeScreen() {
 
       {/* Top Header */}
       <Header
-        title="ተራ Mobile Services"
+        title="Wegagen plus"
         unreadCount={unreadNotifCount}
         onAiAgentPress={handleAiAgentPress}
         onNotificationPress={handleNotificationPress}

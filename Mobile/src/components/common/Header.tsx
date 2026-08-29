@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Image } from 'react-native';
 import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { headerStyles } from '../../../assets/styles/header.styles';
 import { COLORS } from '../../../constants/colors';
@@ -42,7 +42,10 @@ export const Header: React.FC<HeaderProps> = ({
         ) : (
           showBankIcon && (
             <Pressable style={headerStyles.bankIconCircle} onPress={onBankPress}>
-              <FontAwesome5 name="university" size={18} color={COLORS.primary} />
+              <Image
+                source={require('../../../assets/images/wegagenLogo2.webp')}
+                style={{ width: 28, height: 28, resizeMode: 'contain' }}
+              />
             </Pressable>
           )
         )}
