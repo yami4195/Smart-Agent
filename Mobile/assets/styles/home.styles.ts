@@ -284,6 +284,6 @@ export const homeStyles = StyleSheet.create({
   joinNowText: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.primary,
+    color: COLORS.white,
   },
 });

@@ -17,7 +17,7 @@ export const MemberSinceCard: React.FC<MemberSinceCardProps> = ({
         <Ionicons name="calendar-outline" size={16} color={COLORS.navy} />
         <Text style={profileStyles.memberSinceLabel}>MEMBER SINCE</Text>
       </View>
-      <Text style={profileStyles.memberSinceValue}>{memberSince || 'January 2022'}</Text>
+      <Text style={profileStyles.memberSinceValue}>{memberSince || 'August 30, 2026'}</Text>
     </View>
   );
 };

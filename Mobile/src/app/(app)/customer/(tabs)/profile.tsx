@@ -202,12 +202,16 @@ export default function ProfileScreen() {
 
   const memberSince = (() => {
     const rawDate = userData?.createdAt || clerkUser?.createdAt;
-    if (!rawDate) return 'August 2025';
+    if (!rawDate) return 'August 30, 2026';
     try {
       const d = new Date(rawDate);
-      return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      return d.toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      });
     } catch {
-      return 'August 2025';
+      return 'August 30, 2026';
     }
   })();
 

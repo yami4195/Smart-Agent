@@ -119,6 +119,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   closedJoinButton: {
-    backgroundColor: '#0F172A',
+    backgroundColor: '#D97706',
+    borderRadius:8
   },
 });
