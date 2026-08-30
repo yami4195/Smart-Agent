@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { forexStyles } from '../../../../../assets/styles/forex.styles';
+import { notificationStyles } from '../../../../../assets/styles/notification.styles';
 import { TickerTape } from '../../../../components/forex/TickerTape';
 import { CurrencyConverter } from '../../../../components/forex/CurrencyConverter';
 import { ExchangeRatesTable } from '../../../../components/forex/ExchangeRatesTable';
@@ -41,8 +42,8 @@ export default function ForexPage() {
                 <Pressable style={forexStyles.backButton} onPress={openNotificationModal}>
                     <Ionicons name="notifications-outline" size={20} color={COLORS.navy} />
                     {unreadCount > 0 && (
-                        <View style={styles.unreadBadge}>
-                            <Text style={styles.unreadBadgeText}>
+                        <View style={notificationStyles.unreadBadge}>
+                            <Text style={notificationStyles.unreadBadgeText}>
                                 {unreadCount > 9 ? '9+' : unreadCount}
                             </Text>
                         </View>
@@ -64,7 +65,7 @@ export default function ForexPage() {
                 <ForexAiBanner />
 
                 {/* 4. Full Exchange Rates Directory Table */}
-                <ExchangeRatesTable/>
+                <ExchangeRatesTable />
             </ScrollView>
 
             {/* 5. Rate Alert Modal */}
@@ -75,25 +76,3 @@ export default function ForexPage() {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    unreadBadge: {
-        position: 'absolute',
-        top: 2,
-        right: 2,
-        minWidth: 16,
-        height: 16,
-        borderRadius: 8,
-        backgroundColor: '#EF4444',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: 3,
-        borderWidth: 1.5,
-        borderColor: '#FFFFFF',
-    },
-    unreadBadgeText: {
-        fontSize: 9,
-        fontWeight: '800',
-        color: '#FFFFFF',
-    },
-});

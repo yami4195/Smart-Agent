@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { TouchableOpacity, View, Text, StyleSheet, Platform } from 'react-native';
+import { TouchableOpacity, View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '@clerk/expo';
 
 import { NotificationModal } from '../components/common/NotificationModal';
 import { notificationApi } from '../api/notification.api';
 import { socketService } from '../services/socket.service';
+import { notificationStyles } from '../../assets/styles/notification.styles';
 
 interface NotificationContextType {
   unreadCount: number;
@@ -90,19 +91,19 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       {/* Global Toast Banner */}
       {toastNotif && (
         <TouchableOpacity
-          style={styles.toastBanner}
+          style={notificationStyles.toastBanner}
           onPress={() => {
             setToastNotif(null);
             setIsModalVisible(true);
           }}
           activeOpacity={0.9}
         >
-          <View style={styles.toastIconBox}>
+          <View style={notificationStyles.toastIconBox}>
             <Ionicons name="notifications" size={18} color="#FFFFFF" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.toastTitle}>{toastNotif.title}</Text>
-            <Text style={styles.toastMessage} numberOfLines={2}>
+            <Text style={notificationStyles.toastTitle}>{toastNotif.title}</Text>
+            <Text style={notificationStyles.toastMessage} numberOfLines={2}>
               {toastNotif.message}
             </Text>
           </View>
@@ -119,53 +120,5 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     </NotificationContext.Provider>
   );
 };
-
-const styles = StyleSheet.create({
-  toastBanner: {
-    position: 'absolute',
-    top: 55,
-    left: 16,
-    right: 16,
-    zIndex: 999,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#93C5FD',
-    padding: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#0A2540',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.16,
-        shadowRadius: 10,
-      },
-      android: {
-        elevation: 8,
-      },
-    }),
-  },
-  toastIconBox: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: '#0A2540',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  toastTitle: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#0A2540',
-  },
-  toastMessage: {
-    fontSize: 12,
-    color: '#475569',
-    marginTop: 2,
-    lineHeight: 16,
-  },
-});
 
 export default NotificationContext;

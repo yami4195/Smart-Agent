@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { homeStyles } from '../../../assets/styles/home.styles';
 import { Badge } from '../common/Badge';
@@ -57,13 +57,13 @@ export const NearestBranchCard: React.FC<NearestBranchCardProps> = ({
       </View>
 
       {/* Distance & Schedule Row */}
-      <View style={styles.subInfoRow}>
-        <View style={styles.distanceBadge}>
+      <View style={homeStyles.subInfoRow}>
+        <View style={homeStyles.distanceBadge}>
           <FontAwesome5 name="walking" size={12} color={COLORS.textSecondary} />
           <Text style={homeStyles.distanceText}>{distance}</Text>
         </View>
         {!effectiveIsOpen && statusInfo.nextOpenText ? (
-          <Text style={styles.nextOpenBadge}>{statusInfo.nextOpenText}</Text>
+          <Text style={homeStyles.nextOpenBadge}>{statusInfo.nextOpenText}</Text>
         ) : null}
       </View>
 
@@ -84,7 +84,7 @@ export const NearestBranchCard: React.FC<NearestBranchCardProps> = ({
         <Pressable
           style={[
             homeStyles.joinNowButton,
-            !effectiveIsOpen && styles.closedJoinButton,
+            !effectiveIsOpen && homeStyles.closedJoinButton,
           ]}
           onPress={onJoinQueue}
         >
@@ -96,30 +96,3 @@ export const NearestBranchCard: React.FC<NearestBranchCardProps> = ({
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  subInfoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  distanceBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  nextOpenBadge: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#D97706',
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  closedJoinButton: {
-    backgroundColor: '#D97706',
-    borderRadius:8
-  },
-});

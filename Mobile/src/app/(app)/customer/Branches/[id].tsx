@@ -26,6 +26,7 @@ import { getBranchImage } from '../../../../../assets/branchImages';
 import { BranchData } from '../../../../components/branch/BranchCard';
 import { branchDetailsStyles } from '../../../../../assets/styles/branch-details.styles';
 import { commonStyles } from '../../../../../assets/styles/common.styles';
+import { notificationStyles } from '../../../../../assets/styles/notification.styles';
 import { COLORS } from '../../../../../constants/colors';
 import { branchApi } from '../../../../api/branch.api';
 import { queueApi } from '../../../../api/queue.api';
@@ -179,21 +180,8 @@ export default function BranchDetailsScreen() {
       >
         <Ionicons name="notifications-outline" size={20} color={COLORS.navy} />
         {unreadCount > 0 && (
-          <View style={{
-            position: 'absolute',
-            top: 4,
-            right: 4,
-            minWidth: 16,
-            height: 16,
-            borderRadius: 8,
-            backgroundColor: '#EF4444',
-            alignItems: 'center',
-            justifyContent: 'center',
-            paddingHorizontal: 3,
-            borderWidth: 1.5,
-            borderColor: '#FFFFFF',
-          }}>
-            <Text style={{ fontSize: 9, fontWeight: '800', color: '#FFFFFF' }}>
+          <View style={notificationStyles.unreadBadge}>
+            <Text style={notificationStyles.unreadBadgeText}>
               {unreadCount > 9 ? '9+' : unreadCount}
             </Text>
           </View>

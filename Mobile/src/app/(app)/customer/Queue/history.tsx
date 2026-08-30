@@ -14,6 +14,7 @@ import { Ionicons, Feather, MaterialCommunityIcons, FontAwesome5 } from '@expo/v
 import axios from 'axios';
 
 import { commonStyles } from '../../../../../assets/styles/common.styles';
+import { notificationStyles } from '../../../../../assets/styles/notification.styles';
 import { COLORS } from '../../../../../constants/colors';
 import { queueApi, QueueHistoryItem, TicketStatusType } from '../../../../api/queue.api';
 import { useNotification } from '../../../../contexts/NotificationContext';
@@ -137,8 +138,8 @@ export default function CustomerQueueHistoryScreen() {
         >
           <Ionicons name="notifications-outline" size={20} color="#0F172A" />
           {unreadCount > 0 && (
-            <View style={styles.unreadBadge}>
-              <Text style={styles.unreadBadgeText}>
+            <View style={notificationStyles.unreadBadge}>
+              <Text style={notificationStyles.unreadBadgeText}>
                 {unreadCount > 9 ? '9+' : unreadCount}
               </Text>
             </View>
@@ -306,25 +307,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: '#E2E8F0',
-  },
-  unreadBadge: {
-    position: 'absolute',
-    top: 2,
-    right: 2,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: '#EF4444',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 3,
-    borderWidth: 1.5,
-    borderColor: '#FFFFFF',
-  },
-  unreadBadgeText: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: '#FFFFFF',
   },
   headerTitle: {
     fontSize: 17,

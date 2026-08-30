@@ -286,4 +286,28 @@ export const homeStyles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.white,
   },
+  subInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  distanceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  nextOpenBadge: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#D97706',
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  closedJoinButton: {
+    backgroundColor: '#D97706',
+    borderRadius: 8,
+  },
 });
