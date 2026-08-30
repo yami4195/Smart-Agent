@@ -29,6 +29,43 @@ export const homeStyles = StyleSheet.create({
     lineHeight: 20,
   },
 
+  // Image Banner Slider
+  sliderContainer: {
+    marginBottom: 20,
+  },
+  sliderImageWrapper: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: COLORS.borderSoft,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  sliderImage: {
+    width: '100%',
+    height: 165,
+    resizeMode: 'cover',
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 10,
+  },
+  paginationDot: {
+    height: 6,
+    width: 6,
+    borderRadius: 3,
+    backgroundColor: '#CBD5E1',
+  },
+  paginationDotActive: {
+    width: 20,
+    backgroundColor: COLORS.primary,
+  },
+
   // Main CTA Button ("Find Nearby Branches")
   mainCtaButton: {
     backgroundColor: COLORS.primary,

@@ -4,9 +4,9 @@ import Svg, { Circle, G } from 'react-native-svg';
 import { queueStyles } from '../../../assets/styles/queue.styles';
 
 interface QueueCircularGaugeProps {
-  position?: number; // e.g. 3
-  peopleAhead?: number; // e.g. 2
-  totalInQueue?: number; // e.g. 10
+  position?: number; 
+  peopleAhead?: number; 
+  totalInQueue?: number; 
 }
 
 /**

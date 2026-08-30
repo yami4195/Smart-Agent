@@ -11,6 +11,7 @@ import { useUser } from '@clerk/expo';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { Header } from '../../../../components/common/Header';
+import { HomeImageSlider } from '../../../../components/customer/HomeImageSlider';
 import { QuickActionCard } from '../../../../components/customer/QuickActionCard';
 import { ForexRateCard } from '../../../../components/customer/ForexRateCard';
 import { NearestBranchCard } from '../../../../components/customer/NearestBranchCard';
@@ -138,6 +139,16 @@ export default function CustomerHomeScreen() {
 
   const welcomeTitle = firstName ? `Welcome, ${firstName}!` : 'Welcome!';
 
+  const handleSlidePress = (index: number) => {
+    if (index === 0) {
+      handleFindNearbyBranches();
+    } else if (index === 1) {
+      handleJoinQueue();
+    } else if (index === 2) {
+      handleForexPress();
+    }
+  };
+
   return (
     <View style={commonStyles.safeArea}>
       {/* Top Header */}
@@ -170,6 +181,9 @@ export default function CustomerHomeScreen() {
             What would you like to do today?
           </Text>
         </View>
+
+        {/* Image Slider */}
+        <HomeImageSlider onSlidePress={handleSlidePress} />
 
         {/* Main CTA Button: Find Nearby Branches */}
         <Button
