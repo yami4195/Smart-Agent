@@ -39,7 +39,7 @@ interface HomeImageSliderProps {
 
 export const HomeImageSlider: React.FC<HomeImageSliderProps> = ({
   onSlidePress,
-  autoPlayInterval = 4000,
+  autoPlayInterval = 6000,
 }) => {
   const { width } = useWindowDimensions();
   // 40 = 20px padding left + 20px padding right in scrollContent
