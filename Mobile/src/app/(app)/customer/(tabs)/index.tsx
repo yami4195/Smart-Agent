@@ -22,6 +22,7 @@ import { COLORS } from '../../../../../constants/colors';
 import { useNotification } from '../../../../contexts/NotificationContext';
 import { branchApi } from '../../../../api/branch.api';
 import { userApi, UserData } from '../../../../api/user.api';
+import { forexApi, ForexRate } from '../../../../api/forexApi';
 import { BranchData } from '../../../../components/branch/BranchCard';
 
 export default function CustomerHomeScreen() {
@@ -31,6 +32,8 @@ export default function CustomerHomeScreen() {
 
   const [userData, setUserData] = useState<UserData | null>(null);
   const [nearestBranch, setNearestBranch] = useState<BranchData | null>(null);
+  const [forexRates, setForexRates] = useState<ForexRate[]>([]);
+  const [forexLoading, setForexLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
   const fetchUserData = useCallback(async () => {
@@ -58,16 +61,32 @@ export default function CustomerHomeScreen() {
     }
   }, []);
 
+  const fetchForexRates = useCallback(async () => {
+    try {
+      setForexLoading(true);
+      const response = await forexApi.getRates({ filter: 'MAJOR' });
+      if (response?.rates) {
+        setForexRates(response.rates);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch live forex rates for home:', err);
+    } finally {
+      setForexLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchUserData();
     fetchNearestBranch();
-  }, [fetchUserData, fetchNearestBranch]);
+    fetchForexRates();
+  }, [fetchUserData, fetchNearestBranch, fetchForexRates]);
 
   useFocusEffect(
     useCallback(() => {
       fetchUserData();
       fetchNearestBranch();
-    }, [fetchUserData, fetchNearestBranch])
+      fetchForexRates();
+    }, [fetchUserData, fetchNearestBranch, fetchForexRates])
   );
 
   const handleFindNearbyBranches = () => {
@@ -149,6 +168,9 @@ export default function CustomerHomeScreen() {
     }
   };
 
+  const usdRate = forexRates.find((r) => r.currencyCode === 'USD');
+  const eurRate = forexRates.find((r) => r.currencyCode === 'EUR');
+
   return (
     <View style={commonStyles.safeArea}>
       {/* Top Header */}
@@ -168,6 +190,7 @@ export default function CustomerHomeScreen() {
             onRefresh={() => {
               fetchUserData();
               fetchNearestBranch(true);
+              fetchForexRates();
             }}
             colors={[COLORS.primary]}
             tintColor={COLORS.primary}
@@ -215,10 +238,11 @@ export default function CustomerHomeScreen() {
 
         {/* Forex Rates Card */}
         <ForexRateCard
-          usdBuyRate="125.40"
-          usdSellRate="127.90"
-          eurBuyRate="136.10"
-          eurSellRate="138.80"
+          usdBuyRate={usdRate?.cashBuy}
+          usdSellRate={usdRate?.cashSell}
+          eurBuyRate={eurRate?.cashBuy}
+          eurSellRate={eurRate?.cashSell}
+          loading={forexLoading}
           onPress={handleForexPress}
         />
 
@@ -241,3 +265,4 @@ export default function CustomerHomeScreen() {
     </View>
   );
 }
+

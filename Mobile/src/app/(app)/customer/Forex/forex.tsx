@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { View, Text, ScrollView, Pressable, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { forexStyles } from '../../../../../assets/styles/forex.styles';
@@ -11,19 +11,57 @@ import { ForexAiBanner } from '../../../../components/forex/ForexAiBanner';
 import { RateAlertModal } from '../../../../components/forex/RateAlertModal';
 import { COLORS } from '../../../../../constants/colors';
 import { useNotification } from '../../../../contexts/NotificationContext';
+import { forexApi, ForexRate } from '../../../../api/forexApi';
 
 export default function ForexPage() {
     const router = useRouter();
     const { unreadCount, openNotificationModal } = useNotification();
-    const [alertModalVisible, setAlertModalVisible] = useState(false);
+    const scrollViewRef = useRef<ScrollView>(null);
+
+    const [rates, setRates] = useState<ForexRate[]>([]);
+    const [lastUpdated, setLastUpdated] = useState<string>('');
+    const [loading, setLoading] = useState<boolean>(true);
+    const [refreshing, setRefreshing] = useState<boolean>(false);
+    const [selectedCurrencyToConvert, setSelectedCurrencyToConvert] = useState<string>('USD');
+    const [alertModalVisible, setAlertModalVisible] = useState<boolean>(false);
+
+    const fetchRates = useCallback(async (isRefresh = false) => {
+        try {
+            if (isRefresh) {
+                setRefreshing(true);
+            } else {
+                setLoading(true);
+            }
+
+            const response = await forexApi.getRates();
+            if (response && response.rates) {
+                setRates(response.rates);
+                setLastUpdated(response.lastUpdated || new Date().toISOString());
+            }
+        } catch (error) {
+            console.warn('Failed to fetch live forex rates:', error);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchRates();
+    }, [fetchRates]);
 
     const handleBookTicket = () => {
-        // Navigate to queue booking tab/screen
         router.push('/customer/queue');
     };
 
     const handleOpenAlertModal = () => {
         setAlertModalVisible(true);
+    };
+
+    const handleSelectCurrencyToConvert = (code: string) => {
+        setSelectedCurrencyToConvert(code);
+        // Scroll up smoothly to the converter
+        scrollViewRef.current?.scrollTo({ y: 0, animated: true });
     };
 
     return (
@@ -51,12 +89,27 @@ export default function ForexPage() {
                 </Pressable>
             </View>
 
-            <ScrollView style={forexStyles.container} contentContainerStyle={forexStyles.scrollContent}>
+            <ScrollView
+                ref={scrollViewRef}
+                style={forexStyles.container}
+                contentContainerStyle={forexStyles.scrollContent}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={() => fetchRates(true)}
+                        colors={[COLORS.primary]}
+                        tintColor={COLORS.primary}
+                    />
+                }
+            >
                 {/* 1. Real-Time Market Ticker Tape */}
-                <TickerTape />
+                <TickerTape rates={rates} lastUpdated={lastUpdated} />
 
                 {/* 2. Instant Multi-Currency Converter & Calculator */}
                 <CurrencyConverter
+                    rates={rates}
+                    loading={loading}
+                    selectedCurrencyCode={selectedCurrencyToConvert}
                     onBookTicketPress={handleBookTicket}
                     onSetAlertPress={handleOpenAlertModal}
                 />
@@ -65,12 +118,18 @@ export default function ForexPage() {
                 <ForexAiBanner />
 
                 {/* 4. Full Exchange Rates Directory Table */}
-                <ExchangeRatesTable />
+                <ExchangeRatesTable
+                    rates={rates}
+                    loading={loading}
+                    onSelectCurrencyToConvert={handleSelectCurrencyToConvert}
+                />
             </ScrollView>
 
             {/* 5. Rate Alert Modal */}
             <RateAlertModal
                 visible={alertModalVisible}
+                rates={rates}
+                initialCurrencyCode={selectedCurrencyToConvert}
                 onClose={() => setAlertModalVisible(false)}
             />
         </View>

@@ -1,85 +1,152 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable } from 'react-native';
+import React, { useState, useEffect, useMemo } from 'react';
+import { View, Text, TextInput, Pressable, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons, Ionicons, Feather } from '@expo/vector-icons';
 import { forexStyles } from '../../../assets/styles/forex.styles';
 import { COLORS } from '../../../constants/colors';
 import { Button } from '../common/Button';
+import { ForexRate } from '../../api/forexApi';
 
 export interface CurrencyItem {
   code: string;
   name: string;
   flag: string;
-  rateToEtb: number; // Cash Buy
-  ttRateToEtb: number; // TT Buy
+  cashBuy: number;
+  cashSell: number;
+  ttBuy: number;
+  ttSell: number;
 }
 
-export const CURRENCIES: CurrencyItem[] = [
-  { code: 'USD', name: 'US Dollar', flag: '🇺🇸', rateToEtb: 125.40, ttRateToEtb: 126.15 },
-  { code: 'EUR', name: 'Euro', flag: '🇪🇺', rateToEtb: 136.10, ttRateToEtb: 137.05 },
-  { code: 'GBP', name: 'British Pound', flag: '🇬🇧', rateToEtb: 160.25, ttRateToEtb: 161.40 },
-  { code: 'AED', name: 'UAE Dirham', flag: '🇦🇪', rateToEtb: 34.14, ttRateToEtb: 34.35 },
-  { code: 'SAR', name: 'Saudi Riyal', flag: '🇸🇦', rateToEtb: 33.42, ttRateToEtb: 33.60 },
-  { code: 'CAD', name: 'Canadian Dollar', flag: '🇨🇦', rateToEtb: 91.20, ttRateToEtb: 91.80 },
-  { code: 'CNY', name: 'Chinese Yuan', flag: '🇨🇳', rateToEtb: 17.30, ttRateToEtb: 17.45 },
-  { code: 'CHF', name: 'Swiss Franc', flag: '🇨🇭', rateToEtb: 141.50, ttRateToEtb: 142.30 },
-  { code: 'ETB', name: 'Ethiopian Birr', flag: '🇪🇹', rateToEtb: 1.00, ttRateToEtb: 1.00 },
-];
+const ETB_CURRENCY: CurrencyItem = {
+  code: 'ETB',
+  name: 'Ethiopian Birr',
+  flag: '🇪🇹',
+  cashBuy: 1.0,
+  cashSell: 1.0,
+  ttBuy: 1.0,
+  ttSell: 1.0,
+};
 
 interface CurrencyConverterProps {
+  rates?: ForexRate[];
+  loading?: boolean;
+  selectedCurrencyCode?: string;
   onBookTicketPress: () => void;
   onSetAlertPress: () => void;
 }
 
 export const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
+  rates = [],
+  loading = false,
+  selectedCurrencyCode,
   onBookTicketPress,
   onSetAlertPress,
 }) => {
   const [rateType, setRateType] = useState<'CASH' | 'TT'>('CASH');
-  const [fromCurrency, setFromCurrency] = useState<CurrencyItem>(CURRENCIES[0]); // USD
-  const [toCurrency, setToCurrency] = useState<CurrencyItem>(CURRENCIES[8]);     // ETB
   const [amount, setAmount] = useState<string>('100');
+
+  // Dynamically build currencies list from live database rates + ETB base
+  const availableCurrencies: CurrencyItem[] = useMemo(() => {
+    const list: CurrencyItem[] = rates.map((r) => ({
+      code: r.currencyCode,
+      name: r.currencyName,
+      flag: r.flagEmoji,
+      cashBuy: parseFloat(r.cashBuy) || 1,
+      cashSell: parseFloat(r.cashSell) || 1,
+      ttBuy: parseFloat(r.ttBuy) || 1,
+      ttSell: parseFloat(r.ttSell) || 1,
+    }));
+
+    list.push(ETB_CURRENCY);
+    return list;
+  }, [rates]);
+
+  const [fromCode, setFromCode] = useState<string>('USD');
+  const [toCode, setToCode] = useState<string>('ETB');
+
+  // Sync when selectedCurrencyCode prop changes from outside (e.g. table click)
+  useEffect(() => {
+    if (selectedCurrencyCode) {
+      setFromCode(selectedCurrencyCode.toUpperCase());
+      setToCode('ETB');
+    }
+  }, [selectedCurrencyCode]);
+
+  // Ensure selected codes exist in available list or fallback gracefully
+  const fromCurrency = useMemo(() => {
+    return availableCurrencies.find((c) => c.code === fromCode) || availableCurrencies[0] || ETB_CURRENCY;
+  }, [availableCurrencies, fromCode]);
+
+  const toCurrency = useMemo(() => {
+    return (
+      availableCurrencies.find((c) => c.code === toCode) ||
+      availableCurrencies.find((c) => c.code === 'ETB') ||
+      availableCurrencies[availableCurrencies.length - 1] ||
+      ETB_CURRENCY
+    );
+  }, [availableCurrencies, toCode]);
 
   // Swap currencies
   const handleSwap = () => {
-    const temp = fromCurrency;
-    setFromCurrency(toCurrency);
-    setToCurrency(temp);
+    setFromCode(toCurrency.code);
+    setToCode(fromCurrency.code);
   };
 
   // Cycle currency selector
   const handleCycleFrom = () => {
-    const currentIndex = CURRENCIES.findIndex((c) => c.code === fromCurrency.code);
-    const nextIndex = (currentIndex + 1) % CURRENCIES.length;
-    if (CURRENCIES[nextIndex].code === toCurrency.code) {
-      setFromCurrency(CURRENCIES[(nextIndex + 1) % CURRENCIES.length]);
-    } else {
-      setFromCurrency(CURRENCIES[nextIndex]);
+    if (availableCurrencies.length <= 1) return;
+    const currentIndex = availableCurrencies.findIndex((c) => c.code === fromCurrency.code);
+    let nextIndex = (currentIndex + 1) % availableCurrencies.length;
+    if (availableCurrencies[nextIndex].code === toCurrency.code) {
+      nextIndex = (nextIndex + 1) % availableCurrencies.length;
     }
+    setFromCode(availableCurrencies[nextIndex].code);
   };
 
   const handleCycleTo = () => {
-    const currentIndex = CURRENCIES.findIndex((c) => c.code === toCurrency.code);
-    const nextIndex = (currentIndex + 1) % CURRENCIES.length;
-    if (CURRENCIES[nextIndex].code === fromCurrency.code) {
-      setToCurrency(CURRENCIES[(nextIndex + 1) % CURRENCIES.length]);
-    } else {
-      setToCurrency(CURRENCIES[nextIndex]);
+    if (availableCurrencies.length <= 1) return;
+    const currentIndex = availableCurrencies.findIndex((c) => c.code === toCurrency.code);
+    let nextIndex = (currentIndex + 1) % availableCurrencies.length;
+    if (availableCurrencies[nextIndex].code === fromCurrency.code) {
+      nextIndex = (nextIndex + 1) % availableCurrencies.length;
     }
+    setToCode(availableCurrencies[nextIndex].code);
   };
 
-  // Calculate conversion
+  // Live conversion formula matching backend logic
   const numAmount = parseFloat(amount) || 0;
-  const fromRate = rateType === 'CASH' ? fromCurrency.rateToEtb : fromCurrency.ttRateToEtb;
-  const toRate = rateType === 'CASH' ? toCurrency.rateToEtb : toCurrency.ttRateToEtb;
-  const convertedValue = ((numAmount * fromRate) / toRate).toFixed(2);
-  const effectiveRate = (fromRate / toRate).toFixed(4);
+  let effectiveRate = 1;
+
+  if (fromCurrency.code !== toCurrency.code) {
+    const fromRateToEtb =
+      fromCurrency.code === 'ETB'
+        ? 1
+        : rateType === 'TT'
+        ? fromCurrency.ttBuy
+        : fromCurrency.cashBuy;
+
+    const toRateToEtb =
+      toCurrency.code === 'ETB'
+        ? 1
+        : rateType === 'TT'
+        ? toCurrency.ttSell
+        : toCurrency.cashSell;
+
+    effectiveRate = toRateToEtb > 0 ? fromRateToEtb / toRateToEtb : 0;
+  }
+
+  const convertedValue = (numAmount * effectiveRate).toFixed(2);
+  const formattedRate = effectiveRate.toFixed(4);
 
   return (
     <View style={forexStyles.converterCard}>
       {/* Title */}
       <View style={forexStyles.cardTitleRow}>
-        <Text style={forexStyles.converterTitle}>Convert your curruncies</Text>
-        <MaterialCommunityIcons name="calculator" size={20} color={COLORS.primary} />
+        <Text style={forexStyles.converterTitle}>Convert your currencies</Text>
+        {loading ? (
+          <ActivityIndicator size="small" color={COLORS.primary} />
+        ) : (
+          <MaterialCommunityIcons name="calculator" size={20} color={COLORS.primary} />
+        )}
       </View>
 
       {/* Rate Type Segmented Toggle */}
@@ -122,7 +189,7 @@ export const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
         </View>
       </View>
 
-      {/* the Swap Button */}
+      {/* Swap Button */}
       <View style={forexStyles.swapContainer}>
         <Pressable style={forexStyles.swapButton} onPress={handleSwap}>
           <Ionicons name="swap-vertical" size={20} color={COLORS.white} />
@@ -159,7 +226,8 @@ export const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
                 amount === val && forexStyles.shortcutTextActive,
               ]}
             >
-              ${parseInt(val).toLocaleString()}
+              {fromCurrency.code === 'ETB' ? 'ETB ' : '$'}
+              {parseInt(val, 10).toLocaleString()}
             </Text>
           </Pressable>
         ))}
@@ -170,7 +238,7 @@ export const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
         <View style={forexStyles.breakdownRow}>
           <Text style={forexStyles.breakdownLabel}>Applied Exchange Rate:</Text>
           <Text style={forexStyles.breakdownValue}>
-            1 {fromCurrency.code} = {effectiveRate} {toCurrency.code}
+            1 {fromCurrency.code} = {formattedRate} {toCurrency.code}
           </Text>
         </View>
         <View style={forexStyles.breakdownRow}>
@@ -185,32 +253,27 @@ export const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
         </View>
       </View>
 
-      {/* Action Buttons Stack "Reused button" */}
+      {/* Action Buttons Stack */}
       <View style={forexStyles.actionButtonsStack}>
-        
-
-        <Button 
-          title='Book Forex Counter Ticket'
-            onPress={onBookTicketPress}
-              variant='primary'
-            icon={<MaterialCommunityIcons name="ticket-confirmation-outline" size={20} color={COLORS.white} />}
+        <Button
+          title="Book Forex Counter Ticket"
+          onPress={onBookTicketPress}
+          variant="primary"
+          icon={<MaterialCommunityIcons name="ticket-confirmation-outline" size={20} color={COLORS.white} />}
           style={forexStyles.bookTicketButton}
-        textStyle={forexStyles.bookTicketText}
-        >
-        </Button>
+          textStyle={forexStyles.bookTicketText}
+        />
 
         <Button
-          title='Set Rate Alert Notification'
-            onPress={onSetAlertPress}
-              variant='secondary'
-            icon={<Ionicons name="notifications-outline" size={18} color={COLORS.navy} />}
+          title="Set Rate Alert Notification"
+          onPress={onSetAlertPress}
+          variant="secondary"
+          icon={<Ionicons name="notifications-outline" size={18} color={COLORS.navy} />}
           style={forexStyles.alertButton}
-        textStyle={forexStyles.alertButtonText}>
-      
-        </Button>
-
-        
+          textStyle={forexStyles.alertButtonText}
+        />
       </View>
     </View>
   );
 };
+
