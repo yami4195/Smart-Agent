@@ -162,6 +162,11 @@ export const commonStyles = StyleSheet.create({
     borderRadius: 12,
     alignSelf: 'flex-start',
   },
+  badgeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
   badgeText: {
     fontSize: 12,
     fontWeight: '600',
@@ -171,6 +176,27 @@ export const commonStyles = StyleSheet.create({
   },
   badgeOpenText: {
     color: COLORS.badgeOrangeText,
+  },
+  badgeSuccess: {
+    backgroundColor: COLORS.successBg,
+  },
+  badgeSuccessText: {
+    color: '#059669',
+    fontWeight: '700',
+  },
+  badgeWarning: {
+    backgroundColor: COLORS.warningBg,
+  },
+  badgeWarningText: {
+    color: COLORS.warning,
+    fontWeight: '700',
+  },
+  badgeDanger: {
+    backgroundColor: '#FEE2E2',
+  },
+  badgeDangerText: {
+    color: COLORS.danger,
+    fontWeight: '700',
   },
 
   // Section Headers

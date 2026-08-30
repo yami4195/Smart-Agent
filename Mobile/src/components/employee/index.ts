@@ -4,4 +4,3 @@ export * from './CallNextCard';
 export * from './QueueTicketItem';
 export * from './ActiveTokenCard';
 export * from './StatCard';
-export * from './WalkInModal';

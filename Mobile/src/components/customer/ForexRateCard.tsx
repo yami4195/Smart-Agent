@@ -13,10 +13,10 @@ interface ForexRateCardProps {
 }
 
 export const ForexRateCard: React.FC<ForexRateCardProps> = ({
-  usdBuyRate = "125.40",
-  usdSellRate = "127.90",
-  eurBuyRate = "136.10",
-  eurSellRate = "138.80",
+  usdBuyRate = '125.40',
+  usdSellRate = '127.90',
+  eurBuyRate = '136.10',
+  eurSellRate = '138.80',
   onPress,
 }) => {
   return (
@@ -37,16 +37,38 @@ export const ForexRateCard: React.FC<ForexRateCardProps> = ({
         <Feather name="chevron-right" size={20} color={COLORS.textMuted} />
       </View>
 
-      {/* Today's Exchange Rate Preview Bar */}
-      <View style={homeStyles.forexRatesRow}>
-        <View style={homeStyles.ratePill}>
-          <Text style={homeStyles.rateCurrency} numberOfLines={1}>🇺🇸 USD/ETB</Text>
-          <Text style={homeStyles.rateValue} numberOfLines={1}>{usdBuyRate} / {usdSellRate}</Text>
+      {/* Exchange Rates with explicit Buy & Sell Labels */}
+      <View style={homeStyles.forexRatesList}>
+        {/* USD/ETB */}
+        <View style={homeStyles.forexRateItem}>
+          <Text style={homeStyles.forexCurrencyName}>🇺🇸 USD/ETB</Text>
+          <View style={homeStyles.forexBuySellRow}>
+            <View style={homeStyles.forexRateBadge}>
+              <Text style={homeStyles.forexRateLabel}>Buy</Text>
+              <Text style={homeStyles.forexRateNumber}>{usdBuyRate}</Text>
+            </View>
+            <View style={homeStyles.forexRateBadge}>
+              <Text style={homeStyles.forexRateLabel}>Sell</Text>
+              <Text style={homeStyles.forexRateNumber}>{usdSellRate}</Text>
+            </View>
+          </View>
         </View>
 
-        <View style={homeStyles.ratePill}>
-          <Text style={homeStyles.rateCurrency} numberOfLines={1}>🇪🇺 EUR/ETB</Text>
-          <Text style={homeStyles.rateValue} numberOfLines={1}>{eurBuyRate} / {eurSellRate}</Text>
+        <View style={homeStyles.forexDivider} />
+
+        {/* EUR/ETB */}
+        <View style={homeStyles.forexRateItem}>
+          <Text style={homeStyles.forexCurrencyName}>🇪🇺 EUR/ETB</Text>
+          <View style={homeStyles.forexBuySellRow}>
+            <View style={homeStyles.forexRateBadge}>
+              <Text style={homeStyles.forexRateLabel}>Buy</Text>
+              <Text style={homeStyles.forexRateNumber}>{eurBuyRate}</Text>
+            </View>
+            <View style={homeStyles.forexRateBadge}>
+              <Text style={homeStyles.forexRateLabel}>Sell</Text>
+              <Text style={homeStyles.forexRateNumber}>{eurSellRate}</Text>
+            </View>
+          </View>
         </View>
       </View>
     </Pressable>

@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { EmployeeTicket } from '../../api/employee.api';
-import { COLORS } from '../../../constants/colors';
+import { employeeStyles } from '../../../assets/styles/employee.styles';
 
 interface ActiveTokenCardProps {
   ticket: EmployeeTicket;
@@ -58,26 +58,26 @@ export const ActiveTokenCard: React.FC<ActiveTokenCardProps> = ({
 
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={employeeStyles.activeTokenCard}
       onPress={() => onPress?.(ticket)}
       activeOpacity={0.8}
     >
       {/* Main Info Row */}
-      <View style={styles.mainRow}>
+      <View style={employeeStyles.activeTokenMainRow}>
         {/* Token Badge */}
-        <View style={styles.tokenBadge}>
-          <Text style={styles.tokenText}>{formattedToken}</Text>
+        <View style={employeeStyles.activeTokenBadge}>
+          <Text style={employeeStyles.activeTokenText}>{formattedToken}</Text>
         </View>
 
         {/* Details Column */}
-        <View style={styles.detailsCol}>
-          <Text style={styles.serviceName} numberOfLines={1}>
+        <View style={employeeStyles.activeTokenDetailsCol}>
+          <Text style={employeeStyles.activeTokenServiceName} numberOfLines={1}>
             {ticket.serviceName || 'Cashier'}
           </Text>
 
-          <View style={styles.statusRow}>
+          <View style={employeeStyles.activeTokenStatusRow}>
             {/* Time Indicator */}
-            <View style={styles.timeWrapper}>
+            <View style={employeeStyles.activeTokenTimeWrapper}>
               <Feather
                 name="clock"
                 size={13}
@@ -86,7 +86,7 @@ export const ActiveTokenCard: React.FC<ActiveTokenCardProps> = ({
               />
               <Text
                 style={[
-                  styles.timeText,
+                  employeeStyles.activeTokenTimeText,
                   (isDelayed || isCancelled) && { color: '#EF4444', fontWeight: '600' },
                 ]}
               >
@@ -95,11 +95,11 @@ export const ActiveTokenCard: React.FC<ActiveTokenCardProps> = ({
             </View>
 
             {/* Status Dot & Label */}
-            <View style={styles.statusWrapper}>
+            <View style={employeeStyles.activeTokenStatusWrapper}>
               <View
-                style={[styles.statusDot, { backgroundColor: statusConfig.dotColor }]}
+                style={[employeeStyles.activeTokenStatusDot, { backgroundColor: statusConfig.dotColor }]}
               />
-              <Text style={[styles.statusLabel, { color: statusConfig.color }]}>
+              <Text style={[employeeStyles.activeTokenStatusLabel, { color: statusConfig.color }]}>
                 {statusConfig.label}
               </Text>
             </View>
@@ -108,11 +108,11 @@ export const ActiveTokenCard: React.FC<ActiveTokenCardProps> = ({
       </View>
 
       {/* Bottom Action Row */}
-      <View style={styles.bottomRow}>
+      <View style={employeeStyles.activeTokenBottomRow}>
         {/* Reassign / Transfer Action (only for uncompleted / active tickets) */}
         {!isCompleted && !isCancelled ? (
           <TouchableOpacity
-            style={styles.transferBtn}
+            style={employeeStyles.activeTokenTransferBtn}
             onPress={() => onTransfer?.(ticket)}
             activeOpacity={0.7}
           >
@@ -130,7 +130,7 @@ export const ActiveTokenCard: React.FC<ActiveTokenCardProps> = ({
         */}
         {isWaiting && (
           <TouchableOpacity
-            style={styles.callNextBtn}
+            style={employeeStyles.activeTokenCallNextBtn}
             onPress={() => onCallNext?.(ticket)}
             activeOpacity={0.85}
           >
@@ -140,13 +140,13 @@ export const ActiveTokenCard: React.FC<ActiveTokenCardProps> = ({
               color="#FFFFFF"
               style={{ marginRight: 6 }}
             />
-            <Text style={styles.callNextBtnText}>Call Next</Text>
+            <Text style={employeeStyles.activeTokenCallNextBtnText}>Call Next</Text>
           </TouchableOpacity>
         )}
 
         {isServing && (
           <TouchableOpacity
-            style={styles.completeBtn}
+            style={employeeStyles.activeTokenCompleteBtn}
             onPress={() => onComplete?.(ticket)}
             activeOpacity={0.8}
           >
@@ -156,172 +156,36 @@ export const ActiveTokenCard: React.FC<ActiveTokenCardProps> = ({
               color="#334155"
               style={{ marginRight: 6 }}
             />
-            <Text style={styles.completeBtnText}>Complete</Text>
+            <Text style={employeeStyles.activeTokenCompleteBtnText}>Complete</Text>
           </TouchableOpacity>
         )}
 
         {isCompleted && (
-          <View style={styles.completedBadge}>
+          <View style={employeeStyles.activeTokenCompletedBadge}>
             <Ionicons
               name="checkmark-circle"
               size={15}
               color="#10B981"
               style={{ marginRight: 4 }}
             />
-            <Text style={styles.completedBadgeText}>Completed</Text>
+            <Text style={employeeStyles.activeTokenCompletedBadgeText}>Completed</Text>
           </View>
         )}
 
         {isCancelled && (
-          <View style={styles.cancelledBadge}>
+          <View style={employeeStyles.activeTokenCancelledBadge}>
             <Ionicons
               name="close-circle"
               size={15}
               color="#EF4444"
               style={{ marginRight: 4 }}
             />
-            <Text style={styles.cancelledBadgeText}>Cancelled</Text>
+            <Text style={employeeStyles.activeTokenCancelledBadgeText}>Cancelled</Text>
           </View>
         )}
       </View>
     </TouchableOpacity>
   );
 };
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-  },
-  mainRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  tokenBadge: {
-    width: 62,
-    height: 44,
-    borderRadius: 10,
-    backgroundColor: '#EBF3FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
-  },
-  tokenText: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#0A2540',
-    letterSpacing: 0.5,
-    textAlign: 'center',
-  },
-  detailsCol: {
-    flex: 1,
-  },
-  serviceName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginBottom: 4,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  timeWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  timeText: {
-    fontSize: 12,
-    color: '#64748B',
-    fontWeight: '500',
-  },
-  statusWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginRight: 5,
-  },
-  statusLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  bottomRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 10,
-    paddingTop: 8,
-  },
-  transferBtn: {
-    padding: 6,
-  },
-  callNextBtn: {
-    backgroundColor: '#0A2540', // Deep Navy
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 9,
-    paddingHorizontal: 18,
-    borderRadius: 10,
-  },
-  callNextBtnText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  completeBtn: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-  },
-  completeBtnText: {
-    color: '#334155',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  completedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ECFDF5',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  completedBadgeText: {
-    color: '#10B981',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  cancelledBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FEF2F2',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  cancelledBadgeText: {
-    color: '#EF4444',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-});
 
 export default ActiveTokenCard;

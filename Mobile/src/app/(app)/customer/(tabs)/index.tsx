@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
+import { useUser } from '@clerk/expo';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { Header } from '../../../../components/common/Header';
@@ -19,19 +20,32 @@ import { commonStyles } from '../../../../../assets/styles/common.styles';
 import { COLORS } from '../../../../../constants/colors';
 import { useNotification } from '../../../../contexts/NotificationContext';
 import { branchApi } from '../../../../api/branch.api';
+import { userApi, UserData } from '../../../../api/user.api';
 import { BranchData } from '../../../../components/branch/BranchCard';
 
 export default function CustomerHomeScreen() {
   const router = useRouter();
+  const { user } = useUser();
   const { unreadCount, openNotificationModal } = useNotification();
 
+  const [userData, setUserData] = useState<UserData | null>(null);
   const [nearestBranch, setNearestBranch] = useState<BranchData | null>(null);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+
+  const fetchUserData = useCallback(async () => {
+    try {
+      const dbUser = await userApi.getMe();
+      if (dbUser) {
+        setUserData(dbUser);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   const fetchNearestBranch = useCallback(async (isRefresh: boolean = false) => {
     try {
       if (isRefresh) setRefreshing(true);
-      // Fetch the nearest branch or top branch from the backend
       const response = await branchApi.getBranches({ limit: 1 });
       if (response?.branches && response.branches.length > 0) {
         setNearestBranch(response.branches[0]);
@@ -44,13 +58,15 @@ export default function CustomerHomeScreen() {
   }, []);
 
   useEffect(() => {
+    fetchUserData();
     fetchNearestBranch();
-  }, [fetchNearestBranch]);
+  }, [fetchUserData, fetchNearestBranch]);
 
   useFocusEffect(
     useCallback(() => {
+      fetchUserData();
       fetchNearestBranch();
-    }, [fetchNearestBranch])
+    }, [fetchUserData, fetchNearestBranch])
   );
 
   const handleFindNearbyBranches = () => {
@@ -80,6 +96,48 @@ export default function CustomerHomeScreen() {
     }
   };
 
+  // Robustly resolve the user's first name across DB profile and Clerk
+  const rawFirstName = (() => {
+    // 1. PostgreSQL DB profile
+    if (userData?.firstName && userData.firstName.trim()) {
+      return userData.firstName.trim();
+    }
+    // 2. Clerk User profile
+    if (user?.firstName && user.firstName.trim()) {
+      return user.firstName.trim();
+    }
+    // 3. Clerk unsafeMetadata
+    if (user?.unsafeMetadata?.firstName && typeof user.unsafeMetadata.firstName === 'string') {
+      return user.unsafeMetadata.firstName.trim();
+    }
+    // 4. Clerk publicMetadata
+    if (user?.publicMetadata?.firstName && typeof user.publicMetadata.firstName === 'string') {
+      return user.publicMetadata.firstName.trim();
+    }
+    // 5. Clerk fullName (first word)
+    if (user?.fullName && user.fullName.trim()) {
+      const parts = user.fullName.trim().split(' ');
+      if (parts[0]) return parts[0];
+    }
+    // 6. Clerk username
+    if (user?.username && user.username.trim()) {
+      return user.username.trim();
+    }
+    // 7. Email username prefix
+    const email = userData?.email || user?.primaryEmailAddress?.emailAddress;
+    if (email && email.includes('@')) {
+      const emailPrefix = email.split('@')[0].replace(/[._0-9]/g, ' ').trim().split(' ')[0];
+      if (emailPrefix) return emailPrefix;
+    }
+    return '';
+  })();
+
+  const firstName = rawFirstName
+    ? rawFirstName.charAt(0).toUpperCase() + rawFirstName.slice(1)
+    : '';
+
+  const welcomeTitle = firstName ? `Welcome, ${firstName}!` : 'Welcome!';
+
   return (
     <View style={commonStyles.safeArea}>
       {/* Top Header */}
@@ -96,7 +154,10 @@ export default function CustomerHomeScreen() {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={() => fetchNearestBranch(true)}
+            onRefresh={() => {
+              fetchUserData();
+              fetchNearestBranch(true);
+            }}
             colors={[COLORS.primary]}
             tintColor={COLORS.primary}
           />
@@ -104,17 +165,17 @@ export default function CustomerHomeScreen() {
       >
         {/* Welcome Section */}
         <View style={homeStyles.welcomeSection}>
-          <Text style={homeStyles.welcomeTitle}>Welcome to Smart Agent</Text>
+          <Text style={homeStyles.welcomeTitle}>{welcomeTitle}</Text>
           <Text style={homeStyles.welcomeSubtitle}>
-            Your digital gateway to Wegagen Bank services.
+            What would you like to do today?
           </Text>
         </View>
 
         {/* Main CTA Button: Find Nearby Branches */}
         <Button
-          title="Find Nearby Branches"
+          title="Find Branch & Join Queue"
           onPress={handleFindNearbyBranches}
-          icon={<Ionicons name="location-sharp" size={20} color={COLORS.white} />}
+          icon={<Ionicons name="location-sharp" size={25} color={COLORS.white} />}
           style={homeStyles.mainCtaButton}
           textStyle={homeStyles.mainCtaText}
         />

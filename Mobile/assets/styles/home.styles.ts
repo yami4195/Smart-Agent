@@ -190,6 +190,46 @@ export const homeStyles = StyleSheet.create({
     fontWeight: '600',
     color: COLORS.primary,
   },
+  forexRatesList: {
+    marginTop: 14,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.borderSoft,
+  },
+  forexRateItem: {
+    paddingVertical: 4,
+  },
+  forexCurrencyName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.navy,
+    marginBottom: 6,
+  },
+  forexBuySellRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 28,
+  },
+  forexRateBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  forexRateLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: COLORS.textSecondary,
+  },
+  forexRateNumber: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.navy,
+  },
+  forexDivider: {
+    height: 1,
+    backgroundColor: COLORS.borderSoft,
+    marginVertical: 10,
+  },
 
   // Nearest Branch Card
   nearestBranchCard: {

@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet, Image } from 'react-native';
-import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { View, Text, Pressable, Image } from 'react-native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { headerStyles } from '../../../assets/styles/header.styles';
 import { COLORS } from '../../../constants/colors';
 
@@ -19,7 +19,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  title = "ተራ Mobile Services",
+  title = 'ተራ Mobile Services',
   subtitle,
   showBack = false,
   onBackPress,
@@ -70,8 +70,8 @@ export const Header: React.FC<HeaderProps> = ({
           <Pressable style={headerStyles.iconButton} onPress={onNotificationPress}>
             <Ionicons name="notifications-outline" size={20} color={COLORS.navy} />
             {unreadCount > 0 && (
-              <View style={styles.unreadBadge}>
-                <Text style={styles.unreadBadgeText}>
+              <View style={headerStyles.unreadBadge}>
+                <Text style={headerStyles.unreadBadgeText}>
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </Text>
               </View>
@@ -83,24 +83,4 @@ export const Header: React.FC<HeaderProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  unreadBadge: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: '#EF4444',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 3,
-    borderWidth: 1.5,
-    borderColor: '#FFFFFF',
-  },
-  unreadBadgeText: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-});
+export default Header;

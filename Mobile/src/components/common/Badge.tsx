@@ -1,7 +1,6 @@
 import React from 'react';
-import { View, Text, ViewStyle, TextStyle, StyleSheet } from 'react-native';
+import { View, Text, ViewStyle, TextStyle } from 'react-native';
 import { commonStyles } from '../../../assets/styles/common.styles';
-import { COLORS } from '../../../constants/colors';
 
 interface BadgeProps {
   label: string;
@@ -24,54 +23,27 @@ export const Badge: React.FC<BadgeProps> = ({
       text: commonStyles.badgeOpenText,
     },
     success: {
-      container: badgeVariants.successBg,
-      text: badgeVariants.successText,
+      container: commonStyles.badgeSuccess,
+      text: commonStyles.badgeSuccessText,
     },
     warning: {
-      container: badgeVariants.warningBg,
-      text: badgeVariants.warningText,
+      container: commonStyles.badgeWarning,
+      text: commonStyles.badgeWarningText,
     },
     danger: {
-      container: badgeVariants.dangerBg,
-      text: badgeVariants.dangerText,
+      container: commonStyles.badgeDanger,
+      text: commonStyles.badgeDangerText,
     },
   };
 
   const selectedVariant = variantStyles[variant] || variantStyles.open;
 
   return (
-    <View style={[commonStyles.badge, badgeVariants.badgeContainer, selectedVariant.container, style]}>
+    <View style={[commonStyles.badge, commonStyles.badgeContainer, selectedVariant.container, style]}>
       {icon}
       <Text style={[commonStyles.badgeText, selectedVariant.text, textStyle]}>{label}</Text>
     </View>
   );
 };
 
-const badgeVariants = StyleSheet.create({
-  badgeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  successBg: {
-    backgroundColor: COLORS.successBg,
-  },
-  successText: {
-    color: '#059669',
-    fontWeight: '700',
-  },
-  warningBg: {
-    backgroundColor: COLORS.warningBg,
-  },
-  warningText: {
-    color: COLORS.warning,
-    fontWeight: '700',
-  },
-  dangerBg: {
-    backgroundColor: '#FEE2E2',
-  },
-  dangerText: {
-    color: COLORS.danger,
-    fontWeight: '700',
-  },
-});
+export default Badge;

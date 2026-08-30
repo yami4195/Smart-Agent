@@ -50,7 +50,7 @@ export default function CustomerTabsLayout() {
       <Tabs.Screen
         name="queue"
         options={{
-          title: 'My Queue',
+          title: 'Queue',
           tabBarIcon: ({ focused, color, size }) => (
             <MaterialCommunityIcons
               name={focused ? 'ticket-confirmation' : 'ticket-confirmation-outline'}

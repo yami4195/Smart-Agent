@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, StyleSheet, Pressable } from 'react-native';
+import { View, Text, TouchableOpacity, Modal } from 'react-native';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../../constants/colors';
 import { employeeStyles } from '../../../assets/styles/employee.styles';
@@ -87,17 +87,17 @@ export const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
       {/* Status Selection Modal */}
       <Modal visible={showPicker} transparent animationType="fade">
         <TouchableOpacity
-          style={styles.modalOverlay}
+          style={employeeStyles.headerModalOverlay}
           activeOpacity={1}
           onPress={() => setShowPicker(false)}
         >
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Update Counter Status</Text>
+          <View style={employeeStyles.headerModalContent}>
+            <Text style={employeeStyles.headerModalTitle}>Update Counter Status</Text>
             {statuses.map((s) => (
               <TouchableOpacity
                 key={s}
                 style={[
-                  styles.statusOption,
+                  employeeStyles.headerStatusOption,
                   status === s && { backgroundColor: getStatusBg(s) },
                 ]}
                 onPress={() => {
@@ -106,7 +106,7 @@ export const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
                 }}
               >
                 <View style={[employeeStyles.statusDot, { backgroundColor: getStatusColor(s) }]} />
-                <Text style={[styles.statusOptionText, status === s && { fontWeight: '700' }]}>
+                <Text style={[employeeStyles.headerStatusOptionText, status === s && { fontWeight: '700' }]}>
                   {s}
                 </Text>
                 {status === s && (
@@ -120,44 +120,5 @@ export const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  modalContent: {
-    width: '100%',
-    maxWidth: 320,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-  },
-  modalTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  statusOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderRadius: 10,
-    marginBottom: 8,
-  },
-  statusOptionText: {
-    fontSize: 14,
-    color: '#0F172A',
-    flex: 1,
-    marginLeft: 8,
-  },
-});
 
 export default EmployeeHeader;
