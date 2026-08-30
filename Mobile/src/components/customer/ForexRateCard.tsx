@@ -33,7 +33,7 @@ export const ForexRateCard: React.FC<ForexRateCardProps> = ({
             <View style={homeStyles.forexTitleRow}>
               <Text style={homeStyles.forexTitle}>Forex Rates</Text>
             </View>
-            <Text style={homeStyles.forexSubtitle}>Live exchange rates from database</Text>
+            <Text style={homeStyles.forexSubtitle}>See Live exchange rates</Text>
           </View>
         </View>
         {loading ? (
