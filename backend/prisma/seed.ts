@@ -13,16 +13,54 @@ const prisma = new PrismaClient({
 async function main() {
   console.log("🌱 Seeding database with clean banking services...");
 
-  // 1. Seed Real-World Banking Services
+  // 1. Seed 33 Real-World Banking Services
   const servicesData = [
-    { name: "Account Opening", description: "Open new savings, current, salary, or interest-free accounts" },
-    { name: "ATM Card Request", description: "New debit card request, PIN reset, card replacement, and activation" },
-    { name: "Cash Services", description: "Cash deposits, withdrawals, and utility/bill payments" },
-    { name: "Loan Consultation", description: "Personal loan, auto loan, mortgage, and SME business credit consultations" },
-    { name: "Forex Exchange", description: "Foreign currency buy/sell, remittance, and swift telegraphic transfers" },
-    { name: "Digital Banking", description: "Mobile banking app setup, password reset, and internet banking" },
-    { name: "VIP Banking", description: "Priority customer banking and private wealth advisory" },
-    { name: "Customer Support", description: "General inquiries, complaints, and account statement requests" },
+    // 1. Accounts & Deposits
+    { name: "Savings Account Opening", description: "Individual, youth, women, and high-yield savings" },
+    { name: "Current & Checking Account", description: "Commercial and personal checking accounts" },
+    { name: "Fixed Time Deposit", description: "High-yield term deposit investment contracts" },
+    { name: "Interest-Free Banking (Amana)", description: "Sharia-compliant ethical Islamic banking" },
+    { name: "Salary Account Processing", description: "Corporate payroll and institutional employee accounts" },
+    { name: "Student & Youth Banking", description: "Subsidized student and teenage banking accounts" },
+
+    // 2. Cards & Terminals
+    { name: "ATM & Debit Card Issuance", description: "Contactless debit cards, issuance & renewals" },
+    { name: "Card PIN Reset & Unblock", description: "Instant PIN regeneration and card credential unlock" },
+    { name: "POS Merchant Terminal Setup", description: "Point of Sale merchant machine installation" },
+    { name: "International Visa/Mastercard", description: "Prepaid travel cards and international online payments" },
+
+    // 3. Cash & Teller
+    { name: "Cash Deposit & Fast Teller", description: "High-speed cash depositing & counter receipts" },
+    { name: "Cash Withdrawal", description: "Counter cash withdrawals and cheque encashment" },
+    { name: "Utility & Tax Bill Payments", description: "Water, electricity, customs, and ERCA tax payments" },
+    { name: "Cheque Clearance & CPO", description: "Certified payment orders (CPO) and clearance" },
+    { name: "School & University Fee Payment", description: "Tuition deposits and institutional payment receipts" },
+
+    // 4. Forex & International Trade
+    { name: "Forex Cash Exchange", description: "Foreign currency spot buying and selling" },
+    { name: "International Inward Remittance", description: "Western Union, MoneyGram, Ria, and Remitly payouts" },
+    { name: "SWIFT Outward Wire Transfer", description: "Telegraphic transfers for imports and education" },
+    { name: "Letter of Credit (LC) Processing", description: "Trade finance and commercial import/export LC" },
+    { name: "Forex Retention Account", description: "Exporters and diaspora USD/EUR retention accounts" },
+
+    // 5. Loans & Credit
+    { name: "Personal & Salary Advance Loan", description: "Short-term consumer and personal financing" },
+    { name: "Vehicle & Asset Financing", description: "Automobile and commercial transport asset loans" },
+    { name: "Mortgage & Home Loan", description: "Residential property acquisition and construction credit" },
+    { name: "SME & Working Capital Credit", description: "Trade, retail, and manufacturing credit lines" },
+    { name: "Agricultural & Export Financing", description: "Commodity export and agricultural value chain funding" },
+
+    // 6. Digital & Mobile Banking
+    { name: "Mobile App & Internet Banking", description: "Wegagen Mobile App onboarding and web banking" },
+    { name: "Telebirr & Wallet Integration", description: "CBE/Telebirr seamless wallet linkage" },
+    { name: "SMS & Email Alert Subscription", description: "Real-time instant transaction notifications" },
+    { name: "E-Commerce Payment Gateway", description: "Merchant online payment integration and APIs" },
+
+    // 7. Corporate, VIP & Advisory
+    { name: "VIP Priority & Private Banking", description: "Dedicated relationship managers and private lounge access" },
+    { name: "Corporate Treasury & Escrow", description: "Enterprise liquidity management and escrow services" },
+    { name: "Bank Guarantee & Bid Bond", description: "Performance bonds, bid bonds, and advance payment guarantees" },
+    { name: "Customer Care & Statement Requests", description: "General inquiries, complaints, and official account statements" },
   ];
 
   const createdServices: Record<string, string> = {};
@@ -36,8 +74,44 @@ async function main() {
   }
   console.log(`✅ Seeded ${Object.keys(createdServices).length} distinct services.`);
 
-  // 2. Seed Branches (matching Wegagen Bank locations in Addis Ababa)
+  // All service names array
+  const allServiceNames = servicesData.map((s) => s.name);
+
+  // Helper to pick random subset
+  const getRandomServices = (pool: string[], count: number, mustInclude: string[] = []): string[] => {
+    const set = new Set<string>(mustInclude);
+    const shuffled = [...pool].sort(() => 0.5 - Math.random());
+    for (const item of shuffled) {
+      if (set.size >= count) break;
+      set.add(item);
+    }
+    return Array.from(set);
+  };
+
+  // 2. Seed Branches (Headquarters gets the most services; branches get 6 to 10)
   const branchesData = [
+    {
+      name: "Wegagen - Headquarters (HQ) Branch",
+      address: "Ras Mekonnen Avenue, Legehar / Stadium",
+      latitude: 9.0145,
+      longitude: 38.7538,
+      openingHours: "8:00 AM - 5:00 PM",
+      isOpen: true,
+      phone: "+251 11 552 3800",
+      // HQ gets 30 services (the most services)
+      serviceNames: getRandomServices(allServiceNames, 30, [
+        "Savings Account Opening",
+        "Current & Checking Account",
+        "VIP Priority & Private Banking",
+        "Corporate Treasury & Escrow",
+        "Bank Guarantee & Bid Bond",
+        "Letter of Credit (LC) Processing",
+        "SWIFT Outward Wire Transfer",
+        "Forex Cash Exchange",
+        "Cash Deposit & Fast Teller",
+        "Cash Withdrawal",
+      ]),
+    },
     {
       name: "Wegagen - Bole Branch",
       address: "Bole Road, Near Friendship City Center",
@@ -46,7 +120,13 @@ async function main() {
       openingHours: "8:00 AM - 5:00 PM",
       isOpen: true,
       phone: "+251 11 661 2345",
-      serviceNames: ["Account Opening", "ATM Card Request", "Cash Services", "Loan Consultation", "Forex Exchange", "Digital Banking"],
+      serviceNames: getRandomServices(allServiceNames, 10, [
+        "Savings Account Opening",
+        "ATM & Debit Card Issuance",
+        "Cash Deposit & Fast Teller",
+        "Forex Cash Exchange",
+        "International Inward Remittance",
+      ]),
     },
     {
       name: "Wegagen - Kazanchis Branch",
@@ -56,7 +136,43 @@ async function main() {
       openingHours: "8:00 AM - 5:00 PM",
       isOpen: true,
       phone: "+251 11 551 6789",
-      serviceNames: ["Account Opening", "ATM Card Request", "Cash Services", "VIP Banking", "Loan Consultation", "Forex Exchange"],
+      serviceNames: getRandomServices(allServiceNames, 9, [
+        "Savings Account Opening",
+        "Cash Deposit & Fast Teller",
+        "VIP Priority & Private Banking",
+        "SWIFT Outward Wire Transfer",
+      ]),
+    },
+    {
+      name: "Wegagen - Merkato Branch",
+      address: "Somale Tera, Near Grand Anwar Mosque",
+      latitude: 9.0320,
+      longitude: 38.7390,
+      openingHours: "8:00 AM - 5:00 PM",
+      isOpen: true,
+      phone: "+251 11 278 4400",
+      serviceNames: getRandomServices(allServiceNames, 10, [
+        "Cash Deposit & Fast Teller",
+        "Cash Withdrawal",
+        "Cheque Clearance & CPO",
+        "SME & Working Capital Credit",
+        "Interest-Free Banking (Amana)",
+      ]),
+    },
+    {
+      name: "Wegagen - Megenagna Branch",
+      address: "Sileshi Sihine Building, Megenagna Square",
+      latitude: 9.0210,
+      longitude: 38.8020,
+      openingHours: "8:00 AM - 5:00 PM",
+      isOpen: true,
+      phone: "+251 11 663 8811",
+      serviceNames: getRandomServices(allServiceNames, 9, [
+        "Savings Account Opening",
+        "ATM & Debit Card Issuance",
+        "Cash Deposit & Fast Teller",
+        "Telebirr & Wallet Integration",
+      ]),
     },
     {
       name: "Wegagen - Piassa Branch",
@@ -66,7 +182,12 @@ async function main() {
       openingHours: "8:00 AM - 5:00 PM",
       isOpen: true,
       phone: "+251 11 155 4321",
-      serviceNames: ["Account Opening", "ATM Card Request", "Cash Services", "Forex Exchange", "Customer Support"],
+      serviceNames: getRandomServices(allServiceNames, 8, [
+        "Savings Account Opening",
+        "ATM & Debit Card Issuance",
+        "Cash Deposit & Fast Teller",
+        "Forex Cash Exchange",
+      ]),
     },
     {
       name: "Wegagen - Mexico Branch",
@@ -76,7 +197,42 @@ async function main() {
       openingHours: "8:00 AM - 5:00 PM",
       isOpen: true,
       phone: "+251 11 553 9876",
-      serviceNames: ["Account Opening", "ATM Card Request", "Cash Services", "Digital Banking"],
+      serviceNames: getRandomServices(allServiceNames, 8, [
+        "Savings Account Opening",
+        "Current & Checking Account",
+        "Cash Deposit & Fast Teller",
+        "Mobile App & Internet Banking",
+      ]),
+    },
+    {
+      name: "Wegagen - Arat Kilo Branch",
+      address: "Near Ministry of Education, Arat Kilo",
+      latitude: 9.0330,
+      longitude: 38.7610,
+      openingHours: "8:00 AM - 5:00 PM",
+      isOpen: true,
+      phone: "+251 11 123 7799",
+      serviceNames: getRandomServices(allServiceNames, 7, [
+        "Student & Youth Banking",
+        "Savings Account Opening",
+        "Cash Deposit & Fast Teller",
+        "School & University Fee Payment",
+      ]),
+    },
+    {
+      name: "Wegagen - CMC Branch",
+      address: "CMC Road, Near Michael Square",
+      latitude: 9.0220,
+      longitude: 38.8350,
+      openingHours: "8:00 AM - 5:00 PM",
+      isOpen: true,
+      phone: "+251 11 647 3344",
+      serviceNames: getRandomServices(allServiceNames, 7, [
+        "Savings Account Opening",
+        "Mortgage & Home Loan",
+        "Cash Deposit & Fast Teller",
+        "Utility & Tax Bill Payments",
+      ]),
     },
     {
       name: "Wegagen - Sarbet Branch",
@@ -86,7 +242,12 @@ async function main() {
       openingHours: "8:00 AM - 5:00 PM",
       isOpen: false,
       phone: "+251 11 372 1122",
-      serviceNames: ["Account Opening", "ATM Card Request", "Cash Services", "Forex Exchange"],
+      serviceNames: getRandomServices(allServiceNames, 6, [
+        "Savings Account Opening",
+        "ATM & Debit Card Issuance",
+        "Cash Deposit & Fast Teller",
+        "Forex Cash Exchange",
+      ]),
     },
   ];
 
@@ -111,13 +272,14 @@ async function main() {
         data: {
           ...branchInfo,
           services: {
-            connect: serviceNames.map((name) => ({ id: createdServices[name] })),
+            set: serviceNames.map((name) => ({ id: createdServices[name] })),
           },
         },
       });
     }
   }
-  console.log(`✅ Seeded ${branchesData.length} branches with linked services.`);
+  console.log(`✅ Seeded ${branchesData.length} branches with customized service portfolios.`);
+
 
   // 3. Seed Forex Rates
   const forexRatesData = [

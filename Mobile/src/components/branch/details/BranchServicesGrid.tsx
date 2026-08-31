@@ -18,66 +18,214 @@ interface BranchServicesGridProps {
 }
 
 /**
- * Maps raw service strings from the database or defaults to styled service cards
+ * Maps raw service strings from the database to styled service cards with tailored icons and descriptions
  */
 const mapDbServiceToCard = (serviceName: string, index: number): ServiceItem => {
   const lower = serviceName.toLowerCase();
 
-  if (lower.includes('atm') || lower.includes('card')) {
+  // 1. VIP & Private Banking
+  if (lower.includes('vip') || lower.includes('private') || lower.includes('priority')) {
     return {
       id: `service-${index}`,
-      title: 'ATM Card Request',
-      description: 'New ATM Card, PIN Reset & Replacement',
+      title: serviceName,
+      description: 'Dedicated relationship manager & private lounge',
+      icon: <MaterialCommunityIcons name="crown-outline" size={20} color="#D97706" />,
+    };
+  }
+
+  // 2. Letters of Credit & Trade Finance
+  if (lower.includes('letter of credit') || lower.includes('lc') || lower.includes('trade')) {
+    return {
+      id: `service-${index}`,
+      title: serviceName,
+      description: 'Import/export trade finance & commercial L/C',
+      icon: <MaterialCommunityIcons name="file-document-edit-outline" size={20} color="#0284C7" />,
+    };
+  }
+
+  // 3. Bank Guarantees & Bonds
+  if (lower.includes('guarantee') || lower.includes('bond') || lower.includes('bid')) {
+    return {
+      id: `service-${index}`,
+      title: serviceName,
+      description: 'Performance bonds, bid bonds & payment guarantees',
+      icon: <MaterialCommunityIcons name="shield-check-outline" size={20} color="#059669" />,
+    };
+  }
+
+  // 4. Forex & Remittance
+  if (lower.includes('forex') || lower.includes('exchange') || lower.includes('currency') || lower.includes('retention')) {
+    return {
+      id: `service-${index}`,
+      title: serviceName,
+      description: 'Foreign currency spot buy/sell & diaspora retention',
+      icon: <MaterialCommunityIcons name="currency-usd" size={20} color="#0284C7" />,
+    };
+  }
+  if (lower.includes('remittance') || lower.includes('western') || lower.includes('ria') || lower.includes('moneygram')) {
+    return {
+      id: `service-${index}`,
+      title: serviceName,
+      description: 'Western Union, MoneyGram, Ria & Remitly payouts',
+      icon: <MaterialCommunityIcons name="send-circle-outline" size={20} color="#0284C7" />,
+    };
+  }
+  if (lower.includes('swift') || lower.includes('wire') || lower.includes('transfer')) {
+    return {
+      id: `service-${index}`,
+      title: serviceName,
+      description: 'Telegraphic wire transfers for imports & education',
+      icon: <Ionicons name="globe-outline" size={20} color="#0284C7" />,
+    };
+  }
+
+  // 5. Cards & Terminals
+  if (lower.includes('atm') || lower.includes('debit') || lower.includes('card') || lower.includes('visa') || lower.includes('mastercard')) {
+    if (lower.includes('pin') || lower.includes('unblock') || lower.includes('reset')) {
+      return {
+        id: `service-${index}`,
+        title: serviceName,
+        description: 'Instant PIN regeneration & credential unlock',
+        icon: <MaterialCommunityIcons name="form-textbox-password" size={20} color="#0284C7" />,
+      };
+    }
+    if (lower.includes('pos') || lower.includes('terminal') || lower.includes('merchant')) {
+      return {
+        id: `service-${index}`,
+        title: serviceName,
+        description: 'Point of Sale acquiring & machine deployment',
+        icon: <MaterialCommunityIcons name="point-of-sale" size={20} color="#0284C7" />,
+      };
+    }
+    return {
+      id: `service-${index}`,
+      title: serviceName,
+      description: 'Contactless debit card issuance & replacements',
       icon: <MaterialCommunityIcons name="credit-card-plus-outline" size={20} color="#0284C7" />,
     };
   }
 
-  if (lower.includes('account') || lower.includes('opening')) {
+  // 6. Cash & Teller
+  if (lower.includes('deposit') || lower.includes('fast teller')) {
     return {
       id: `service-${index}`,
-      title: 'Account Opening',
-      description: 'New Savings, Current Account & KYC',
+      title: serviceName,
+      description: 'High-speed cash depositing & counter receipts',
+      icon: <MaterialCommunityIcons name="cash-fast" size={20} color="#059669" />,
+    };
+  }
+  if (lower.includes('withdrawal') || lower.includes('cash')) {
+    return {
+      id: `service-${index}`,
+      title: serviceName,
+      description: 'Counter cash withdrawals & cheque encashment',
+      icon: <MaterialCommunityIcons name="cash-multiple" size={20} color="#0284C7" />,
+    };
+  }
+  if (lower.includes('cheque') || lower.includes('cpo')) {
+    return {
+      id: `service-${index}`,
+      title: serviceName,
+      description: 'Certified payment orders (CPO) & clearing',
+      icon: <MaterialCommunityIcons name="checkbook" size={20} color="#0284C7" />,
+    };
+  }
+  if (lower.includes('bill') || lower.includes('tax') || lower.includes('utility')) {
+    return {
+      id: `service-${index}`,
+      title: serviceName,
+      description: 'Electricity, water, ERCA & customs bill payment',
+      icon: <MaterialCommunityIcons name="receipt-text-outline" size={20} color="#0284C7" />,
+    };
+  }
+  if (lower.includes('school') || lower.includes('university') || lower.includes('fee')) {
+    return {
+      id: `service-${index}`,
+      title: serviceName,
+      description: 'Tuition deposits & institutional student payments',
+      icon: <Ionicons name="school-outline" size={20} color="#0284C7" />,
+    };
+  }
+
+  // 7. Accounts & Deposits
+  if (lower.includes('saving') || lower.includes('account') || lower.includes('opening') || lower.includes('checking') || lower.includes('current')) {
+    if (lower.includes('fixed') || lower.includes('term')) {
+      return {
+        id: `service-${index}`,
+        title: serviceName,
+        description: 'High-yield term deposit investment contracts',
+        icon: <MaterialCommunityIcons name="piggy-bank-outline" size={20} color="#059669" />,
+      };
+    }
+    if (lower.includes('interest-free') || lower.includes('amana') || lower.includes('islamic')) {
+      return {
+        id: `service-${index}`,
+        title: serviceName,
+        description: 'Sharia-compliant ethical Islamic banking',
+        icon: <MaterialCommunityIcons name="hand-heart-outline" size={20} color="#059669" />,
+      };
+    }
+    if (lower.includes('salary') || lower.includes('payroll')) {
+      return {
+        id: `service-${index}`,
+        title: serviceName,
+        description: 'Corporate employee accounts & payroll setup',
+        icon: <MaterialCommunityIcons name="badge-account-outline" size={20} color="#0284C7" />,
+      };
+    }
+    if (lower.includes('student') || lower.includes('youth')) {
+      return {
+        id: `service-${index}`,
+        title: serviceName,
+        description: 'Subsidized youth & student banking perks',
+        icon: <Ionicons name="person-add-outline" size={20} color="#0284C7" />,
+      };
+    }
+    return {
+      id: `service-${index}`,
+      title: serviceName,
+      description: 'New Savings, Current Account & KYC onboarding',
       icon: <FontAwesome5 name="university" size={17} color="#0284C7" />,
     };
   }
 
-  if (lower.includes('cash') || lower.includes('deposit') || lower.includes('withdrawal')) {
+  // 8. Loans & Financing
+  if (lower.includes('mortgage') || lower.includes('home')) {
     return {
       id: `service-${index}`,
-      title: 'Cash Services',
-      description: 'Cash Deposit, Withdrawal & Cashier Desk',
-      icon: <MaterialCommunityIcons name="cash-multiple" size={20} color="#0284C7" />,
+      title: serviceName,
+      description: 'Residential property & construction financing',
+      icon: <MaterialCommunityIcons name="home-city-outline" size={20} color="#0284C7" />,
     };
   }
-
-  if (lower.includes('loan') || lower.includes('credit') || lower.includes('finance')) {
+  if (lower.includes('vehicle') || lower.includes('auto') || lower.includes('asset')) {
     return {
       id: `service-${index}`,
-      title: 'Loan Consultation',
-      description: 'Personal Loan, Business & SME Credit',
+      title: serviceName,
+      description: 'Automobile & commercial vehicle leasing',
+      icon: <MaterialCommunityIcons name="car-outline" size={20} color="#0284C7" />,
+    };
+  }
+  if (lower.includes('loan') || lower.includes('credit') || lower.includes('sme') || lower.includes('agriculture') || lower.includes('advance')) {
+    return {
+      id: `service-${index}`,
+      title: serviceName,
+      description: 'Personal, SME, trade & agricultural credit lines',
       icon: <MaterialCommunityIcons name="handshake-outline" size={20} color="#0284C7" />,
     };
   }
 
-  if (lower.includes('forex') || lower.includes('exchange') || lower.includes('currency') || lower.includes('remittance')) {
+  // 9. Digital Banking & Tech
+  if (lower.includes('digital') || lower.includes('mobile') || lower.includes('app') || lower.includes('internet') || lower.includes('telebirr') || lower.includes('wallet') || lower.includes('gateway') || lower.includes('sms') || lower.includes('alert') || lower.includes('e-commerce')) {
     return {
       id: `service-${index}`,
-      title: 'Forex Exchange',
-      description: 'Foreign Currency Buy/Sell & Remittance',
-      icon: <MaterialCommunityIcons name="currency-usd" size={20} color="#0284C7" />,
-    };
-  }
-
-  if (lower.includes('digital') || lower.includes('mobile') || lower.includes('app') || lower.includes('internet')) {
-    return {
-      id: `service-${index}`,
-      title: 'Digital Banking',
-      description: 'App Activation, Telebirr & Internet Banking',
+      title: serviceName,
+      description: 'App setup, wallet linkage & digital services',
       icon: <MaterialCommunityIcons name="cellphone-cog" size={20} color="#0284C7" />,
     };
   }
 
-  // Default fallback for any other custom service from DB
+  // 10. Default fallback
   return {
     id: `service-${index}`,
     title: serviceName,
@@ -85,6 +233,7 @@ const mapDbServiceToCard = (serviceName: string, index: number): ServiceItem => 
     icon: <Ionicons name="checkmark-circle-outline" size={20} color="#0284C7" />,
   };
 };
+
 
 const DEFAULT_SERVICES: ServiceItem[] = [
   {
