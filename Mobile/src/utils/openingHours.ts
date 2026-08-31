@@ -60,21 +60,24 @@ export function getBranchStatusInfo(
   const day = now.getDay();
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
   const OPEN_TIME_MINUTES = 8 * 60;
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-  let nextOpenText = 'Opens Mon at 8:00 AM';
-  if (day === 0) {
-    nextOpenText = 'Opens Mon at 8:00 AM';
+  let nextOpenText = 'Opens Monday at 8:00 AM';
+  if (!manualIsOpen) {
+    nextOpenText = 'Temporarily closed';
+  } else if (day === 0) {
+    nextOpenText = 'Opens Monday at 8:00 AM';
   } else if (day === 6) {
     if (currentMinutes < OPEN_TIME_MINUTES) {
-      nextOpenText = 'Opens today at 8:00 AM';
+      nextOpenText = 'Opens today (Saturday) at 8:00 AM';
     } else {
-      nextOpenText = 'Opens Mon at 8:00 AM';
+      nextOpenText = 'Opens Monday at 8:00 AM';
     }
   } else if (day >= 1 && day <= 5) {
     if (currentMinutes < OPEN_TIME_MINUTES) {
-      nextOpenText = 'Opens today at 8:00 AM';
+      nextOpenText = `Opens today (${dayNames[day]}) at 8:00 AM`;
     } else if (currentMinutes >= 17 * 60) {
-      nextOpenText = day === 5 ? 'Opens Sat at 8:00 AM' : 'Opens tomorrow at 8:00 AM';
+      nextOpenText = day === 5 ? 'Opens Saturday at 8:00 AM' : `Opens tomorrow (${dayNames[day + 1]}) at 8:00 AM`;
     }
   }
 
@@ -87,3 +90,22 @@ export function getBranchStatusInfo(
     nextOpenText: isOpen ? undefined : nextOpenText,
   };
 }
+
+/**
+ * Returns full customer-facing alert message when attempting to join a closed branch queue.
+ */
+export function getBranchClosedMessage(
+  branchName: string = 'This branch',
+  manualIsOpen: boolean = true,
+  customHours?: string
+): string {
+  if (!manualIsOpen) {
+    return `${branchName} is currently temporarily closed by bank administration.\n\nStandard Banking Hours:\n• Mon - Fri: 8:00 AM - 5:00 PM\n• Saturday: 8:00 AM - 12:00 PM\n• Sunday: Closed`;
+  }
+
+  const statusInfo = getBranchStatusInfo(manualIsOpen, customHours);
+  const nextOpen = statusInfo.nextOpenText || 'Opens next business day at 8:00 AM';
+
+  return `${branchName} is currently closed.\n\n⏰ Next Opening: ${nextOpen}\n\n📅 Operating Schedule:\n• Monday – Friday: 8:00 AM – 5:00 PM\n• Saturday: 8:00 AM – 12:00 PM\n• Sunday: Closed`;
+}
+

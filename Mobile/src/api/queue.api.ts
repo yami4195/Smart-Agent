@@ -108,63 +108,40 @@ export const queueApi = {
     const serviceName = payload.serviceName || 'Account Opening';
     const branchName = payload.branchName || 'Bole Branch';
 
-    try {
-      const response = await api.post<{ success: boolean; ticket: any }>(
-        '/queues/join',
-        {
-          branchId: payload.branchId,
-          serviceId: payload.serviceId,
-          serviceName: serviceName,
-        }
-      );
-      if (response.data?.success && response.data?.ticket) {
-        const t = response.data.ticket;
-        localActiveTicket = {
-          id: t.id,
-          ticketNumber: t.ticketNumber || 'A-101',
-          status: t.status || 'WAITING',
-          peopleAhead: t.peopleAhead ?? 2,
-          estimatedWaitTime: formatEstimatedWait(t.estimatedWaitMins || payload.estimatedWaitMins || 4),
-          nowServingTicket: t.nowServingTicket || 'A-100',
-          counterNumber: t.counterNumber || '01',
-          branch: {
-            id: t.branch?.id || payload.branchId,
-            name: t.branch?.name || branchName,
-          },
-          service: {
-            id: t.service?.id || payload.serviceId || 'srv-selected',
-            name: t.service?.name || serviceName,
-          },
-          createdAt: t.createdAt || new Date().toISOString(),
-          updatedAt: t.updatedAt,
-        };
-        return localActiveTicket;
+    const response = await api.post<{ success: boolean; ticket: any }>(
+      '/queues/join',
+      {
+        branchId: payload.branchId,
+        serviceId: payload.serviceId,
+        serviceName: serviceName,
       }
-    } catch (err) {
-      console.warn('Backend join queue error:', err);
+    );
+
+    if (response.data?.success && response.data?.ticket) {
+      const t = response.data.ticket;
+      localActiveTicket = {
+        id: t.id,
+        ticketNumber: t.ticketNumber || 'A-101',
+        status: t.status || 'WAITING',
+        peopleAhead: t.peopleAhead ?? 0,
+        estimatedWaitTime: formatEstimatedWait(t.estimatedWaitMins || payload.estimatedWaitMins || 4),
+        nowServingTicket: t.nowServingTicket || '—',
+        counterNumber: t.counterNumber || '01',
+        branch: {
+          id: t.branch?.id || payload.branchId,
+          name: t.branch?.name || branchName,
+        },
+        service: {
+          id: t.service?.id || payload.serviceId || 'srv-selected',
+          name: t.service?.name || serviceName,
+        },
+        createdAt: t.createdAt || new Date().toISOString(),
+        updatedAt: t.updatedAt,
+      };
+      return localActiveTicket;
     }
 
-    // Fallback local representation
-    localActiveTicket = {
-      id: `ticket-${Date.now()}`,
-      ticketNumber: 'A-101',
-      status: 'WAITING',
-      peopleAhead: 2,
-      estimatedWaitTime: formatEstimatedWait(payload.estimatedWaitMins || 4),
-      nowServingTicket: 'A-100',
-      counterNumber: '01',
-      branch: {
-        id: payload.branchId || 'branch-selected',
-        name: branchName,
-      },
-      service: {
-        id: payload.serviceId || 'srv-selected',
-        name: serviceName,
-      },
-      createdAt: new Date().toISOString(),
-    };
-
-    return localActiveTicket;
+    throw new Error('Failed to join queue on server.');
   },
 
   /**

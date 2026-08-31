@@ -77,6 +77,66 @@ export function isBranchOpenBySchedule(openingHours?: string | null): boolean {
 }
 
 /**
+ * Returns a human-friendly string stating when the branch will open next in East Africa Time (EAT - UTC+3).
+ */
+export function getNextOpeningSchedule(openingHours?: string | null, manualIsOpen: boolean = true): string {
+    if (!manualIsOpen) {
+        return "This branch has been temporarily closed by administration. Standard operating hours: Mon-Fri 8:00 AM - 5:00 PM, Sat 8:00 AM - 12:00 PM (Closed Sundays).";
+    }
+
+    const now = new Date();
+    const utcHours = now.getUTCHours();
+    const utcMinutes = now.getUTCMinutes();
+    const eatHours = (utcHours + 3) % 24;
+    const eatMinutes = eatHours * 60 + utcMinutes;
+
+    let eatDay = now.getUTCDay();
+    if (utcHours + 3 >= 24) {
+        eatDay = (eatDay + 1) % 7;
+    }
+
+    const OPEN_MINUTES = 8 * 60; // 08:00 AM = 480
+    const CLOSE_WEEKDAY_MINUTES = 17 * 60; // 05:00 PM = 1020
+
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+    // Sunday (0)
+    if (eatDay === 0) {
+        return "Opens Monday at 8:00 AM";
+    }
+
+    // Saturday (6)
+    if (eatDay === 6) {
+        if (eatMinutes < OPEN_MINUTES) {
+            return "Opens today (Saturday) at 8:00 AM";
+        }
+        return "Opens Monday at 8:00 AM";
+    }
+
+    // Friday (5)
+    if (eatDay === 5) {
+        if (eatMinutes < OPEN_MINUTES) {
+            return "Opens today (Friday) at 8:00 AM";
+        }
+        if (eatMinutes >= CLOSE_WEEKDAY_MINUTES) {
+            return "Opens Saturday at 8:00 AM";
+        }
+        return "Currently Open";
+    }
+
+    // Monday - Thursday (1 - 4)
+    if (eatMinutes < OPEN_MINUTES) {
+        return `Opens today (${dayNames[eatDay]}) at 8:00 AM`;
+    }
+    if (eatMinutes >= CLOSE_WEEKDAY_MINUTES) {
+        return `Opens tomorrow (${dayNames[eatDay + 1]}) at 8:00 AM`;
+    }
+
+    return "Currently Open";
+}
+
+
+/**
  * Transforms a Prisma branch record into a standardized mobile-friendly format
  */
 function formatBranchRecord(

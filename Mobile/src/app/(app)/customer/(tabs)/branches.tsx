@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
@@ -21,6 +22,7 @@ import { commonStyles } from '../../../../../assets/styles/common.styles';
 import { COLORS } from '../../../../../constants/colors';
 import { branchApi } from '../../../../api/branch.api';
 import { useNotification } from '../../../../contexts/NotificationContext';
+import { isBranchOpenNow, getBranchClosedMessage } from '../../../../utils/openingHours';
 
 const PAGE_SIZE = 10;
 
@@ -132,7 +134,19 @@ export default function BranchesScreen() {
   };
 
   const handleJoinQueue = (branch: BranchData) => {
-    router.push('/(app)/customer/queue');
+    const isOpen = isBranchOpenNow(branch.isOpen, branch.hours);
+    if (!isOpen) {
+      Alert.alert(
+        'Branch Closed ⏳',
+        getBranchClosedMessage(branch.name, branch.isOpen, branch.hours),
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+    router.push({
+      pathname: '/(app)/customer/Branches/[id]',
+      params: { id: branch.id },
+    });
   };
 
   const handleViewDetails = (branch: BranchData) => {

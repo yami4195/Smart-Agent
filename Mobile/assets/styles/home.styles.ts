@@ -361,7 +361,7 @@ export const homeStyles = StyleSheet.create({
   joinNowText: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.white,
+    color: COLORS.primary,
   },
   subInfoRow: {
     flexDirection: 'row',

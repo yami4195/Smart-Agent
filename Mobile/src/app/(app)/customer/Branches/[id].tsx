@@ -9,6 +9,7 @@ import {
   Animated,
   Linking,
   Platform,
+  Alert,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -31,7 +32,7 @@ import { COLORS } from '../../../../../constants/colors';
 import { branchApi } from '../../../../api/branch.api';
 import { queueApi } from '../../../../api/queue.api';
 import { useNotification } from '../../../../contexts/NotificationContext';
-import { isBranchOpenNow } from '../../../../utils/openingHours';
+import { isBranchOpenNow, getBranchStatusInfo, getBranchClosedMessage } from '../../../../utils/openingHours';
 
 const FALLBACK_BRANCH: BranchData = {
   id: 'default-branch',
@@ -117,6 +118,17 @@ export default function BranchDetailsScreen() {
   const handleJoinQueue = async () => {
     const activeBranch = branch || FALLBACK_BRANCH;
     const chosenService = selectedService || 'Cash Services';
+    const isOpen = isBranchOpenNow(activeBranch.isOpen, activeBranch.hours);
+
+    if (!isOpen) {
+      const closedMessage = getBranchClosedMessage(
+        activeBranch.name,
+        activeBranch.isOpen,
+        activeBranch.hours
+      );
+      Alert.alert('Branch Closed ⏳', closedMessage, [{ text: 'OK' }]);
+      return;
+    }
 
     try {
       await queueApi.joinQueue({
@@ -124,19 +136,25 @@ export default function BranchDetailsScreen() {
         branchName: activeBranch.name,
         serviceName: chosenService,
       });
-    } catch (e) {
-      console.warn('Error joining queue:', e);
-    }
 
-    // Navigate to My Queue tab screen with selected branch & service parameters
-    router.push({
-      pathname: '/(app)/customer/(tabs)/queue',
-      params: {
-        branchId: activeBranch.id,
-        branchName: activeBranch.name,
-        serviceName: chosenService,
-      },
-    });
+      // Navigate to My Queue tab screen with selected branch & service parameters
+      router.push({
+        pathname: '/(app)/customer/(tabs)/queue',
+        params: {
+          branchId: activeBranch.id,
+          branchName: activeBranch.name,
+          serviceName: chosenService,
+        },
+      });
+    } catch (e: any) {
+      const serverMsg = e?.response?.data?.message || e?.message || 'Failed to join queue.';
+      if (e?.response?.data?.code === 'BRANCH_CLOSED' || serverMsg.includes('BRANCH_CLOSED')) {
+        const displayMsg = getBranchClosedMessage(activeBranch.name, activeBranch.isOpen, activeBranch.hours);
+        Alert.alert('Branch Closed ⏳', displayMsg, [{ text: 'OK' }]);
+      } else {
+        Alert.alert('Queue Error', serverMsg, [{ text: 'OK' }]);
+      }
+    }
   };
 
   const handleGetDirections = () => {
@@ -155,6 +173,7 @@ export default function BranchDetailsScreen() {
   };
 
   const activeBranch = branch || FALLBACK_BRANCH;
+  const branchStatus = getBranchStatusInfo(activeBranch.isOpen, activeBranch.hours);
   const backButtonTop = insets.top > 0 ? insets.top + 8 : 44;
 
   return (
@@ -229,7 +248,7 @@ export default function BranchDetailsScreen() {
             {/* Branch Header Card (Title, Status, Distance, Address, Directions) */}
             <BranchDetailsHeader
               name={activeBranch.name}
-              isOpen={isBranchOpenNow(activeBranch.isOpen, activeBranch.hours)}
+              isOpen={branchStatus.isOpen}
               distance={activeBranch.distance}
               address={activeBranch.address}
               onGetDirections={handleGetDirections}
@@ -240,8 +259,11 @@ export default function BranchDetailsScreen() {
             <BranchLiveQueueCard
               waitingCount={activeBranch.waitingCount}
               estimatedWaitMins={activeBranch.estimatedWaitMins}
+              isOpen={branchStatus.isOpen}
+              nextOpenText={branchStatus.nextOpenText}
               onJoinQueue={handleJoinQueue}
             />
+
 
             {/* 4. Available Services Section (Dynamic with interactive selection) */}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>

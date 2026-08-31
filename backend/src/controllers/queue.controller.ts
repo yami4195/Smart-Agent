@@ -52,12 +52,15 @@ export const joinQueue = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error("Error in joinQueue controller:", error);
 
-    if (error.statusCode === 409) {
-      return res.status(409).json({
+    if (error.code === "BRANCH_CLOSED") {
+      return res.status(400).json({
         success: false,
+        code: "BRANCH_CLOSED",
+        isClosed: true,
         message: error.message,
-        activeTicketId: error.activeTicketId,
-        ticketNumber: error.ticketNumber,
+        nextOpenText: error.nextOpenText,
+        branchName: error.branchName,
+        hours: error.hours,
       });
     }
 

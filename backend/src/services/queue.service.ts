@@ -1,6 +1,7 @@
 import prisma from "../config/prisma";
 import { getServicePrefix, formatTicketNumber } from "../utils/ticketGenerator";
 import { emitToBranch, emitToUser } from "../socket";
+import { isBranchOpenBySchedule, getNextOpeningSchedule } from "./branch.service";
 
 export interface JoinQueueParams {
   clerkUserId: string;
@@ -36,9 +37,21 @@ export const joinQueueService = async (params: JoinQueueParams) => {
   if (!branch) {
     throw new Error("BRANCH_NOT_FOUND: Branch not found.");
   }
-  if (!branch.isOpen) {
-    throw new Error("BRANCH_CLOSED: This branch is currently closed.");
+
+  const isBranchOpen = branch.isOpen ? isBranchOpenBySchedule(branch.openingHours) : false;
+  if (!isBranchOpen) {
+    const nextSchedule = getNextOpeningSchedule(branch.openingHours, branch.isOpen);
+    const err: any = new Error(
+      `BRANCH_CLOSED: ${branch.name} is currently closed. ${nextSchedule}. Standard hours: ${branch.openingHours || 'Mon-Fri: 8:00 AM - 5:00 PM, Sat: 8:00 AM - 12:00 PM (Closed Sundays)'}`
+    );
+    err.statusCode = 400;
+    err.code = "BRANCH_CLOSED";
+    err.branchName = branch.name;
+    err.nextOpenText = nextSchedule;
+    err.hours = branch.openingHours;
+    throw err;
   }
+
 
   // 3. Resolve or create the exact requested service
   let targetService = null;
