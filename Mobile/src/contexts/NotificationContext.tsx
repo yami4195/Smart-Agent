@@ -73,8 +73,26 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       }, 6000);
     });
 
+    const unsubEmployeeNotif = socketService.onEmployeeNotification((notif: any) => {
+      notificationApi.addLocalNotification(
+        notif.title || 'Queue Request 🔔',
+        notif.message || '',
+        notif.id
+      );
+      setToastNotif({
+        title: notif.title || 'Queue Request 🔔',
+        message: notif.message || '',
+      });
+      setUnreadCount((prev) => prev + 1);
+
+      setTimeout(() => {
+        setToastNotif(null);
+      }, 6000);
+    });
+
     return () => {
       unsubNotif();
+      unsubEmployeeNotif();
     };
   }, [clerkUser?.id]);
 

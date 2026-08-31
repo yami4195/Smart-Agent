@@ -197,4 +197,63 @@ export const authStyles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: COLORS.background,
   },
+
+   biometricSection: {
+    alignItems: 'center',
+    marginTop: 18,
+    marginBottom: 4,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 16,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E2E8F0',
+  },
+  dividerText: {
+    marginHorizontal: 12,
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#94A3B8',
+    textTransform: 'uppercase',
+  },
+  fingerprintTouchArea: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 4,
+    paddingHorizontal: 16,
+  },
+  fingerprintTouchAreaPressed: {
+    opacity: 0.75,
+    transform: [{ scale: 0.96 }],
+  },
+  touchAreaDisabled: {
+    opacity: 0.5,
+  },
+  fingerprintCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1.5,
+    borderColor: '#BFDBFE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  fingerprintLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.primary,
+    textAlign: 'center',
+  },
 });

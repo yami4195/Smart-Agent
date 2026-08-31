@@ -19,6 +19,7 @@ import { employeeApi, EmployeeTicket } from '../../../../api/employee.api';
 import { branchApi } from '../../../../api/branch.api';
 import { authStyles } from '../../../../../assets/styles/auth.styles';
 import { agentsStyles } from '../../../../../assets/styles/agents.styles';
+import { useNotification } from '../../../../contexts/NotificationContext';
 
 const SERVICES = [
   { id: '1', name: 'Cash Deposit & Withdrawal', icon: 'cash' },
@@ -29,6 +30,7 @@ const SERVICES = [
 ];
 
 export default function WalkInScreen() {
+  const { unreadCount, openNotificationModal } = useNotification();
   const [branchId, setBranchId] = useState<string>('');
   const [branchName, setBranchName] = useState<string>('Wegagen - Bole Branch');
 
@@ -109,6 +111,15 @@ export default function WalkInScreen() {
           <Text style={employeeStyles.headerBranchTitle}>{branchName}</Text>
           <Text style={employeeStyles.headerSubtitle}>Walk-in Token Dispenser</Text>
         </View>
+
+        <TouchableOpacity
+          style={employeeStyles.notificationBtn}
+          onPress={openNotificationModal}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="notifications-outline" size={18} color="#0F172A" />
+          {unreadCount > 0 && <View style={employeeStyles.notificationDot} />}
+        </TouchableOpacity>
       </View>
 
       <ScrollView

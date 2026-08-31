@@ -172,13 +172,18 @@ export const commonStyles = StyleSheet.create({
     fontWeight: '600',
   },
   badgeOpen: {
-    backgroundColor: COLORS.badgeOrangeBg,
+    backgroundColor: '#ECFDF5',
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+    borderWidth: 1,
   },
   badgeOpenText: {
-    color: COLORS.badgeOrangeText,
+    color: '#059669',
+    fontWeight: '700',
   },
   badgeSuccess: {
-    backgroundColor: COLORS.successBg,
+    backgroundColor: '#ECFDF5',
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+    borderWidth: 1,
   },
   badgeSuccessText: {
     color: '#059669',
@@ -186,13 +191,17 @@ export const commonStyles = StyleSheet.create({
   },
   badgeWarning: {
     backgroundColor: COLORS.warningBg,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
+    borderWidth: 1,
   },
   badgeWarningText: {
-    color: COLORS.warning,
+    color: '#D97706',
     fontWeight: '700',
   },
   badgeDanger: {
     backgroundColor: '#FEE2E2',
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+    borderWidth: 1,
   },
   badgeDangerText: {
     color: COLORS.danger,

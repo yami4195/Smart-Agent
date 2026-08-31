@@ -18,6 +18,7 @@ import { commonStyles } from '../../../../../assets/styles/common.styles';
 import { COLORS } from '../../../../../constants/colors';
 import { branchApi } from '../../../../api/branch.api';
 import {agentsStyles} from '../../../../../assets/styles/agents.styles';
+import { useNotification } from '../../../../contexts/NotificationContext';
 
 export interface AppointmentItem {
   id: string;
@@ -33,6 +34,7 @@ export interface AppointmentItem {
 const APPOINTMENT_FILTERS = ['ALL', 'SCHEDULED', 'CHECKED_IN', 'COMPLETED'];
 
 export default function AppointmentScreen() {
+  const { unreadCount, openNotificationModal } = useNotification();
   const [branchId, setBranchId] = useState<string>('');
   const [branchName, setBranchName] = useState<string>('Bole Medhanialem Branch');
   const [counterStatus, setCounterStatus] = useState<CounterStatus>('Available');
@@ -94,7 +96,9 @@ export default function AppointmentScreen() {
       <EmployeeHeader
         branchName={branchName}
         status={counterStatus}
+        unreadCount={unreadCount}
         onStatusChange={(s) => setCounterStatus(s)}
+        onNotificationPress={openNotificationModal}
       />
 
       <ScrollView

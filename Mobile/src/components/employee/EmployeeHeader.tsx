@@ -10,6 +10,7 @@ interface EmployeeHeaderProps {
   branchName?: string;
   counterNumber?: string;
   status: CounterStatus;
+  unreadCount?: number;
   onStatusChange?: (newStatus: CounterStatus) => void;
   onNotificationPress?: () => void;
 }
@@ -18,6 +19,7 @@ export const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
   branchName = 'Bole Medhanialem Branch',
   counterNumber = '01',
   status,
+  unreadCount,
   onStatusChange,
   onNotificationPress,
 }) => {
@@ -80,7 +82,9 @@ export const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
           activeOpacity={0.7}
         >
           <Ionicons name="notifications-outline" size={18} color="#0F172A" />
-          <View style={employeeStyles.notificationDot} />
+          {unreadCount === undefined || unreadCount > 0 ? (
+            <View style={employeeStyles.notificationDot} />
+          ) : null}
         </TouchableOpacity>
       </View>
 

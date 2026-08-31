@@ -22,10 +22,12 @@ import { userApi, UserData } from '../../../../api/user.api';
 import { employeeApi, EmployeeStats, EmployeeHistoryItem } from '../../../../api/employee.api';
 import { branchApi } from '../../../../api/branch.api';
 import { agentsStyles } from '../../../../../assets/styles/agents.styles';
+import { useNotification } from '../../../../contexts/NotificationContext';
 
 export default function EmployeeProfileScreen() {
   const { signOut } = useAuth();
   const { user: clerkUser } = useUser();
+  const { unreadCount, openNotificationModal } = useNotification();
   const router = useRouter();
 
   const [branchId, setBranchId] = useState<string>('');
@@ -163,6 +165,8 @@ export default function EmployeeProfileScreen() {
       <EmployeeHeader
         branchName={branchName}
         status="Available"
+        unreadCount={unreadCount}
+        onNotificationPress={openNotificationModal}
       />
 
       <ScrollView

@@ -13,6 +13,7 @@
     "axios": "^1.19.0",
     "expo": "^54.0.0",
     "expo-constants": "~18.0.13",
+    "expo-linear-gradient": "~15.0.8",
     "expo-linking": "~8.0.12",
     "expo-local-authentication": "~17.0.9",
     "expo-location": "~19.0.8",

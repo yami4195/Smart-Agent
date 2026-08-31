@@ -321,7 +321,7 @@ export const homeStyles = StyleSheet.create({
 
   // Sub-card for current live queue
   liveQueueCard: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#f6f6f3',
     borderRadius: 12,
     padding: 14,
     flexDirection: 'row',

@@ -22,6 +22,7 @@ import { COLORS } from '../../../../../constants/colors';
 import { employeeApi, EmployeeTicket } from '../../../../api/employee.api';
 import { branchApi } from '../../../../api/branch.api';
 import { socketService } from '../../../../services/socket.service';
+import { useNotification } from '../../../../contexts/NotificationContext';
 
 const STATUS_FILTERS = [
   { id: 'ALL', label: 'All' },
@@ -42,6 +43,7 @@ const SERVICE_FILTERS = [
 ];
 
 export default function LiveQueueScreen() {
+  const { unreadCount, openNotificationModal } = useNotification();
   const [branchId, setBranchId] = useState<string>('');
   const [branchName, setBranchName] = useState<string>('Bole Medhanialem Branch');
   const [counterStatus, setCounterStatus] = useState<CounterStatus>('Available');
@@ -234,7 +236,9 @@ export default function LiveQueueScreen() {
       <EmployeeHeader
         branchName={branchName}
         status={counterStatus}
+        unreadCount={unreadCount}
         onStatusChange={(s) => setCounterStatus(s)}
+        onNotificationPress={openNotificationModal}
       />
 
       <ScrollView

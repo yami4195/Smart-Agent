@@ -25,9 +25,11 @@ import { employeeApi, EmployeeTicket, EmployeeStats } from '../../../../api/empl
 import { branchApi } from '../../../../api/branch.api';
 import { agentsStyles } from '../../../../../assets/styles/agents.styles';
 import { socketService } from '../../../../services/socket.service';
+import { useNotification } from '../../../../contexts/NotificationContext';
 
 export default function EmployeeDashboardScreen() {
   const router = useRouter();
+  const { unreadCount, openNotificationModal } = useNotification();
 
   // Active teller session state
   const [branchId, setBranchId] = useState<string>('');
@@ -290,14 +292,9 @@ export default function EmployeeDashboardScreen() {
         branchName={branchName}
         counterNumber={counterNumber}
         status={counterStatus}
+        unreadCount={unreadCount}
         onStatusChange={(newStatus) => setCounterStatus(newStatus)}
-        onNotificationPress={() => {
-          setUnreadNotifCount(0);
-          Alert.alert(
-            'Employee Notifications',
-            `You are monitoring live queue requests at ${branchName}.`
-          );
-        }}
+        onNotificationPress={openNotificationModal}
       />
 
       <ScrollView
