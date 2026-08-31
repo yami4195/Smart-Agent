@@ -28,7 +28,7 @@ export const ForexRateCard: React.FC<ForexRateCardProps> = ({
         <View style={homeStyles.forexLeftContent}>
           <View style={homeStyles.forexIconCircle}>
             <MaterialCommunityIcons name="currency-usd" size={24} color={COLORS.primary} />
-          </View>
+          </View>c
           <View style={homeStyles.forexTextContainer}>
             <View style={homeStyles.forexTitleRow}>
               <Text style={homeStyles.forexTitle}>Forex Rates</Text>
