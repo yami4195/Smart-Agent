@@ -55,10 +55,13 @@ export interface QueueHistoryItem {
 let localActiveTicket: QueueTicketData | null = null;
 
 export const formatEstimatedWait = (mins?: number): string => {
-  if (!mins || mins <= 0) return '03:28';
-  const m = Math.floor(mins);
+  if (mins === undefined || mins === null || mins <= 0) return '00:00';
+  const totalSeconds = Math.round(mins * 60);
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
   const paddedM = m < 10 ? `0${m}` : `${m}`;
-  return `${paddedM}:28`;
+  const paddedS = s < 10 ? `0${s}` : `${s}`;
+  return `${paddedM}:${paddedS}`;
 };
 
 export const queueApi = {
@@ -71,17 +74,18 @@ export const queueApi = {
         timeout: 4000,
       });
       if (response.data?.success && response.data?.hasActiveTicket && response.data?.ticket) {
-        const t = response.data.ticket;
+        const t = response.data.ticket as any;
         localActiveTicket = {
           id: t.id,
           ticketNumber: t.ticketNumber,
           status: t.status,
           peopleAhead: t.peopleAhead ?? 0,
           estimatedWaitTime:
-            t.estimatedWaitTime ||
-            formatEstimatedWait((t as any).estimatedWaitMins),
-          nowServingTicket: t.nowServingTicket || 'T-101',
-          counterNumber: t.counterNumber || '01',
+            t.status === 'SERVING'
+              ? 'Serving Now'
+              : formatEstimatedWait(t.estimatedWaitMins),
+          nowServingTicket: t.nowServingTicket || '',
+          counterNumber: t.counterNumber || '',
           branch: t.branch,
           service: t.service,
           createdAt: t.createdAt,
@@ -124,9 +128,9 @@ export const queueApi = {
         ticketNumber: t.ticketNumber || 'A-101',
         status: t.status || 'WAITING',
         peopleAhead: t.peopleAhead ?? 0,
-        estimatedWaitTime: formatEstimatedWait(t.estimatedWaitMins || payload.estimatedWaitMins || 4),
-        nowServingTicket: t.nowServingTicket || '—',
-        counterNumber: t.counterNumber || '01',
+        estimatedWaitTime: formatEstimatedWait(t.estimatedWaitMins ?? payload.estimatedWaitMins),
+        nowServingTicket: t.nowServingTicket || '',
+        counterNumber: t.counterNumber || '',
         branch: {
           id: t.branch?.id || payload.branchId,
           name: t.branch?.name || branchName,

@@ -147,7 +147,7 @@ export const joinQueueService = async (params: JoinQueueParams) => {
   const sequence = todayCount + 1;
   const ticketNumber = formatTicketNumber(prefix, sequence);
 
-  // 6. Calculate people ahead and estimated wait time (~3 mins per person)
+  // 6. Calculate people ahead and estimated wait time based on actual queue state
   const peopleAhead = await prisma.queueTicket.count({
     where: {
       branchId: branch.id,
@@ -155,7 +155,24 @@ export const joinQueueService = async (params: JoinQueueParams) => {
     },
   });
 
-  const estimatedWaitMins = Math.max(peopleAhead * 3, 3);
+  const currentlyServingTicket = await prisma.queueTicket.findFirst({
+    where: {
+      branchId: branch.id,
+      status: "SERVING",
+    },
+    orderBy: { updatedAt: "desc" },
+  });
+
+  let estimatedWaitMins = 0;
+  if (currentlyServingTicket) {
+    const elapsedMins = Math.floor(
+      (Date.now() - new Date(currentlyServingTicket.updatedAt).getTime()) / 60000
+    );
+    const remainingServingMins = Math.max(1, 4 - elapsedMins);
+    estimatedWaitMins = peopleAhead * 4 + remainingServingMins;
+  } else {
+    estimatedWaitMins = peopleAhead === 0 ? 2 : peopleAhead * 4 + 1;
+  }
 
   // 7. Create ticket in PostgreSQL
   const ticket = await prisma.queueTicket.create({
@@ -219,6 +236,8 @@ export const joinQueueService = async (params: JoinQueueParams) => {
     status: ticket.status,
     peopleAhead,
     estimatedWaitMins,
+    nowServingTicket: currentlyServingTicket?.ticketNumber || null,
+    counterNumber: currentlyServingTicket ? "01" : null,
     customerName,
     customerPhone: ticket.user?.phone || "—",
     branchId: ticket.branch.id,
@@ -248,8 +267,8 @@ export const joinQueueService = async (params: JoinQueueParams) => {
   emitToBranch(branch.id, "employee:notification", {
     id: `notif-${Date.now()}`,
     type: "NEW_TICKET",
-    title: `New Queue Request: ${ticket.ticketNumber} 🎫`,
-    message: `${customerName} joined the queue for ${targetService.name}`,
+    title: `New Queue Request (${ticket.ticketNumber})`,
+    message: `${customerName} joined queue for ${targetService.name}.`,
     ticketNumber: ticket.ticketNumber,
     serviceName: targetService.name,
     timestamp: new Date().toISOString(),
@@ -259,7 +278,7 @@ export const joinQueueService = async (params: JoinQueueParams) => {
 };
 
 /**
- * 2. Fetch the user's currently active ticket (status WAITING or SERVING)
+ * 2. Fetch active ticket for a customer
  */
 export const getActiveTicketService = async (clerkUserId: string) => {
   const user = await prisma.user.findUnique({
@@ -303,11 +322,28 @@ export const getActiveTicketService = async (clerkUserId: string) => {
     return { hasActiveTicket: false, ticket: null };
   }
 
-  // Calculate live position ahead of this ticket
+  // Find currently serving ticket at this branch
+  const currentlyServingTicket = await prisma.queueTicket.findFirst({
+    where: {
+      branchId: activeTicket.branchId,
+      status: "SERVING",
+    },
+    orderBy: {
+      updatedAt: "desc",
+    },
+  });
+
+  let nowServingTicket: string | null = null;
+  let counterNumber: string | null = null;
   let peopleAhead = 0;
   let estimatedWaitMins = 0;
 
-  if (activeTicket.status === "WAITING") {
+  if (activeTicket.status === "SERVING") {
+    peopleAhead = 0;
+    estimatedWaitMins = 0;
+    nowServingTicket = activeTicket.ticketNumber;
+    counterNumber = "01";
+  } else if (activeTicket.status === "WAITING") {
     peopleAhead = await prisma.queueTicket.count({
       where: {
         branchId: activeTicket.branchId,
@@ -315,7 +351,20 @@ export const getActiveTicketService = async (clerkUserId: string) => {
         createdAt: { lt: activeTicket.createdAt },
       },
     });
-    estimatedWaitMins = Math.max(peopleAhead * 3, 3);
+
+    if (currentlyServingTicket) {
+      nowServingTicket = currentlyServingTicket.ticketNumber;
+      counterNumber = "01";
+      const elapsedMins = Math.floor(
+        (Date.now() - new Date(currentlyServingTicket.updatedAt).getTime()) / 60000
+      );
+      const remainingServingMins = Math.max(1, 4 - elapsedMins);
+      estimatedWaitMins = peopleAhead * 4 + remainingServingMins;
+    } else {
+      nowServingTicket = null;
+      counterNumber = null;
+      estimatedWaitMins = peopleAhead === 0 ? 2 : peopleAhead * 4 + 1;
+    }
   }
 
   return {
@@ -326,6 +375,8 @@ export const getActiveTicketService = async (clerkUserId: string) => {
       status: activeTicket.status,
       peopleAhead,
       estimatedWaitMins,
+      nowServingTicket,
+      counterNumber,
       branch: {
         id: activeTicket.branch.id,
         name: activeTicket.branch.name,

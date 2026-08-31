@@ -34,7 +34,7 @@ export const LiveQueueCard: React.FC<LiveQueueCardProps> = ({
   ticketNumber,
   branchName,
   serviceName,
-  estimatedWaitTime = '03:28',
+  estimatedWaitTime = '00:00',
 }) => {
   return (
     <View style={queueStyles.ticketCard}>
@@ -42,7 +42,7 @@ export const LiveQueueCard: React.FC<LiveQueueCardProps> = ({
       <View style={queueStyles.ticketTopRow}>
         <View style={queueStyles.ticketLabelCol}>
           <Text style={queueStyles.ticketLabel}>TICKET NUMBER</Text>
-          <Text style={queueStyles.ticketNumber}>{ticketNumber || 'T-104'}</Text>
+          <Text style={queueStyles.ticketNumber}>{ticketNumber || '—'}</Text>
         </View>
 
         {/* Branch Name Badge */}
@@ -73,7 +73,7 @@ export const LiveQueueCard: React.FC<LiveQueueCardProps> = ({
         <View style={queueStyles.ticketDetailRowSpaced}>
           <Ionicons name="time-outline" size={18} color="#94A3B8" />
           <Text style={queueStyles.ticketWaitLabel}>Est. Wait:</Text>
-          <Text style={queueStyles.ticketWaitValue}>{estimatedWaitTime || '03:28'}</Text>
+          <Text style={queueStyles.ticketWaitValue}>{estimatedWaitTime || '00:00'}</Text>
         </View>
       </View>
     </View>

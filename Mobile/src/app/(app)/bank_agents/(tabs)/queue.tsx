@@ -64,6 +64,8 @@ export default function LiveQueueScreen() {
         if (res.branches && res.branches.length > 0) {
           setBranchId(res.branches[0].id);
           setBranchName(res.branches[0].name);
+        } else {
+          setBranchId('branch-bole');
         }
       } catch {
         setBranchId('branch-bole');
@@ -95,6 +97,31 @@ export default function LiveQueueScreen() {
       setRefreshing(false);
     }
   }, [branchId, selectedStatus]);
+
+  // Trigger fetch whenever branchId or selectedStatus changes
+  useEffect(() => {
+    if (branchId) {
+      fetchTickets();
+    }
+  }, [branchId, selectedStatus, fetchTickets]);
+
+  // Reload tickets when employee navigates to this tab
+  useFocusEffect(
+    useCallback(() => {
+      if (branchId) {
+        fetchTickets();
+      }
+    }, [branchId, fetchTickets])
+  );
+
+  // Safety fallback to prevent infinite loading indicator
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, []);
+
 
   // Real-time socket sync for live queue
   useEffect(() => {

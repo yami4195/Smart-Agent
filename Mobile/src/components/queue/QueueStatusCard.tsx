@@ -14,10 +14,10 @@ interface QueueStatusCardProps {
 }
 
 export const QueueStatusCard: React.FC<QueueStatusCardProps> = ({
-  position = 3,
-  peopleAhead = 2,
-  nowServingTicket = 'Ticket T-101',
-  counterNumber = '02',
+  position = 1,
+  peopleAhead = 0,
+  nowServingTicket,
+  counterNumber,
   status = 'WAITING',
 }) => {
   return (

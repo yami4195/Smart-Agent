@@ -83,12 +83,15 @@ export default function MyQueueScreen() {
   }, []);
 
   // Socket.IO Real-Time Listener for Queue Status Changes
-  // (notification listener is now handled globally by NotificationContext)
   useEffect(() => {
     socketService.connect();
 
     if (clerkUser?.id) {
       socketService.joinUser(clerkUser.id);
+    }
+
+    if (ticket?.branch?.id) {
+      socketService.joinBranch(ticket.branch.id);
     }
 
     const unsubStatus = socketService.onQueueStatusChanged((data) => {
@@ -100,11 +103,21 @@ export default function MyQueueScreen() {
             ? {
                 ...prev,
                 status: 'SERVING',
-                counterNumber: data.counterNumber || prev.counterNumber,
+                counterNumber: data.counterNumber || prev.counterNumber || '01',
+                estimatedWaitTime: 'Serving Now',
+                peopleAhead: 0,
               }
             : null
         );
       }
+    });
+
+    const unsubTicketUpdated = socketService.onTicketUpdated(() => {
+      loadTicket();
+    });
+
+    const unsubNewTicket = socketService.onNewTicket(() => {
+      loadTicket();
     });
 
     // Also reload ticket when a notification comes in (queue update)
@@ -114,9 +127,11 @@ export default function MyQueueScreen() {
 
     return () => {
       unsubStatus();
+      unsubTicketUpdated();
+      unsubNewTicket();
       unsubNotif();
     };
-  }, [clerkUser?.id, loadTicket]);
+  }, [clerkUser?.id, ticket?.branch?.id, loadTicket]);
 
   // Back navigation action
   const handleBack = () => {
@@ -169,10 +184,8 @@ export default function MyQueueScreen() {
 
       {/* Header */}
       <QueueHeader
-        title="My Queue"
         onBackPress={handleBack}
         onNotificationPress={openNotificationModal}
-        showBack={true}
       />
 
       {loading && !refreshing && !ticket ? (
@@ -200,15 +213,19 @@ export default function MyQueueScreen() {
                 ticketNumber={ticket.ticketNumber}
                 branchName={ticket.branch.name}
                 serviceName={ticket.service.name}
-                estimatedWaitTime={ticket.estimatedWaitTime || '03:28'}
+                estimatedWaitTime={
+                  ticket.status === 'SERVING'
+                    ? 'Serving Now'
+                    : ticket.estimatedWaitTime || '00:00'
+                }
               />
 
               {/* 2. Queue Status Card */}
               <QueueStatusCard
-                position={ticket.peopleAhead ? ticket.peopleAhead + 1 : 1}
-                peopleAhead={ticket.peopleAhead ?? 0}
-                nowServingTicket={ticket.nowServingTicket || 'Ticket T-101'}
-                counterNumber={ticket.counterNumber || '01'}
+                position={ticket.status === 'SERVING' ? 1 : (ticket.peopleAhead ? ticket.peopleAhead + 1 : 1)}
+                peopleAhead={ticket.status === 'SERVING' ? 0 : (ticket.peopleAhead ?? 0)}
+                nowServingTicket={ticket.nowServingTicket || ''}
+                counterNumber={ticket.counterNumber || ''}
                 status={ticket.status === 'SERVING' ? 'SERVING' : 'WAITING'}
               />
 
