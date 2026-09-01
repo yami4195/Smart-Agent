@@ -100,7 +100,7 @@ export function getBranchClosedMessage(
   customHours?: string
 ): string {
   if (!manualIsOpen) {
-    return `${branchName} is currently temporarily closed by bank administration.\n\nStandard Banking Hours:\n• Mon - Fri: 8:00 AM - 5:00 PM\n• Saturday: 8:00 AM - 12:00 PM\n• Sunday: Closed`;
+return `${branchName} is currently closed.\n\n⏰ Banking Hours:\n• Monday – Friday: 8:00 AM – 5:00 PM\n• Saturday: 8:00 AM – 12:00 PM\n• Sunday: Closed\n\nPlease visit during banking hours to access branch services.`;
   }
 
   const statusInfo = getBranchStatusInfo(manualIsOpen, customHours);

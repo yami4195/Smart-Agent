@@ -233,8 +233,8 @@ export const getBranchesService = async (
 
     const hasGeoSorting = lat !== undefined && lng !== undefined && !isNaN(lat) && !isNaN(lng);
 
-    // If distance sorting or lowQueue filtering is needed, fetch candidate records to rank accurately
-    if (hasGeoSorting || lowQueueOnly) {
+    // If distance sorting, lowQueue, or openNow filtering is needed, fetch candidate records to rank and filter accurately
+    if (hasGeoSorting || lowQueueOnly || openNow) {
         const branches = await prisma.branch.findMany({
             where: whereClause,
             include: {
@@ -259,8 +259,13 @@ export const getBranchesService = async (
             },
         });
 
-        // Map and calculate distances
+        // Map and calculate distances & schedule open/closed status
         let formatted = branches.map((b) => formatBranchRecord(b, lat, lng));
+
+        // openNow filter: only include branches that are actively open right now
+        if (openNow) {
+            formatted = formatted.filter((b) => b.isOpen);
+        }
 
         // low-queue needs the computed waitingCount
         if (lowQueueOnly) {

@@ -73,10 +73,11 @@ export const getAllRatesService = async (query: GetRatesQuery) => {
     });
 
     const latest = rates.length > 0
-        ? rates.reduce((latest, current) =>
-            current.updatedAt > latest ? current.updatedAt : latest,
-            rates[0].updatedAt
-        )
+        ? rates.reduce((latestTime, current) => {
+            const currentMs = new Date(current.updatedAt).getTime();
+            const latestMs = new Date(latestTime).getTime();
+            return currentMs > latestMs ? current.updatedAt : latestTime;
+        }, rates[0].updatedAt)
         : new Date();
 
     return {

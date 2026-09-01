@@ -19,9 +19,9 @@ export const getBranches = async (req: Request, res: Response) => {
 
     const result = await getBranchesService({
         search: typeof search === "string" ? search : undefined,
-        openNow: openNow === "true",
-        forexOnly: forexOnly === "true",
-        lowQueueOnly: lowQueueOnly === "true",
+        openNow: openNow === "true" || (openNow as unknown) === true,
+        forexOnly: forexOnly === "true" || (forexOnly as unknown) === true,
+        lowQueueOnly: lowQueueOnly === "true" || (lowQueueOnly as unknown) === true,
         lat: parsedLat && !isNaN(parsedLat) ? parsedLat : undefined,
         lng: parsedLng && !isNaN(parsedLng) ? parsedLng : undefined,
         page: !isNaN(parsedPage) && parsedPage > 0 ? parsedPage : 1,

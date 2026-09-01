@@ -300,7 +300,34 @@ async function main() {
       create: rate,
     });
   }
-  console.log(`✅ Seeded ${forexRatesData.length} forex exchange rates.`);
+  // 4. Ensure PostgreSQL Database Triggers for automatic updatedAt maintenance
+  await prisma.$executeRawUnsafe(`
+    CREATE OR REPLACE FUNCTION update_updated_at_column()
+    RETURNS TRIGGER AS $$
+    BEGIN
+        NEW."updatedAt" = CURRENT_TIMESTAMP;
+        RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    DROP TRIGGER IF EXISTS set_forex_rate_updated_at ON "ForexRate";
+    CREATE TRIGGER set_forex_rate_updated_at
+    BEFORE UPDATE ON "ForexRate"
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    DROP TRIGGER IF EXISTS set_branch_updated_at ON "Branch";
+    CREATE TRIGGER set_branch_updated_at
+    BEFORE UPDATE ON "Branch"
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+  `);
+  console.log("✅ Automatic updatedAt triggers initialized.");
+
   console.log("🚀 Database seeding completed successfully!");
 }
 

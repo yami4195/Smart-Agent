@@ -21,14 +21,22 @@ function formatRelativeTime(dateInput?: string | Date): string {
     const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
 
+    // Guard against slight negative diff due to client-server clock drift
+    if (diffMs <= 0) return 'Updated just now';
+
+    const diffMins = Math.floor(diffMs / 60000);
     if (diffMins < 1) return 'Updated just now';
     if (diffMins === 1) return 'Updated 1 min ago';
     if (diffMins < 60) return `Updated ${diffMins} mins ago`;
+
     const diffHours = Math.floor(diffMins / 60);
     if (diffHours === 1) return 'Updated 1 hour ago';
-    return `Updated ${diffHours} hours ago`;
+    if (diffHours < 24) return `Updated ${diffHours} hours ago`;
+
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays === 1) return 'Updated 1 day ago';
+    return `Updated ${diffDays} days ago`;
   } catch {
     return 'Updated live';
   }
