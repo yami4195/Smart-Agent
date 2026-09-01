@@ -295,13 +295,21 @@ export default function BranchesScreen() {
 
             {/* Empty State */}
             {branches.length === 0 ? (
-              <View style={{ paddingVertical: 36, alignItems: 'center' }}>
-                <Ionicons name="search-outline" size={40} color={COLORS.textMuted} />
-                <Text style={{ marginTop: 8, fontSize: 14, fontWeight: '700', color: COLORS.navy }}>
-                  No branches found
+              <View style={{ paddingVertical: 36, alignItems: 'center', paddingHorizontal: 20 }}>
+                <Ionicons
+                  name={activeFilter === 'OPEN' ? 'time-outline' : 'search-outline'}
+                  size={42}
+                  color={COLORS.textMuted}
+                />
+                <Text style={{ marginTop: 10, fontSize: 15, fontWeight: '700', color: COLORS.navy, textAlign: 'center' }}>
+                  {activeFilter === 'OPEN'
+                    ? 'No open branch available at this time'
+                    : 'No branches found'}
                 </Text>
-                <Text style={{ marginTop: 4, fontSize: 12, color: COLORS.textSecondary, textAlign: 'center' }}>
-                  Try changing your search terms or filters
+                <Text style={{ marginTop: 6, fontSize: 13, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 18 }}>
+                  {activeFilter === 'OPEN'
+                    ? 'Please visit during operating hours: Mon–Fri 8:00 AM – 5:00 PM, Sat 8:00 AM – 12:00 PM.'
+                    : 'Try changing your search terms or filters'}
                 </Text>
               </View>
             ) : viewMode === 'MAP' ? (
