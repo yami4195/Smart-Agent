@@ -57,27 +57,38 @@ export function getBranchStatusInfo(
   const isOpen = isBranchOpenNow(manualIsOpen, customHours);
 
   const now = new Date();
-  const day = now.getDay();
+  const day = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  const OPEN_TIME_MINUTES = 8 * 60;
+  const OPEN_TIME_MINUTES = 8 * 60; // 08:00 AM (480 mins)
+  const CLOSE_WEEKDAY_MINUTES = 17 * 60; // 05:00 PM (1020 mins)
+  const CLOSE_SATURDAY_MINUTES = 12 * 60; // 12:00 PM (720 mins)
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
   let nextOpenText = 'Opens Monday at 8:00 AM';
-  if (!manualIsOpen) {
-    nextOpenText = 'Temporarily closed';
-  } else if (day === 0) {
+
+  if (day === 0) {
+    // Sunday: Closed all day
     nextOpenText = 'Opens Monday at 8:00 AM';
   } else if (day === 6) {
+    // Saturday: 8:00 AM - 12:00 PM
     if (currentMinutes < OPEN_TIME_MINUTES) {
       nextOpenText = 'Opens today (Saturday) at 8:00 AM';
     } else {
       nextOpenText = 'Opens Monday at 8:00 AM';
     }
-  } else if (day >= 1 && day <= 5) {
+  } else if (day >= 1 && day <= 4) {
+    // Monday - Thursday: 8:00 AM - 5:00 PM
     if (currentMinutes < OPEN_TIME_MINUTES) {
       nextOpenText = `Opens today (${dayNames[day]}) at 8:00 AM`;
-    } else if (currentMinutes >= 17 * 60) {
-      nextOpenText = day === 5 ? 'Opens Saturday at 8:00 AM' : `Opens tomorrow (${dayNames[day + 1]}) at 8:00 AM`;
+    } else if (currentMinutes >= CLOSE_WEEKDAY_MINUTES) {
+      nextOpenText = `Opens tomorrow (${dayNames[day + 1]}) at 8:00 AM`;
+    }
+  } else if (day === 5) {
+    // Friday: 8:00 AM - 5:00 PM
+    if (currentMinutes < OPEN_TIME_MINUTES) {
+      nextOpenText = 'Opens today (Friday) at 8:00 AM';
+    } else if (currentMinutes >= CLOSE_WEEKDAY_MINUTES) {
+      nextOpenText = 'Opens Saturday at 8:00 AM';
     }
   }
 
@@ -99,10 +110,6 @@ export function getBranchClosedMessage(
   manualIsOpen: boolean = true,
   customHours?: string
 ): string {
-  if (!manualIsOpen) {
-return `${branchName} is currently closed.\n\n⏰ Banking Hours:\n• Monday – Friday: 8:00 AM – 5:00 PM\n• Saturday: 8:00 AM – 12:00 PM\n• Sunday: Closed\n\nPlease visit during banking hours to access branch services.`;
-  }
-
   const statusInfo = getBranchStatusInfo(manualIsOpen, customHours);
   const nextOpen = statusInfo.nextOpenText || 'Opens next business day at 8:00 AM';
 
