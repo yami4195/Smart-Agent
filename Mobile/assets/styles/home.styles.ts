@@ -383,8 +383,4 @@ export const homeStyles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 6,
   },
-  closedJoinButton: {
-    backgroundColor: '#D97706',
-    borderRadius: 8,
-  },
 });

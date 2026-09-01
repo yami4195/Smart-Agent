@@ -82,10 +82,7 @@ export const NearestBranchCard: React.FC<NearestBranchCardProps> = ({
         </View>
 
         <Pressable
-          style={[
-            homeStyles.joinNowButton,
-            !effectiveIsOpen && homeStyles.closedJoinButton,
-          ]}
+          style={homeStyles.joinNowButton}
           onPress={onJoinQueue}
         >
           <Text style={homeStyles.joinNowText}>
