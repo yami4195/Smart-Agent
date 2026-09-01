@@ -367,12 +367,14 @@ export const homeStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 8,
     marginBottom: 12,
   },
   distanceBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    flexShrink: 0,
   },
   nextOpenBadge: {
     fontSize: 11,
@@ -382,5 +384,6 @@ export const homeStyles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
+    flexShrink: 1,
   },
 });

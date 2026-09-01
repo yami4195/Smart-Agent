@@ -62,33 +62,31 @@ export function getBranchStatusInfo(
   const OPEN_TIME_MINUTES = 8 * 60; // 08:00 AM (480 mins)
   const CLOSE_WEEKDAY_MINUTES = 17 * 60; // 05:00 PM (1020 mins)
   const CLOSE_SATURDAY_MINUTES = 12 * 60; // 12:00 PM (720 mins)
-  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-  let nextOpenText = 'Opens Monday at 8:00 AM';
+  let nextOpenText = 'Opens Mon at 8:00 AM';
 
   if (day === 0) {
     // Sunday: Closed all day
-    nextOpenText = 'Opens Monday at 8:00 AM';
+    nextOpenText = 'Opens Mon at 8:00 AM';
   } else if (day === 6) {
     // Saturday: 8:00 AM - 12:00 PM
     if (currentMinutes < OPEN_TIME_MINUTES) {
-      nextOpenText = 'Opens today (Saturday) at 8:00 AM';
+      nextOpenText = 'Opens today at 8:00 AM';
     } else {
-      nextOpenText = 'Opens Monday at 8:00 AM';
+      nextOpenText = 'Opens Mon at 8:00 AM';
     }
   } else if (day >= 1 && day <= 4) {
     // Monday - Thursday: 8:00 AM - 5:00 PM
     if (currentMinutes < OPEN_TIME_MINUTES) {
-      nextOpenText = `Opens today (${dayNames[day]}) at 8:00 AM`;
+      nextOpenText = 'Opens today at 8:00 AM';
     } else if (currentMinutes >= CLOSE_WEEKDAY_MINUTES) {
-      nextOpenText = `Opens tomorrow (${dayNames[day + 1]}) at 8:00 AM`;
+      nextOpenText = 'Opens tomorrow at 8:00 AM';
     }
   } else if (day === 5) {
     // Friday: 8:00 AM - 5:00 PM
     if (currentMinutes < OPEN_TIME_MINUTES) {
-      nextOpenText = 'Opens today (Friday) at 8:00 AM';
+      nextOpenText = 'Opens today at 8:00 AM';
     } else if (currentMinutes >= CLOSE_WEEKDAY_MINUTES) {
-      nextOpenText = 'Opens Saturday at 8:00 AM';
+      nextOpenText = 'Opens Sat at 8:00 AM';
     }
   }
 

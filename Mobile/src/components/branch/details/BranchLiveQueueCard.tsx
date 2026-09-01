@@ -101,7 +101,7 @@ export const BranchLiveQueueCard: React.FC<BranchLiveQueueCardProps> = ({
         ) : (
           <>
             <Ionicons name="time-outline" size={19} color={COLORS.white} />
-            <Text style={branchDetailsStyles.joinQueueBtnText}>
+            <Text style={branchDetailsStyles.joinQueueBtnText} numberOfLines={1} ellipsizeMode="tail">
               {nextOpenText ? `Closed • ${nextOpenText}` : 'Branch Closed • View Hours'}
             </Text>
           </>

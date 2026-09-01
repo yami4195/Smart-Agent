@@ -63,7 +63,9 @@ export const NearestBranchCard: React.FC<NearestBranchCardProps> = ({
           <Text style={homeStyles.distanceText}>{distance}</Text>
         </View>
         {!effectiveIsOpen && statusInfo.nextOpenText ? (
-          <Text style={homeStyles.nextOpenBadge}>{statusInfo.nextOpenText}</Text>
+          <Text style={homeStyles.nextOpenBadge} numberOfLines={1} ellipsizeMode="tail">
+            {statusInfo.nextOpenText}
+          </Text>
         ) : null}
       </View>
 
