@@ -345,7 +345,7 @@ export default function BranchesScreen() {
                       {loadingMore ? (
                         <>
                           <ActivityIndicator size="small" color={COLORS.primary} />
-                          <Text style={branchesStyles.loadMoreText}>Loading...</Text>
+                          <Text style={branchesStyles.loadMoreText}>Loading....</Text>
                         </>
                       ) : (
                         <>
