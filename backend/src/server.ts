@@ -15,5 +15,5 @@ initSocket(server);
 
 server.listen(Number(PORT), "0.0.0.0", () => {
   console.log(`Server running on http://localhost:${PORT} (and network http://0.0.0.0:${PORT})`);
-  console.log(`⚡ Socket.IO initialized and listening for real-time queue events`);
+  console.log(`Socket.IO initialized and listening for real-time queue events`);
 });
