@@ -22,7 +22,7 @@ app.use(clerkMiddleware());
 
 app.get("/", (_req, res) => {
     res.json({
-    message: "Smart Agent API is running",
+    message: "Smart Agent API is running Successfully!!",
     });
 });
 
