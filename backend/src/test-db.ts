@@ -7,7 +7,7 @@ async function testDatabase() {
     console.log("Database connected!");
     console.log(users);
     } catch (error) {
-    console.error("Database connection failed:", error);
+    console.error("Database connection failed with error:", error);
     } finally {
     await prisma.$disconnect();
     }

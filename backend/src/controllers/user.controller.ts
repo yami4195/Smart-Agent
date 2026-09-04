@@ -13,14 +13,14 @@ import {
 
         const { firstName, lastName, email, phone, role } = req.body;
 
-        const user = await syncUserWithDb({
+    const user = await syncUserWithDb({
         clerkUserId,
         firstName,
         lastName,
         email,
         phone,
         role,
-        });
+    });
 
         return res.status(200).json({
         message: "User synced successfully",
