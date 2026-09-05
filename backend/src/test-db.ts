@@ -4,7 +4,7 @@ async function testDatabase() {
     try {
     const users = await prisma.user.findMany();
 
-    console.log("Database connected!");
+    console.log("Database connected Successfully!");
     console.log(users);
     } catch (error) {
     console.error("Database connection failed with error:", error);
