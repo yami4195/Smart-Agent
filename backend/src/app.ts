@@ -9,9 +9,15 @@ import ForexRoutes from './routes/forex.routes';
 import QueueRoutes from './routes/queue.routes';
 import NotificationRoutes from './routes/notification.routes';
 import ServiceRoutes from './routes/service.routes' ;
+import swaggerUi from "swagger-ui-express";
+import YAML from "yamljs";
+import path from "path";
+
+
 
 
 const app = express();
+
 
 app.use(cors());
 app.use(helmet());
@@ -19,6 +25,8 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(clerkMiddleware());
 
+const swaggerDocument = YAML.load(path.join(__dirname, "../openapi.yaml"));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.get("/", (_req, res) => {
     res.json({

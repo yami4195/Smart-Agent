@@ -1,0 +1,1915 @@
+openapi: 3.0.3
+info:
+  title: Smart Agent Backend API Specification
+  description: >
+    Enterprise RESTful API documentation for the Smart Agent banking queue management,
+    real-time telemetry, and foreign-exchange platform. Integrates Clerk authentication,
+    atomic queue token issuance, real-time wait telemetry, branch geo-routing, and automated alerts.
+  version: 1.0.0
+  contact:
+    name: Backend Engineering Team
+    email: support@smartagent.bank
+servers:
+  - url: http://localhost:5000
+    description: Local Development Server
+  - url: https://api.smartagent.bank
+    description: Production Environment
+
+tags:
+  - name: System Health
+    description: Health check and root status endpoints
+  - name: User Authentication
+    description: User synchronization with Clerk, profile management, and role-based access control
+  - name: Queue Management (Customer)
+    description: Atomic queue token issuance, active ticket tracking, telemetry, and cancellation
+  - name: Queue Management (Employee / Teller)
+    description: Teller queue calling, status lifecycle progression, walk-in ticketing, and shift telemetry
+  - name: Branch Telemetry & Geolocation
+    description: Branch location discovery, opening hours verification, and GPS proximity routing
+  - name: Foreign Exchange (Forex)
+    description: Real-time currency exchange rates, multi-currency conversion, and threshold rate alerts
+  - name: In-App Notifications
+    description: User notification dispatch, read state mutations, and alert management
+  - name: Banking Services
+    description: Service catalog directory and branch service mappings
+
+security:
+  - BearerAuth: []
+
+paths:
+  /:
+    get:
+      summary: Root Service Status
+      description: Returns the operational status message of the Smart Agent API.
+      tags:
+        - System Health
+      security: []
+      responses:
+        "200":
+          description: API is online and operational
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Smart Agent API is running Successfully!!"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/health:
+    get:
+      summary: Health Check Probe
+      description: Performs a heartbeat verification check for orchestration probes and load balancers.
+      tags:
+        - System Health
+      security: []
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  message:
+                    type: string
+                    example: "Server is healthy"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # ==========================================
+  # USER AUTHENTICATION & PROFILE LIFECYCLES
+  # ==========================================
+  /api/users/sync:
+    post:
+      summary: Synchronize User with Clerk
+      description: >
+        Synchronizes an authenticated Clerk identity into the PostgreSQL database.
+        Upserts the user record and initializes default customer role and preferences.
+      tags:
+        - User Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SyncUserRequest"
+      responses:
+        "200":
+          description: User successfully synchronized with local database
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User synced successfully"
+                  user:
+                    $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/users/me:
+    get:
+      summary: Get Current User Profile
+      description: Fetches the authenticated user's account details and roles using the Clerk bearer token.
+      tags:
+        - User Authentication
+      responses:
+        "200":
+          description: Profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    patch:
+      summary: Update User Profile
+      description: Updates basic profile attributes (first name, last name, phone number) for the authenticated user.
+      tags:
+        - User Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileRequest"
+      responses:
+        "200":
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Profile updated successfully"
+                  user:
+                    $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/users/role:
+    patch:
+      summary: Update User Role
+      description: Updates the platform authorization role for the authenticated user (e.g., customer, employee, admin).
+      tags:
+        - User Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - role
+              properties:
+                role:
+                  $ref: "#/components/schemas/UserRole"
+      responses:
+        "200":
+          description: Role updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Role updated successfully"
+                  user:
+                    $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # ==========================================
+  # ATOMIC QUEUE TOKEN ISSUANCE & TELEMETRY
+  # ==========================================
+  /api/queues/join:
+    post:
+      summary: Atomic Queue Token Issuance
+      description: >
+        Atomically allocates a daily sequential queue ticket token (e.g., A001, C004) for a branch service.
+        Prevents duplicate active tickets, calculates estimated wait telemetry, and dispatches real-time WebSocket events.
+      tags:
+        - Queue Management (Customer)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JoinQueueRequest"
+      responses:
+        "201":
+          description: Queue token issued successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Successfully joined the queue"
+                  ticket:
+                    $ref: "#/components/schemas/QueueTicketResponse"
+        "400":
+          description: Validation error or branch is currently closed
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/StandardErrorResponse"
+                  - $ref: "#/components/schemas/BranchClosedErrorResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/queues/active:
+    get:
+      summary: Get Active Ticket & Live Wait Telemetry
+      description: >
+        Retrieves the customer's current active queue ticket along with dynamic telemetry:
+        people ahead in line, estimated wait minutes, and the ticket currently being served at the counter.
+      tags:
+        - Queue Management (Customer)
+      responses:
+        "200":
+          description: Active ticket status retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActiveTicketResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/queues/history:
+    get:
+      summary: Customer Queue History
+      description: Retrieves the past 50 completed, cancelled, or no-show queue tickets for the authenticated customer.
+      tags:
+        - Queue Management (Customer)
+      responses:
+        "200":
+          description: Historical queue tickets retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  tickets:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CustomerQueueHistoryItem"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/queues/{id}/cancel:
+    patch:
+      summary: Cancel Active Ticket
+      description: Cancels an active waiting queue ticket, recalculates line position for remaining patrons, and broadcasts updates.
+      tags:
+        - Queue Management (Customer)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID of the queue ticket to cancel
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Ticket cancelled successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardSuccessResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/queues/branch/{branchId}:
+    get:
+      summary: Branch Queue Telemetry Summary
+      description: Returns real-time aggregate queue telemetry for a branch, including total waiting counts, wait time estimates, and per-service breakdown.
+      tags:
+        - Branch Telemetry & Geolocation
+      security: []
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          description: UUID of the bank branch
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Branch queue summary retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  summary:
+                    $ref: "#/components/schemas/BranchQueueSummary"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # ==========================================
+  # EMPLOYEE & TELLER QUEUE OPERATIONS
+  # ==========================================
+  /api/queues/branch/{branchId}/tickets:
+    get:
+      summary: Teller Live Queue Ticket Roster
+      description: Fetches live queue tickets at a branch with multi-criteria filtering by status and banking service.
+      tags:
+        - Queue Management (Employee / Teller)
+      security: []
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          description: UUID of the bank branch
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          required: false
+          description: Filter by status (WAITING, SERVING, COMPLETED, CANCELLED, NO_SHOW, or ALL)
+          schema:
+            type: string
+            example: "WAITING"
+        - name: serviceId
+          in: query
+          required: false
+          description: Filter by service UUID or ALL
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of tickets matching criteria
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  tickets:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TellerTicketItem"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/queues/call-next:
+    post:
+      summary: Call Next Ticket to Teller Counter
+      description: >
+        Atomically pops the next waiting customer ticket in FIFO order for a specific branch and service.
+        Transitions the ticket status to 'SERVING', records the employee ID, dispatches in-app notifications,
+        and triggers WebSocket room audio alerts.
+      tags:
+        - Queue Management (Employee / Teller)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CallNextTicketRequest"
+      responses:
+        "200":
+          description: Next ticket called or queue is empty
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CallNextTicketResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/queues/{id}/status:
+    patch:
+      summary: Update Ticket Lifecycle Status
+      description: Updates the status of a queue ticket (WAITING, SERVING, COMPLETED, CANCELLED, NO_SHOW) and pushes real-time status notifications to the customer.
+      tags:
+        - Queue Management (Employee / Teller)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID of the queue ticket
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  $ref: "#/components/schemas/TicketStatus"
+      responses:
+        "200":
+          description: Ticket status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  ticket:
+                    $ref: "#/components/schemas/QueueTicketResponse"
+                  message:
+                    type: string
+                    example: "Ticket status updated to COMPLETED"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/queues/walk-in:
+    post:
+      summary: Issue Walk-In Queue Ticket
+      description: Generates a physical or in-branch walk-in queue ticket for customers without prior mobile app reservations.
+      tags:
+        - Queue Management (Employee / Teller)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WalkInTicketRequest"
+      responses:
+        "201":
+          description: Walk-in ticket generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  ticket:
+                    $ref: "#/components/schemas/QueueTicketResponse"
+                  message:
+                    type: string
+                    example: "Walk-in ticket generated successfully."
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/queues/employee/stats/{branchId}:
+    get:
+      summary: Teller Shift & Branch Performance Telemetry
+      description: Computes real-time queue metrics for the employee's current shift, including waiting volume, completed transactions, cancellation rates, and average wait time.
+      tags:
+        - Queue Management (Employee / Teller)
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          description: UUID of the bank branch
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Shift telemetry statistics retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  stats:
+                    $ref: "#/components/schemas/EmployeeStats"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/queues/employee/history:
+    get:
+      summary: Teller Transaction History
+      description: Returns chronological log of tickets served by the employee during the current shift.
+      tags:
+        - Queue Management (Employee / Teller)
+      parameters:
+        - name: branchId
+          in: query
+          required: false
+          description: Filter by branch UUID
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Employee history retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  history:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CustomerQueueHistoryItem"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/queues/employee/history/{id}:
+    delete:
+      summary: Archive Ticket from Teller Shift View
+      description: Soft-archives a handled ticket record from the teller's active workspace list.
+      tags:
+        - Queue Management (Employee / Teller)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID of the queue ticket
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Ticket archived successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardSuccessResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # ==========================================
+  # BRANCHES & GEOLOCATION
+  # ==========================================
+  /api/branches:
+    get:
+      summary: Branch Directory & Geolocation Search
+      description: >
+        Fetches bank branches with support for multi-faceted filters (open now, forex service availability, low queue volume),
+        paginated output, and real-time distance calculation relative to client GPS coordinates.
+      tags:
+        - Branch Telemetry & Geolocation
+      parameters:
+        - name: search
+          in: query
+          required: false
+          description: Text search by branch name or street address
+          schema:
+            type: string
+        - name: openNow
+          in: query
+          required: false
+          description: Filter branches currently open according to business schedule
+          schema:
+            type: boolean
+        - name: forexOnly
+          in: query
+          required: false
+          description: Filter branches offering foreign currency exchange
+          schema:
+            type: boolean
+        - name: lowQueueOnly
+          in: query
+          required: false
+          description: Filter branches with low current waiting traffic
+          schema:
+            type: boolean
+        - name: lat
+          in: query
+          required: false
+          description: User current latitude for proximity calculation
+          schema:
+            type: number
+            format: float
+            example: 9.0112
+        - name: lng
+          in: query
+          required: false
+          description: User current longitude for proximity calculation
+          schema:
+            type: number
+            format: float
+            example: 38.7467
+        - name: page
+          in: query
+          required: false
+          description: Page number for pagination (default 1)
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          description: Number of items per page (default 10)
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: List of branches with pagination metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BranchListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/branches/nearest:
+    get:
+      summary: Find Nearest Bank Branch
+      description: Computes the closest operational branch to the user's GPS coordinates using Haversine distance calculations.
+      tags:
+        - Branch Telemetry & Geolocation
+      parameters:
+        - name: lat
+          in: query
+          required: false
+          description: User latitude (defaults to Addis Ababa city center 9.0112)
+          schema:
+            type: number
+            format: float
+        - name: lng
+          in: query
+          required: false
+          description: User longitude (defaults to Addis Ababa city center 38.7467)
+          schema:
+            type: number
+            format: float
+      responses:
+        "200":
+          description: Nearest branch found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  branch:
+                    $ref: "#/components/schemas/Branch"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/branches/{id}:
+    get:
+      summary: Get Branch Details by ID
+      description: Returns full branch profile, linked banking services, active operating status, and calculated user distance.
+      tags:
+        - Branch Telemetry & Geolocation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Branch UUID
+          schema:
+            type: string
+            format: uuid
+        - name: lat
+          in: query
+          required: false
+          description: User latitude
+          schema:
+            type: number
+            format: float
+        - name: lng
+          in: query
+          required: false
+          description: User longitude
+          schema:
+            type: number
+            format: float
+      responses:
+        "200":
+          description: Branch details retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  branch:
+                    $ref: "#/components/schemas/Branch"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # ==========================================
+  # FOREIGN EXCHANGE (FOREX) MODULE
+  # ==========================================
+  /api/forex/rates:
+    get:
+      summary: Retrieve Foreign Exchange Rates
+      description: Retrieves real-time foreign currency rates against ETB, supporting cash and Telegraphic Transfer (TT) bid/ask spreads.
+      tags:
+        - Foreign Exchange (Forex)
+      security: []
+      parameters:
+        - name: search
+          in: query
+          required: false
+          description: Search by currency code (e.g., USD) or full currency name
+          schema:
+            type: string
+        - name: filter
+          in: query
+          required: false
+          description: Filter by tier (ALL or MAJOR currencies)
+          schema:
+            type: string
+            enum: [ALL, MAJOR]
+      responses:
+        "200":
+          description: Daily forex rates retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForexRatesResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/forex/rates/{code}:
+    get:
+      summary: Get Single Currency Exchange Rate
+      description: Fetches detailed rate information for a specific currency symbol (e.g., USD, EUR, GBP).
+      tags:
+        - Foreign Exchange (Forex)
+      security: []
+      parameters:
+        - name: code
+          in: path
+          required: true
+          description: ISO 3-letter currency code
+          schema:
+            type: string
+            example: "USD"
+      responses:
+        "200":
+          description: Currency rate details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  rate:
+                    $ref: "#/components/schemas/ForexRate"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/forex/convert:
+    get:
+      summary: Real-Time Currency Conversion Calculation
+      description: >
+        Calculates conversion amounts between foreign currencies and local currency (ETB),
+        applying appropriate bank buying/selling spreads and transaction fee rules.
+      tags:
+        - Foreign Exchange (Forex)
+      security: []
+      parameters:
+        - name: from
+          in: query
+          required: false
+          description: Source currency code (defaults to USD)
+          schema:
+            type: string
+            default: "USD"
+            example: "USD"
+        - name: to
+          in: query
+          required: false
+          description: Destination currency code (defaults to ETB)
+          schema:
+            type: string
+            default: "ETB"
+            example: "ETB"
+        - name: amount
+          in: query
+          required: false
+          description: Numeric amount to convert
+          schema:
+            type: number
+            default: 1
+            example: 100
+        - name: type
+          in: query
+          required: false
+          description: Rate transaction type (CASH or TT)
+          schema:
+            type: string
+            enum: [CASH, TT]
+            default: "CASH"
+      responses:
+        "200":
+          description: Conversion calculation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForexConversionResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/forex/alerts:
+    get:
+      summary: List User Forex Rate Alerts
+      description: Fetches all active target exchange rate threshold alert subscriptions configured by the authenticated user.
+      tags:
+        - Foreign Exchange (Forex)
+      responses:
+        "200":
+          description: List of active user alerts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  count:
+                    type: integer
+                    example: 2
+                  alerts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ForexAlert"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    post:
+      summary: Create Forex Target Rate Alert
+      description: Configures an automated notification alert trigger when a currency hits a target rate threshold.
+      tags:
+        - Foreign Exchange (Forex)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAlertRequest"
+      responses:
+        "201":
+          description: Alert created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Rate alert created successfully"
+                  alert:
+                    $ref: "#/components/schemas/ForexAlert"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/forex/alerts/{id}:
+    delete:
+      summary: Delete Forex Rate Alert
+      description: Removes an active exchange rate alert subscription for the authenticated user.
+      tags:
+        - Foreign Exchange (Forex)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID of the forex alert to remove
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Alert deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardSuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # ==========================================
+  # IN-APP NOTIFICATIONS & ALERTS
+  # ==========================================
+  /api/notifications:
+    get:
+      summary: Fetch In-App Notifications
+      description: Retrieves the list of personal notifications (queue call alerts, ticket confirmations, rate thresholds) with unread count metrics.
+      tags:
+        - In-App Notifications
+      parameters:
+        - name: unreadOnly
+          in: query
+          required: false
+          description: Filter for unread messages only
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Notifications retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationsListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/notifications/read-all:
+    patch:
+      summary: Mark All Notifications as Read
+      description: Bulk updates all unread notifications to read status for the authenticated user.
+      tags:
+        - In-App Notifications
+      responses:
+        "200":
+          description: All notifications marked as read
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "All notifications marked as read"
+                  updatedCount:
+                    type: integer
+                    example: 5
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/notifications/{id}/read:
+    patch:
+      summary: Mark Single Notification as Read
+      description: Sets read status of a specific notification by ID.
+      tags:
+        - In-App Notifications
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID of the notification
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Notification marked as read
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Notification marked as read"
+                  notification:
+                    $ref: "#/components/schemas/Notification"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/notifications/{id}:
+    delete:
+      summary: Delete Notification
+      description: Permanently deletes a single notification record from the user's inbox.
+      tags:
+        - In-App Notifications
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID of the notification
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Notification deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardSuccessResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # ==========================================
+  # BANKING SERVICES DIRECTORY
+  # ==========================================
+  /api/services:
+    get:
+      summary: Banking Services Directory
+      description: Lists all available banking services (Cash Deposit, Foreign Exchange, Account Opening, Loan Consultation) with optional branch filtering.
+      tags:
+        - Banking Services
+      security: []
+      parameters:
+        - name: branchId
+          in: query
+          required: false
+          description: Filter services offered at a specific branch UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Services list retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  count:
+                    type: integer
+                    example: 6
+                  services:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Service"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/services/{id}:
+    get:
+      summary: Get Service Details
+      description: Retrieves comprehensive details and description for a specific banking service.
+      tags:
+        - Banking Services
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Service UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Service details retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  service:
+                    $ref: "#/components/schemas/Service"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+# ==========================================
+# COMPONENTS: SCHEMAS & RESPONSES
+# ==========================================
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Clerk Authentication Bearer Token (JWT) sent in Authorization header `Bearer <token>`
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters, missing payload fields, or business rule validation error.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/StandardErrorResponse"
+          example:
+            success: false
+            message: "Field 'branchId' is required."
+
+    Unauthorized:
+      description: Missing, invalid, or expired Clerk Bearer Authentication token.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/StandardErrorResponse"
+          example:
+            success: false
+            message: "Unauthorized - User is not authenticated"
+
+    NotFound:
+      description: Requested entity or resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/StandardErrorResponse"
+          example:
+            success: false
+            message: "Resource not found in database"
+
+    InternalServerError:
+      description: Unhandled internal backend error or database exception.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/StandardErrorResponse"
+          example:
+            success: false
+            message: "Internal server error"
+
+  schemas:
+    # --- ENUMS ---
+    UserRole:
+      type: string
+      enum: [customer, employee, admin]
+      default: customer
+      example: "customer"
+
+    TicketStatus:
+      type: string
+      enum: [WAITING, SERVING, COMPLETED, CANCELLED, NO_SHOW]
+      example: "WAITING"
+
+    # --- MODELS ---
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "e2b17a1b-42e3-4c91-a1d2-09fba24d8b91"
+        clerkUserId:
+          type: string
+          example: "user_2aBcDeFgHiJkLmNoPqRsTuVwXyZ"
+        firstName:
+          type: string
+          nullable: true
+          example: "Abebe"
+        lastName:
+          type: string
+          nullable: true
+          example: "Kebede"
+        email:
+          type: string
+          format: email
+          nullable: true
+          example: "abebe.kebede@example.com"
+        phone:
+          type: string
+          nullable: true
+          example: "+251911223344"
+        role:
+          $ref: "#/components/schemas/UserRole"
+        isActive:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-09-17T08:30:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2026-09-17T08:30:00.000Z"
+
+    Service:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        name:
+          type: string
+          example: "Foreign Exchange"
+        description:
+          type: string
+          nullable: true
+          example: "Currency exchange, remittances, and international fund transfers"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Branch:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
+        name:
+          type: string
+          example: "Wegagen Bank Bole Medhanialem Branch"
+        address:
+          type: string
+          example: "Bole Road, Next to Medhanialem Mall, Addis Ababa"
+        latitude:
+          type: number
+          format: float
+          example: 8.9984
+        longitude:
+          type: number
+          format: float
+          example: 38.7865
+        openingHours:
+          type: string
+          example: "8:00 AM - 5:00 PM"
+        isOpen:
+          type: boolean
+          example: true
+        phone:
+          type: string
+          nullable: true
+          example: "+251116639900"
+        distanceKm:
+          type: number
+          format: float
+          nullable: true
+          example: 1.45
+        services:
+          type: array
+          items:
+            $ref: "#/components/schemas/Service"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    QueueTicketResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "8a1bc7e2-4521-4f11-9a70-8bf1c38e6822"
+        ticketNumber:
+          type: string
+          example: "A024"
+        status:
+          $ref: "#/components/schemas/TicketStatus"
+        peopleAhead:
+          type: integer
+          example: 3
+        estimatedWaitMins:
+          type: integer
+          example: 12
+        nowServingTicket:
+          type: string
+          nullable: true
+          example: "A020"
+        counterNumber:
+          type: string
+          nullable: true
+          example: "01"
+        customerName:
+          type: string
+          example: "Abebe Kebede"
+        customerPhone:
+          type: string
+          example: "+251911223344"
+        branchId:
+          type: string
+          format: uuid
+        branchName:
+          type: string
+          example: "Bole Medhanialem Branch"
+        serviceId:
+          type: string
+          format: uuid
+        serviceName:
+          type: string
+          example: "Account Opening"
+        branch:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+            address:
+              type: string
+            hours:
+              type: string
+            isOpen:
+              type: boolean
+        service:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ActiveTicketResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        hasActiveTicket:
+          type: boolean
+          example: true
+        ticket:
+          nullable: true
+          $ref: "#/components/schemas/QueueTicketResponse"
+
+    CustomerQueueHistoryItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        ticketNumber:
+          type: string
+          example: "C012"
+        status:
+          $ref: "#/components/schemas/TicketStatus"
+        branchName:
+          type: string
+          example: "Main Branch - Stadium"
+        serviceName:
+          type: string
+          example: "Cash Deposit"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    BranchQueueSummary:
+      type: object
+      properties:
+        branchId:
+          type: string
+          format: uuid
+        branchName:
+          type: string
+          example: "Wegagen Bank Bole Branch"
+        isOpen:
+          type: boolean
+          example: true
+        totalWaiting:
+          type: integer
+          example: 8
+        estimatedWaitMins:
+          type: integer
+          example: 24
+        servicesBreakdown:
+          type: array
+          items:
+            type: object
+            properties:
+              serviceId:
+                type: string
+                format: uuid
+              serviceName:
+                type: string
+                example: "Foreign Exchange"
+              waiting:
+                type: integer
+                example: 3
+
+    TellerTicketItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        ticketNumber:
+          type: string
+          example: "A005"
+        status:
+          $ref: "#/components/schemas/TicketStatus"
+        estimatedWaitMins:
+          type: integer
+          example: 8
+        customerName:
+          type: string
+          example: "Sara Tesfaye"
+        customerPhone:
+          type: string
+          example: "+251922334455"
+        serviceId:
+          type: string
+        serviceName:
+          type: string
+          example: "Forex Exchange"
+        branchId:
+          type: string
+        branchName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    EmployeeStats:
+      type: object
+      properties:
+        totalWaiting:
+          type: integer
+          example: 6
+        totalServing:
+          type: integer
+          example: 2
+        totalCompleted:
+          type: integer
+          example: 45
+        totalCancelled:
+          type: integer
+          example: 3
+        totalNoShow:
+          type: integer
+          example: 2
+        totalServedToday:
+          type: integer
+          example: 22
+        avgWaitMins:
+          type: number
+          example: 7.5
+        avgServiceMins:
+          type: number
+          example: 3.5
+
+    ForexRate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        currencyCode:
+          type: string
+          example: "USD"
+        currencyName:
+          type: string
+          example: "US Dollar"
+        flagEmoji:
+          type: string
+          example: "🇺🇸"
+        cashBuy:
+          type: string
+          example: "128.45"
+        cashSell:
+          type: string
+          example: "131.02"
+        ttBuy:
+          type: string
+          example: "129.50"
+        ttSell:
+          type: string
+          example: "132.10"
+        change24h:
+          type: string
+          example: "+0.35%"
+        isPositive:
+          type: boolean
+          example: true
+        isMajor:
+          type: boolean
+          example: true
+        updatedAt:
+          type: string
+          format: date-time
+
+    ForexRatesResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        count:
+          type: integer
+          example: 12
+        lastUpdated:
+          type: string
+          format: date-time
+        rates:
+          type: array
+          items:
+            $ref: "#/components/schemas/ForexRate"
+
+    ForexConversionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        from:
+          type: string
+          example: "USD"
+        to:
+          type: string
+          example: "ETB"
+        amount:
+          type: number
+          example: 100
+        rateType:
+          type: string
+          enum: [CASH, TT]
+          example: "CASH"
+        effectiveRate:
+          type: number
+          example: 128.45
+        convertedAmount:
+          type: number
+          example: 12845.00
+        fee:
+          type: number
+          example: 0
+        feeText:
+          type: string
+          example: "Free NBE Promo"
+
+    ForexAlert:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        currencyCode:
+          type: string
+          example: "USD"
+        targetRate:
+          type: string
+          example: "135.00"
+        isActive:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          example: "Now Serving: Ticket A024 🔔"
+        message:
+          type: string
+          example: "Please proceed to Counter 01 at Bole Medhanialem Branch."
+        isRead:
+          type: boolean
+          example: false
+        userId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+    NotificationsListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        unreadCount:
+          type: integer
+          example: 2
+        totalCount:
+          type: integer
+          example: 8
+        notifications:
+          type: array
+          items:
+            $ref: "#/components/schemas/Notification"
+
+    BranchListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        count:
+          type: integer
+          example: 10
+        total:
+          type: integer
+          example: 25
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 10
+        totalPages:
+          type: integer
+          example: 3
+        hasMore:
+          type: boolean
+          example: true
+        branches:
+          type: array
+          items:
+            $ref: "#/components/schemas/Branch"
+
+    # --- REQUEST PAYLOADS ---
+    SyncUserRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+          example: "Abebe"
+        lastName:
+          type: string
+          example: "Kebede"
+        email:
+          type: string
+          format: email
+          example: "abebe@example.com"
+        phone:
+          type: string
+          example: "+251911223344"
+        role:
+          $ref: "#/components/schemas/UserRole"
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+          example: "Abebe"
+        lastName:
+          type: string
+          example: "Kebede"
+        phone:
+          type: string
+          example: "+251911223344"
+
+    JoinQueueRequest:
+      type: object
+      required:
+        - branchId
+      properties:
+        branchId:
+          type: string
+          format: uuid
+          description: Target branch identifier
+          example: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
+        serviceId:
+          type: string
+          format: uuid
+          description: Optional UUID of the specific banking service
+        serviceName:
+          type: string
+          description: Optional service name fallback (e.g., 'Account Opening', 'Forex Exchange')
+          example: "Account Opening"
+
+    CallNextTicketRequest:
+      type: object
+      required:
+        - branchId
+      properties:
+        branchId:
+          type: string
+          format: uuid
+        serviceId:
+          type: string
+          format: uuid
+          description: Optional service UUID to call specific line
+        counterNumber:
+          type: string
+          description: Teller counter identifier
+          example: "01"
+
+    CallNextTicketResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        hasTicket:
+          type: boolean
+          example: true
+        ticket:
+          nullable: true
+          $ref: "#/components/schemas/TellerTicketItem"
+        message:
+          type: string
+          example: "Now serving ticket A024"
+
+    WalkInTicketRequest:
+      type: object
+      required:
+        - branchId
+      properties:
+        branchId:
+          type: string
+          format: uuid
+        serviceId:
+          type: string
+          format: uuid
+        serviceName:
+          type: string
+          example: "Cash Deposit"
+        customerName:
+          type: string
+          example: "Walk-in Visitor"
+        phone:
+          type: string
+          example: "+251900112233"
+
+    CreateAlertRequest:
+      type: object
+      required:
+        - currencyCode
+        - targetRate
+      properties:
+        currencyCode:
+          type: string
+          example: "USD"
+        targetRate:
+          type: number
+          example: 135.50
+
+    # --- GENERIC RESPONSES ---
+    StandardSuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Action performed successfully"
+
+    StandardErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Detailed error message explanation"
+
+    BranchClosedErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        code:
+          type: string
+          example: "BRANCH_CLOSED"
+        isClosed:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Branch is currently closed."
+        nextOpenText:
+          type: string
+          example: "Opens Monday at 8:00 AM"
+        branchName:
+          type: string
+          example: "Bole Medhanialem Branch"
+        hours:
+          type: string
+          example: "Mon-Fri: 8:00 AM - 5:00 PM"
