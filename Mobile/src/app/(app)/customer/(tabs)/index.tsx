@@ -101,9 +101,6 @@ export default function CustomerHomeScreen() {
     router.push('/customer/Forex/forex');
   };
 
-  const handleAiAgentPress = () => {
-    console.log('AI Agent pressed');
-  };
 
   const handleNearestBranchJoin = () => {
     if (nearestBranch?.id) {
@@ -177,7 +174,6 @@ export default function CustomerHomeScreen() {
       <Header
         title="Wegagen plus"
         unreadCount={unreadCount}
-        onAiAgentPress={handleAiAgentPress}
         onNotificationPress={openNotificationModal}
       />
 
