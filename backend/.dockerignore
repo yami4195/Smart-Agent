@@ -1,0 +1,7 @@
+# .dockerignore
+node_modules
+.git
+.env
+dist
+npm-debug.log
+web-build

@@ -1,0 +1,6 @@
+node_modules
+.expo
+.git
+npm-debug.log
+dist
+web-build
