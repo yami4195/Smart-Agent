@@ -1,36 +1,38 @@
 # ==========================================
 # Phase 1: Build the React Native Web app
 # ==========================================
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Copy package manifests first (optimizes Docker caching)
+# Copy dependency files
 COPY package*.json ./
 RUN npm install
 
-# Copy project source code
+# Copy source code and environment file
 COPY . .
 
-# Build the static web bundle using Expo
-# (Note: make sure public env variables are supplied if needed)
-ARG EXPO_PUBLIC_API_URL
-ARG EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
-ENV EXPO_PUBLIC_API_URL=$EXPO_PUBLIC_API_URL
-ENV EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=$EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
+# Pass build arguments (with defaults from your .env if not passed)
+ARG EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_dG9wLXJhcHRvci0zMC5jbGVyay5hY2NvdW50cy5kZXYk
+ARG EXPO_PUBLIC_API_URL=http://localhost:5000/api
 
+ENV EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=$EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
+ENV EXPO_PUBLIC_API_URL=$EXPO_PUBLIC_API_URL
+
+# Build web distribution
 RUN npx expo export -p web
 
 # ==========================================
-# Phase 2: Serve the files using Nginx
+# Phase 2: Serve using Nginx
 # ==========================================
 FROM nginx:alpine
 
-# Copy the exported web assets from builder stage into Nginx web root
+# Copy custom Nginx SPA config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy exported assets
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expose port 80 for web traffic
 EXPOSE 80
 
-# Run Nginx in foreground
 CMD ["nginx", "-g", "daemon off;"]
