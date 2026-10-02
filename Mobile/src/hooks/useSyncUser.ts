@@ -13,6 +13,7 @@ export function useSyncUser() {
   useEffect(() => {
     async function sync() {
       if (!isSignedIn || !user) return;
+      if (syncedRef.current === user.id) return;
 
       // Extract phone from unsafeMetadata or primaryPhoneNumber
       const rawPhone =
