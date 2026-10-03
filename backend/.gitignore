@@ -4,3 +4,4 @@ dist
 build/
 *.logs
 /src/generated/prisma
+*.sql
