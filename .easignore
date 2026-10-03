@@ -1,0 +1,7 @@
+# EAS build ignore
+backend/
+*.docx
+*.py
+*.sql
+*.log
+render.yaml

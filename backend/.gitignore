@@ -5,3 +5,5 @@ build/
 *.logs
 /src/generated/prisma
 *.sql
+.claude/
+.windsurf/

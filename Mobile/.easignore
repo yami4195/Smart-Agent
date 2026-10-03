@@ -1,0 +1,4 @@
+# EAS build ignore for Mobile
+node_modules/
+.expo/
+npm-debug.log
