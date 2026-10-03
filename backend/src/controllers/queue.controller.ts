@@ -19,14 +19,7 @@ import {
  */
 export const joinQueue = async (req: Request, res: Response) => {
   try {
-    const clerkUserId = req.clerkUserId;
-
-    if (!clerkUserId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized - User is not authenticated",
-      });
-    }
+    const clerkUserId = req.clerkUserId!;
 
     const { branchId, serviceId, serviceName } = req.body;
 

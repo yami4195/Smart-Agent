@@ -16,10 +16,17 @@ import path from "path";
 
 
 
+import { errorHandler } from "./middlewares/errorHandler";
+
 const app = express();
 
-
-app.use(cors());
+const corsOrigin = process.env.CORS_ORIGIN || process.env.FRONTEND_URL || "*";
+app.use(
+  cors({
+    origin: corsOrigin.includes(",") ? corsOrigin.split(",").map((o) => o.trim()) : corsOrigin,
+    credentials: true,
+  })
+);
 app.use(helmet());
 app.use(morgan('dev'));
 app.use(express.json());
@@ -30,14 +37,16 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.get("/", (_req, res) => {
     res.json({
-    message: "Smart Agent API is running Successfully!!",
+        success: true,
+        message: "Smart Agent API is running Successfully!!",
     });
 });
 
 app.get("/api/health", (_req, res) => {
     res.status(200).json({
+        success: true,
         status: "ok",
-        message: "Server is healthy"
+        message: "Server is healthy",
     }); 
 });
 
@@ -47,5 +56,8 @@ app.use("/api/forex", ForexRoutes);
 app.use("/api/queues", QueueRoutes);
 app.use("/api/notifications", NotificationRoutes);
 app.use("/api/services", ServiceRoutes);
+
+// Centralized error handling
+app.use(errorHandler);
 
 export default app;

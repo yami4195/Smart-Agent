@@ -12,15 +12,7 @@ import {
  */
 export const getNotifications = async (req: Request, res: Response) => {
   try {
-    const clerkUserId = req.clerkUserId;
-
-    if (!clerkUserId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized - User is not authenticated",
-      });
-    }
-
+    const clerkUserId = req.clerkUserId!;
     const unreadOnly = req.query.unreadOnly === "true";
 
     const result = await getUserNotificationsService(clerkUserId, { unreadOnly });
@@ -45,15 +37,7 @@ export const getNotifications = async (req: Request, res: Response) => {
  */
 export const markAsRead = async (req: Request, res: Response) => {
   try {
-    const clerkUserId = req.clerkUserId;
-
-    if (!clerkUserId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized - User is not authenticated",
-      });
-    }
-
+    const clerkUserId = req.clerkUserId!;
     const notificationId = req.params.id as string;
 
     if (!notificationId) {
@@ -91,15 +75,7 @@ export const markAsRead = async (req: Request, res: Response) => {
  */
 export const markAllAsRead = async (req: Request, res: Response) => {
   try {
-    const clerkUserId = req.clerkUserId;
-
-    if (!clerkUserId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized - User is not authenticated",
-      });
-    }
-
+    const clerkUserId = req.clerkUserId!;
     const result = await markAllNotificationsAsReadService(clerkUserId);
 
     return res.status(200).json({
@@ -121,15 +97,7 @@ export const markAllAsRead = async (req: Request, res: Response) => {
  */
 export const deleteNotification = async (req: Request, res: Response) => {
   try {
-    const clerkUserId = req.clerkUserId;
-
-    if (!clerkUserId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized - User is not authenticated",
-      });
-    }
-
+    const clerkUserId = req.clerkUserId!;
     const notificationId = req.params.id as string;
 
     if (!notificationId) {

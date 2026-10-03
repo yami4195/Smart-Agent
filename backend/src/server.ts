@@ -5,9 +5,6 @@ import { initSocket } from "./socket";
 
 const PORT = process.env.PORT || 5000;
 
-console.log("Publishable key loaded:", !!process.env.CLERK_PUBLISHABLE_KEY);
-console.log("Secret key loaded:", !!process.env.CLERK_SECRET_KEY);
-
 const server = http.createServer(app);
 
 // Initialize Socket.IO with the HTTP server

@@ -1,5 +1,5 @@
 import prisma from "../config/prisma";
-import { calculateDistanceKm, formatDistance } from "../utils/distance";
+import { calculateDistanceKm, formatDistance, sortBranchesByDistance } from "../utils/distance";
 
 export interface GetBranchesQuery {
     search?: string;
@@ -274,7 +274,7 @@ export const getBranchesService = async (
 
         // If user coordinates provided, sort branches by proximity (closest first)
         if (hasGeoSorting) {
-            formatted.sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
+            sortBranchesByDistance(formatted);
         }
 
         const total = formatted.length;
@@ -374,14 +374,11 @@ export const getNearestBranchService = async (
         });
         if (anyBranches.length === 0) return null;
         const formatted = anyBranches.map((b) => formatBranchRecord(b, lat, lng));
-        formatted.sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
-        return formatted[0];
+        return sortBranchesByDistance(formatted)[0];
     }
 
     const formatted = branches.map((b) => formatBranchRecord(b, lat, lng));
-    formatted.sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
-
-    return formatted[0];
+    return sortBranchesByDistance(formatted)[0];
 };
 
 /**

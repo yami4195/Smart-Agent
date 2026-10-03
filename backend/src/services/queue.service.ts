@@ -2,6 +2,7 @@ import prisma from "../config/prisma";
 import { getServicePrefix, formatTicketNumber } from "../utils/ticketGenerator";
 import { emitToBranch, emitToUser } from "../socket";
 import { isBranchOpenBySchedule, getNextOpeningSchedule } from "./branch.service";
+import { createNotificationHelper } from "./notification.service";
 
 export interface JoinQueueParams {
   clerkUserId: string;
@@ -216,14 +217,11 @@ export const joinQueueService = async (params: JoinQueueParams) => {
 
   // 8. Dispatch In-App Notification to Customer
   try {
-    await prisma.notification.create({
-      data: {
-        userId: user.id,
-        title: `Queue Ticket Booked (${ticket.ticketNumber}) 🎫`,
-        message: `Your ticket ${ticket.ticketNumber} for ${targetService.name} at ${branch.name} is confirmed. Estimated wait: ~${estimatedWaitMins} mins.`,
-        isRead: false,
-      },
-    });
+    await createNotificationHelper(
+      user.id,
+      `Queue Ticket Booked (${ticket.ticketNumber}) 🎫`,
+      `Your ticket ${ticket.ticketNumber} for ${targetService.name} at ${branch.name} is confirmed. Estimated wait: ~${estimatedWaitMins} mins.`
+    );
   } catch (notifErr) {
     console.warn("Failed to create in-app notification:", notifErr);
   }
@@ -648,14 +646,11 @@ export const callNextTicketService = async (
 
   // Notify customer
   try {
-    await prisma.notification.create({
-      data: {
-        userId: updatedTicket.userId,
-        title: `Now Serving: Ticket ${updatedTicket.ticketNumber} 🔔`,
-        message: `Please proceed to Counter ${counterNumber || "01"} at ${updatedTicket.branch.name} for ${updatedTicket.service.name}.`,
-        isRead: false,
-      },
-    });
+    await createNotificationHelper(
+      updatedTicket.userId,
+      `Now Serving: Ticket ${updatedTicket.ticketNumber} 🔔`,
+      `Please proceed to Counter ${counterNumber || "01"} at ${updatedTicket.branch.name} for ${updatedTicket.service.name}.`
+    );
   } catch (notifErr) {
     console.warn("Could not dispatch notification:", notifErr);
   }
@@ -748,14 +743,7 @@ export const updateTicketStatusService = async (
 
   if (notifTitle && updated.userId) {
     try {
-      await prisma.notification.create({
-        data: {
-          userId: updated.userId,
-          title: notifTitle,
-          message: notifMessage,
-          isRead: false,
-        },
-      });
+      await createNotificationHelper(updated.userId, notifTitle, notifMessage);
     } catch (e) {
       console.warn("Error creating customer notification:", e);
     }

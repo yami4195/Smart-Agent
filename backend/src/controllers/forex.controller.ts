@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { getAuth } from "@clerk/express";
 import {
     getAllRatesService,
     getRateByCodeService,

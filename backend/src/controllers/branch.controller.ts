@@ -4,6 +4,11 @@ import {
     getNearestBranchService,
     getBranchByIdService,
 } from "../services/branch.service";
+import { parseCoordinates } from "../utils/distance";
+
+// Default coordinates (Addis Ababa central) if client does not provide GPS
+const DEFAULT_LAT = parseFloat(process.env.DEFAULT_LATITUDE || "9.0112");
+const DEFAULT_LNG = parseFloat(process.env.DEFAULT_LONGITUDE || "38.7467");
 
 /**
  * GET /api/branches
@@ -12,8 +17,7 @@ import {
 export const getBranches = async (req: Request, res: Response) => {
     try {
     const { search, openNow, forexOnly, lowQueueOnly, lat, lng, page, limit } = req.query;
-    const parsedLat = lat ? parseFloat(lat as string) : undefined;
-    const parsedLng = lng ? parseFloat(lng as string) : undefined;
+    const coords = parseCoordinates(lat, lng);
     const parsedPage = page ? parseInt(page as string, 10) : 1;
     const parsedLimit = limit ? parseInt(limit as string, 10) : 10;
 
@@ -22,8 +26,8 @@ export const getBranches = async (req: Request, res: Response) => {
         openNow: openNow === "true" || (openNow as unknown) === true,
         forexOnly: forexOnly === "true" || (forexOnly as unknown) === true,
         lowQueueOnly: lowQueueOnly === "true" || (lowQueueOnly as unknown) === true,
-        lat: parsedLat && !isNaN(parsedLat) ? parsedLat : undefined,
-        lng: parsedLng && !isNaN(parsedLng) ? parsedLng : undefined,
+        lat: coords?.lat,
+        lng: coords?.lng,
         page: !isNaN(parsedPage) && parsedPage > 0 ? parsedPage : 1,
         limit: !isNaN(parsedLimit) && parsedLimit > 0 ? parsedLimit : 10,
     });
@@ -54,18 +58,11 @@ export const getBranches = async (req: Request, res: Response) => {
 export const getNearestBranch = async (req: Request, res: Response) => {
     try {
         const { lat, lng } = req.query;
+        const coords = parseCoordinates(lat, lng);
+        const searchLat = coords?.lat ?? DEFAULT_LAT;
+        const searchLng = coords?.lng ?? DEFAULT_LNG;
 
-        // Default to Addis Ababa central coordinates if client has not provided GPS coordinates
-        const DEFAULT_LAT = 9.0112;
-        const DEFAULT_LNG = 38.7467;
-
-        let parsedLat = lat ? parseFloat(lat as string) : DEFAULT_LAT;
-        let parsedLng = lng ? parseFloat(lng as string) : DEFAULT_LNG;
-
-        if (isNaN(parsedLat)) parsedLat = DEFAULT_LAT;
-        if (isNaN(parsedLng)) parsedLng = DEFAULT_LNG;
-
-    const nearestBranch = await getNearestBranchService(parsedLat, parsedLng);
+    const nearestBranch = await getNearestBranchService(searchLat, searchLng);
 
     if (!nearestBranch) {
         return res.status(404).json({
@@ -96,15 +93,9 @@ export const getBranchById = async (req: Request, res: Response) => {
     try {
         const id = req.params.id as string;
         const { lat, lng } = req.query;
+        const coords = parseCoordinates(lat, lng);
 
-        const parsedLat = lat ? parseFloat(lat as string) : undefined;
-        const parsedLng = lng ? parseFloat(lng as string) : undefined;
-
-        const branch = await getBranchByIdService(
-        id,
-        parsedLat && !isNaN(parsedLat) ? parsedLat : undefined,
-        parsedLng && !isNaN(parsedLng) ? parsedLng : undefined
-        );
+        const branch = await getBranchByIdService(id, coords?.lat, coords?.lng);
 
         if (!branch) {
         return res.status(404).json({

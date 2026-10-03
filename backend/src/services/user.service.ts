@@ -43,9 +43,7 @@ export const syncUserWithDb = async (data: SyncUserData) => {
     if (data.phone && data.phone.trim() !== '') {
       updatePayload.phone = data.phone.trim();
     }
-    if (data.role) {
-      updatePayload.role = data.role;
-    }
+    // Note: Role is intentionally preserved for existing users to prevent privilege escalation via sync
 
     if (Object.keys(updatePayload).length > 0) {
       return prisma.user.update({

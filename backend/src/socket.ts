@@ -4,9 +4,10 @@ import { Server as SocketIOServer, Socket } from "socket.io";
 let io: SocketIOServer | null = null;
 
 export const initSocket = (httpServer: HttpServer): SocketIOServer => {
+  const corsOrigin = process.env.CORS_ORIGIN || process.env.FRONTEND_URL || "*";
   io = new SocketIOServer(httpServer, {
     cors: {
-      origin: "*",
+      origin: corsOrigin.includes(",") ? corsOrigin.split(",").map((o) => o.trim()) : corsOrigin,
       methods: ["GET", "POST", "PATCH", "DELETE"],
       credentials: true,
     },

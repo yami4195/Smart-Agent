@@ -42,4 +42,37 @@ export function formatDistance(km: number): string {
         return `${meters} m away`;
     }
     return `${km.toFixed(1)} km away`;
-    }
+}
+
+export interface Coordinates {
+  lat: number;
+  lng: number;
+}
+
+/**
+ * Validates and parses latitude and longitude from unknown inputs (e.g. query params).
+ * Returns undefined if either coordinate is missing or invalid.
+ */
+export function parseCoordinates(lat?: unknown, lng?: unknown): Coordinates | undefined {
+  if (lat === undefined || lng === undefined || lat === null || lng === null) {
+    return undefined;
+  }
+  const parsedLat = typeof lat === "number" ? lat : parseFloat(String(lat));
+  const parsedLng = typeof lng === "number" ? lng : parseFloat(String(lng));
+
+  if (isNaN(parsedLat) || isNaN(parsedLng)) {
+    return undefined;
+  }
+  if (parsedLat < -90 || parsedLat > 90 || parsedLng < -180 || parsedLng > 180) {
+    return undefined;
+  }
+
+  return { lat: parsedLat, lng: parsedLng };
+}
+
+/**
+ * Sorts an array of items with optional distanceKm in ascending order (closest first).
+ */
+export function sortBranchesByDistance<T extends { distanceKm?: number | null }>(items: T[]): T[] {
+  return items.sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
+}
