@@ -27,33 +27,44 @@ interface NotificationProviderProps {
 }
 
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
-  const { user: clerkUser } = useUser();
+  const { user: clerkUser, isSignedIn } = useUser();
 
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [toastNotif, setToastNotif] = useState<{ title: string; message: string } | null>(null);
 
-  // Fetch initial unread count
+  // Fetch initial unread count only when authenticated
   const fetchUnreadCount = useCallback(async () => {
+    if (!isSignedIn || !clerkUser?.id) {
+      setUnreadCount(0);
+      return;
+    }
     try {
       const res = await notificationApi.getNotifications(true);
       setUnreadCount(res.unreadCount || 0);
     } catch {
       // ignore
     }
-  }, []);
+  }, [isSignedIn, clerkUser?.id]);
 
   useEffect(() => {
-    fetchUnreadCount();
-  }, [fetchUnreadCount]);
-
-  // Socket.IO real-time notification listener (single connection for all screens)
-  useEffect(() => {
-    socketService.connect();
-
-    if (clerkUser?.id) {
-      socketService.joinUser(clerkUser.id);
+    if (isSignedIn && clerkUser?.id) {
+      fetchUnreadCount();
+    } else {
+      setUnreadCount(0);
+      setToastNotif(null);
     }
+  }, [isSignedIn, clerkUser?.id, fetchUnreadCount]);
+
+  // Socket.IO real-time notification listener (only when authenticated)
+  useEffect(() => {
+    if (!isSignedIn || !clerkUser?.id) {
+      socketService.disconnect();
+      return;
+    }
+
+    socketService.connect();
+    socketService.joinUser(clerkUser.id);
 
     const unsubNotif = socketService.onCustomerNotification((notif) => {
       notificationApi.addLocalNotification(
@@ -94,7 +105,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       unsubNotif();
       unsubEmployeeNotif();
     };
-  }, [clerkUser?.id]);
+  }, [isSignedIn, clerkUser?.id]);
 
   const openNotificationModal = useCallback(() => {
     setIsModalVisible(true);

@@ -20,6 +20,7 @@ export function registerTokenGetter(fn: () => Promise<string | null>) {
 }
 
 api.interceptors.request.use(async (config) => {
+  console.log(`[API Request] ${config.method?.toUpperCase()} ${config.baseURL || ''}${config.url || ''}`);
   if (getTokenFn) {
     try {
       const token = await getTokenFn();
@@ -37,7 +38,12 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error?.response?.status === 401) {
-      console.log('Session expired or invalid (401)');
+      console.log(`[API Auth] 401 Unauthorized for ${error?.config?.url} (user signed out or session expired)`);
+    } else {
+      console.error(
+        `[API Error] ${error?.config?.method?.toUpperCase()} ${error?.config?.url} -> Status ${error?.response?.status}:`,
+        error?.response?.data || error.message
+      );
     }
     return Promise.reject(error);
   }
