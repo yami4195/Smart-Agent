@@ -4,7 +4,7 @@ async function main() {
   console.log('--- Setting up PostgreSQL Triggers for updatedAt ---');
 
   await prisma.$executeRawUnsafe(`
-    CREATE OR REPLACE FUNCTION update_updated_at_column()
+    CREATE OR REPLACE FUNCTION public.update_updated_at_column()
     RETURNS TRIGGER AS $$
     BEGIN
         NEW."updatedAt" = CURRENT_TIMESTAMP;
@@ -15,26 +15,26 @@ async function main() {
   console.log('✅ Created/Updated trigger function: update_updated_at_column');
 
   await prisma.$executeRawUnsafe(`
-    DROP TRIGGER IF EXISTS set_forex_rate_updated_at ON "ForexRate";
+    DROP TRIGGER IF EXISTS set_forex_rate_updated_at ON public."ForexRate";
     CREATE TRIGGER set_forex_rate_updated_at
-    BEFORE UPDATE ON "ForexRate"
+    BEFORE UPDATE ON public."ForexRate"
     FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+    EXECUTE FUNCTION public.update_updated_at_column();
   `);
   console.log('✅ Created trigger: set_forex_rate_updated_at on ForexRate');
 
   await prisma.$executeRawUnsafe(`
-    DROP TRIGGER IF EXISTS set_branch_updated_at ON "Branch";
+    DROP TRIGGER IF EXISTS set_branch_updated_at ON public."Branch";
     CREATE TRIGGER set_branch_updated_at
-    BEFORE UPDATE ON "Branch"
+    BEFORE UPDATE ON public."Branch"
     FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+    EXECUTE FUNCTION public.update_updated_at_column();
   `);
   console.log('✅ Created trigger: set_branch_updated_at on Branch');
 
   console.log('Testing raw SQL update without explicit updatedAt...');
   await prisma.$executeRawUnsafe(`
-    UPDATE "ForexRate" SET "cashBuy" = 125.50 WHERE "currencyCode" = 'USD';
+    UPDATE public."ForexRate" SET "cashBuy" = 125.50 WHERE "currencyCode" = 'USD';
   `);
 
   // Print all current forex rates

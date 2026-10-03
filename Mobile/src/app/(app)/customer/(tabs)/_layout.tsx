@@ -23,6 +23,7 @@ export default function CustomerTabsLayout() {
           title: 'Home',
           tabBarIcon: ({ focused, color, size }) => (
             <Ionicons
+            
               name={focused ? 'home' : 'home-outline'}
               size={size}
               color={color}

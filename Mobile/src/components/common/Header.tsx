@@ -11,6 +11,7 @@ interface HeaderProps {
   onBackPress?: () => void;
   showBankIcon?: boolean;
   showAiAgent?: boolean;
+  onAiAgentPress?: () => void;
   showNotification?: boolean;
   unreadCount?: number;
   onBankPress?: () => void;
@@ -24,6 +25,7 @@ export const Header: React.FC<HeaderProps> = ({
   onBackPress,
   showBankIcon = true,
   showAiAgent = true,
+  onAiAgentPress,
   showNotification = true,
   unreadCount = 0,
   onBankPress,
@@ -55,7 +57,14 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Right: AI Agent Icon + Notification Icon */}
       <View style={headerStyles.rightContainer}>
-        
+        {showAiAgent && (
+          <Pressable
+            style={[headerStyles.iconButton, headerStyles.aiIconButton]}
+            onPress={onAiAgentPress}
+          >
+            <MaterialCommunityIcons name="robot" size={20} color={COLORS.aiPurple} />
+          </Pressable>
+        )}
 
         {showNotification && (
           <Pressable style={headerStyles.iconButton} onPress={onNotificationPress}>

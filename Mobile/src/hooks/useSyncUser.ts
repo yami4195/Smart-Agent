@@ -37,10 +37,14 @@ export function useSyncUser() {
         const token = await getToken();
         if (!token) return;
 
-        const response = await fetch(`${API_BASE_URL}/users/sync`, {
+        const syncUrl = `${API_BASE_URL}/users/sync`;
+        console.log(`[useSyncUser] Syncing user to: ${syncUrl}`);
+
+        const response = await fetch(syncUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Bypass-Tunnel-Reminder': 'true',
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({

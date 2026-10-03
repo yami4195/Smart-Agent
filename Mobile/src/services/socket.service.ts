@@ -26,6 +26,9 @@ class SocketService {
         reconnectionAttempts: 10,
         reconnectionDelay: 1000,
         autoConnect: true,
+        extraHeaders: {
+          'Bypass-Tunnel-Reminder': 'true',
+        },
       });
 
       this.socket.on('connect', () => {
